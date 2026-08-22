@@ -177,44 +177,47 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
         children: [
           const Icon(Icons.supervisor_account, size: 16, color: AppColors.pink),
           const SizedBox(width: 4),
-          DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              value: currentRoleCode,
-              isDense: true,
-              dropdownColor: isDark ? AppColors.surface2 : Colors.white,
-              style: TextStyle(
-                color: isDark ? AppColors.txt : const Color(0xFF0F172A),
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-              ),
-              items: roles.map((r) {
-                return DropdownMenuItem<String>(
-                  value: r['code'],
-                  child: Text(r['label']!),
-                );
-              }).toList(),
-              onChanged: (newCode) async {
-                if (newCode != null) {
-                  final r = roles.firstWhere((element) => element['code'] == newCode);
-                  final ok = await ref.read(authProvider.notifier).login(
-                    employeeCode: r['emp']!,
-                    pin: r['pin']!,
+          Flexible(
+            child: DropdownButtonHideUnderline(
+              child: DropdownButton<String>(
+                value: currentRoleCode,
+                isDense: true,
+                isExpanded: true,
+                dropdownColor: isDark ? AppColors.surface2 : Colors.white,
+                style: TextStyle(
+                  color: isDark ? AppColors.txt : const Color(0xFF0F172A),
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.w700,
+                ),
+                items: roles.map((r) {
+                  return DropdownMenuItem<String>(
+                    value: r['code'],
+                    child: Text(r['label']!, overflow: TextOverflow.ellipsis),
                   );
-                  if (ok && context.mounted) {
-                    if (newCode == 'picker') {
-                      context.go('/hht-picking');
-                    } else if (newCode == 'packOperator') {
-                      context.go('/pack-point');
-                    } else if (newCode == 'warehouseManager') {
-                      context.go('/warehouse');
-                    } else if (newCode == 'security') {
-                      context.go('/dispatch');
-                    } else {
-                      context.go('/dashboard');
+                }).toList(),
+                onChanged: (newCode) async {
+                  if (newCode != null) {
+                    final r = roles.firstWhere((element) => element['code'] == newCode);
+                    final ok = await ref.read(authProvider.notifier).login(
+                      employeeCode: r['emp']!,
+                      pin: r['pin']!,
+                    );
+                    if (ok && context.mounted) {
+                      if (newCode == 'picker') {
+                        context.go('/hht-picking');
+                      } else if (newCode == 'packOperator') {
+                        context.go('/pack-point');
+                      } else if (newCode == 'warehouseManager') {
+                        context.go('/warehouse');
+                      } else if (newCode == 'security') {
+                        context.go('/dispatch');
+                      } else {
+                        context.go('/dashboard');
+                      }
                     }
                   }
-                }
-              },
+                },
+              ),
             ),
           ),
         ],
