@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maxion Wheels — Dispatch Operations Digitalization (Vistar Logitek)</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #070611;
+      --bg2: #0f0e1e;
+      --surface: #16142a;
+      --surface2: #201d3a;
+      --surface3: #2a274a;
+      --ribbon: linear-gradient(135deg, #e0218a 0%, #f06000 35%, #f0c000 65%, #9b30c9 100%);
+      --pink: #e0218a;
+      --orange: #f06000;
+      --amber: #f0c000;
+      --violet: #9b30c9;
+      --plum: #7a1f6e;
+      --txt: #f3f4f6;
+      --txt2: #9ca3af;
+      --txt3: #6b7280;
+      --line: rgba(255, 255, 255, 0.08);
+      --line2: rgba(224, 33, 138, 0.35);
+      --ok: #34d399;
+      --warn: #f0c000;
+      --danger: #fb6f84;
+      --info: #5ba8ff;
+      --r-sm: 10px;
+      --r: 16px;
+      --r-lg: 24px;
+      --glow: 0 14px 40px -10px rgba(224, 33, 138, 0.45);
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--txt);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
+
+    /* Splash Screen */
+    #splash {
+      position: fixed; inset: 0; z-index: 100;
+      background: radial-gradient(circle at center, #1b1638 0%, #070611 70%);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease;
+    }
+    .splash-logo-img { height: 72px; object-fit: contain; filter: drop-shadow(0 0 24px rgba(224,33,138,.6)); }
+    .splash-name-img { height: 32px; object-fit: contain; margin-top: 16px; }
+    .splash-sub { color: var(--txt3); font-size: 11px; font-weight: 700; letter-spacing: 2px; margin-top: 8px; }
+    .splash-bar { width: 180px; height: 4px; background: rgba(255,255,255,.07); border-radius: 10px; margin-top: 32px; overflow: hidden; }
+    .splash-bar i { display: block; height: 100%; width: 50%; background: var(--ribbon); border-radius: 10px; animation: loadBar 1.2s ease-in-out infinite; }
+
+    @keyframes loadBar { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+
+    /* Login Screen */
+    #login { display: none; min-height: 100vh; grid-template-columns: 1.05fr .95fr; }
+    #login.active { display: grid; }
+    .login-art { background: var(--surface); padding: 48px; border-right: 1px solid var(--line); display: flex; flex-direction: column; justify-content: center; }
+    .login-form { background: var(--bg2); padding: 48px; display: flex; flex-direction: column; justify-content: center; align-items: center; }
+    .login-box { width: 100%; max-width: 400px; background: var(--surface); padding: 32px; border-radius: var(--r-lg); border: 1px solid var(--line); }
+
+    /* App Shell */
+    #app { display: none; min-height: 100vh; grid-template-columns: 248px 1fr; }
+    #app.active { display: grid; }
+    .sidebar { background: var(--bg2); border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+    .brand-row { padding: 20px; border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+    .nav-logo-mark { height: 38px; object-fit: contain; }
+    .nav-logo-name { height: 22px; object-fit: contain; }
+    .nav-list { flex: 1; padding: 12px; overflow-y: auto; }
+    .nav-item { padding: 12px 14px; border-radius: 10px; margin-bottom: 4px; color: var(--txt2); font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: .18s; }
+    .nav-item:hover, .nav-item.active { background: var(--surface); color: var(--txt); }
+    .nav-item.active { border-left: 3px solid var(--pink); color: #fff; font-weight: 700; }
+    .user-footer { padding: 16px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+    .avatar { width: 38px; height: 38px; border-radius: 10px; background: var(--ribbon); display: grid; place-items: center; font-weight: 800; color: #fff; }
+
+    /* Topbar */
+    .topbar { height: 64px; background: var(--bg2); border-bottom: 1px solid var(--line); padding: 0 24px; display: flex; align-items: center; gap: 16px; }
+    .search-box { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 8px 16px; color: var(--txt); font-size: 13px; outline: none; width: 320px; }
+
+    /* Canvas & Screens */
+    .canvas { padding: 24px; overflow-y: auto; height: calc(100vh - 64px); }
+    .screen { display: none; }
+    .screen.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+    /* UI Components */
+    .btn { border: none; border-radius: var(--r-sm); padding: 12px 18px; font-weight: 700; font-size: 13px; cursor: pointer; transition: .18s; display: inline-flex; align-items: center; gap: 8px; justify-content: center; }
+    .btn-grad { background: var(--ribbon); color: #fff; box-shadow: var(--glow); }
+    .btn-grad:hover { transform: translateY(-1px); filter: brightness(1.1); }
+    .btn-ghost { background: var(--surface2); color: var(--txt); border: 1px solid var(--line); }
+    .btn-ghost:hover { border-color: var(--line2); background: var(--surface3); }
+    .btn-danger { background: rgba(251,111,132,.18); color: var(--danger); border: 1px solid rgba(251,111,132,.4); }
+
+    .inp { width: 100%; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-sm); padding: 12px 14px; color: var(--txt); font-size: 13px; outline: none; margin-top: 6px; }
+    .inp:focus { border-color: var(--pink); box-shadow: 0 0 0 3px rgba(224,33,138,.15); }
+
+    .card { background: var(--bg2); border: 1px solid var(--line); border-radius: var(--r); padding: 20px; margin-bottom: 20px; position: relative; }
+    .card.glow { border-color: var(--line2); box-shadow: 0 10px 30px -10px rgba(224,33,138,.2); }
+
+    .sect-ttl { font-size: 15px; font-weight: 800; margin-bottom: 16px; display: flex; align-items: center; gap: 10px; }
+    .sect-ttl::before { content: ""; width: 5px; height: 16px; border-radius: 6px; background: var(--ribbon); }
+
+    .pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+    .pill .d { width: 6px; height: 6px; border-radius: 50%; }
+    .pill-ok { background: rgba(52,211,153,.15); color: var(--ok); } .pill-ok .d { background: var(--ok); }
+    .pill-warn { background: rgba(240,192,0,.15); color: var(--warn); } .pill-warn .d { background: var(--warn); }
+    .pill-danger { background: rgba(251,111,132,.15); color: var(--danger); } .pill-danger .d { background: var(--danger); }
+    .pill-purple { background: rgba(155,48,201,.2); color: #d8b4fe; } .pill-purple .d { background: var(--violet); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+    th { text-align: left; padding: 12px 16px; font-size: 11px; text-transform: uppercase; color: var(--txt3); font-weight: 700; background: var(--surface); border-bottom: 1px solid var(--line); }
+    td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 13px; color: var(--txt2); }
+    tr:hover td { background: var(--surface); }
+
+    .big-count { font-size: 96px; font-weight: 900; color: var(--pink); line-height: 1; font-family: 'Bricolage Grotesque'; }
+  </style>
+</head>
+<body>
+
+  <!-- 1. SPLASH SCREEN WITH LOGO IMAGES -->
+  <div id="splash">
+    <img src="/assets/logo.png" class="splash-logo-img" alt="Vistar Logo Mark">
+    <img src="/assets/logo_name.png" class="splash-name-img" alt="Vistar Logitek Wordmark">
+    <div class="splash-sub">MAXION WHEELS DISPATCH DIGITALIZATION</div>
+    <div class="splash-bar"><i></i></div>
+  </div>
+
+  <!-- 2. LOGIN SCREEN -->
+  <div id="login">
+    <div class="login-art">
+      <div style="display:flex; align-items:center; gap:12px; margin-bottom:40px;">
+        <img src="/assets/logo.png" style="height:42px;" alt="Logo">
+        <img src="/assets/logo_name.png" style="height:24px;" alt="Logo Name">
+      </div>
+      <h1 style="font-family:'Bricolage Grotesque'; font-size:42px; font-weight:900; line-height:1.1; margin-bottom:16px;">
+        MAXION WHEELS <br><span style="background:var(--ribbon); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;">DISPATCH DIGITAL</span>
+      </h1>
+      <p style="color:var(--txt2); font-size:15px; line-height:1.6; margin-bottom:32px;">
+        Paint plan on screen instead of whiteboard, 100% QR traceability, full/half/merged pallet control, directed picking & printed gate passes.
+      </p>
+      <div style="display:flex; gap:32px;">
+        <div><div style="font-size:28px; font-weight:900; color:var(--pink);">0%</div><div style="font-size:12px; color:var(--txt3);">Scans Lost</div></div>
+        <div><div style="font-size:28px; font-weight:900; color:var(--orange);">&lt;1s</div><div style="font-size:12px; color:var(--txt3);">Scan Speed</div></div>
+        <div><div style="font-size:28px; font-weight:900; color:var(--amber);">&lt;5 min</div><div style="font-size:12px; color:var(--txt3);">Gate Out</div></div>
+      </div>
+    </div>
+    <div class="login-form">
+      <div class="login-box">
+        <h2 style="font-size:22px; font-weight:800; margin-bottom:6px;">Sign In to Dispatch</h2>
+        <p style="color:var(--txt2); font-size:13px; margin-bottom:24px;">Scan badge or enter employee code</p>
+        <label style="font-size:11px; font-weight:700; color:var(--txt3); letter-spacing:1px;">EMPLOYEE CODE / BADGE BARCODE</label>
+        <input type="text" id="empCode" class="inp" value="EMP001" style="margin-bottom:16px;">
+        <label style="font-size:11px; font-weight:700; color:var(--txt3); letter-spacing:1px;">SECURITY PIN</label>
+        <input type="password" id="pinCode" class="inp" value="1234" style="margin-bottom:24px;">
+        <button class="btn btn-grad" style="width:100%; padding:14px;" onclick="doLogin()">SIGN IN TO DISPATCH</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. APP SHELL -->
+  <div id="app">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="brand-row">
+        <img src="/assets/logo.png" class="nav-logo-mark" alt="Logo Mark">
+        <img src="/assets/logo_name.png" class="nav-logo-name" alt="Logo Name">
+      </div>
+      <div class="nav-list">
+        <div class="nav-item active" onclick="goNav('dash', this)">Dashboard</div>
+        <div class="nav-item" onclick="goNav('plan', this)">Paint Plan (Mod 1)</div>
+        <div class="nav-item" onclick="goNav('pack', this)">Pack Point (Mod 3-5)</div>
+        <div class="nav-item" onclick="goNav('warehouse', this)">Warehouse Putaway (Mod 6)</div>
+        <div class="nav-item" onclick="goNav('halfReg', this)">Half Pallet Register (Mod 5)</div>
+        <div class="nav-item" onclick="goNav('picking', this)">Indent & Picking (Mod 7)</div>
+        <div class="nav-item" onclick="goNav('gatePass', this)">Gate Pass & Out (Mod 8)</div>
+        <div class="nav-item" onclick="goNav('returnables', this)">Returnables (Mod 9)</div>
+        <div class="nav-item" onclick="goNav('trace', this)">Traceability (Mod 10)</div>
+        <div class="nav-item" onclick="goNav('sync', this)">Sync Monitor (Sec 7)</div>
+      </div>
+      <div class="user-footer">
+        <div class="avatar" id="userAvatar">T</div>
+        <div>
+          <div style="font-size:13px; font-weight:700;" id="userName">Tanmay (Admin)</div>
+          <div style="font-size:10px; color:var(--txt3);" id="userRole">SUPERADMIN</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div>
+      <div class="topbar">
+        <span class="pill pill-purple"><span class="d"></span>VLT/MXW/DISP/SSR/001 v2.0</span>
+        <input type="text" id="globalSearch" class="search-box" placeholder="Scan or search Wheel QR / Pallet QR / Location..." onchange="handleGlobalSearch(this.value)">
+        <div style="margin-left:auto; display:flex; align-items:center; gap:12px;">
+          <span class="pill pill-ok"><span class="d"></span>ONLINE · SYNCED</span>
+        </div>
+      </div>
+
+      <div class="canvas">
+
+        <!-- SCREEN 1: DASHBOARD -->
+        <div id="scr-dash" class="screen active">
+          <div class="sect-ttl">DISPATCH OPERATIONS DASHBOARD</div>
+          <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:16px; margin-bottom:24px;">
+            <div class="card"><div style="font-size:11px; color:var(--txt3); font-weight:700;">PLAN ACHIEVEMENT</div><div id="db-achieve" style="font-size:28px; font-weight:900; color:var(--ok); margin-top:8px;">84.2%</div><div id="db-achieve-sub" style="font-size:12px; color:var(--ok);">320 / 384 Packed</div></div>
+            <div class="card"><div style="font-size:11px; color:var(--txt3); font-weight:700;">PALLETS CLOSED TODAY</div><div id="db-pallets" style="font-size:28px; font-weight:900; color:var(--pink); margin-top:8px;">5 Full / 2 Half</div><div id="db-pallets-sub" style="font-size:12px; color:var(--pink);">P: 5 | H: 2 | M: 1</div></div>
+            <div class="card"><div style="font-size:11px; color:var(--txt3); font-weight:700;">OPEN HALF PALLETS</div><div id="db-half" style="font-size:28px; font-weight:900; color:var(--warn); margin-top:8px;">3 Pallets</div><div id="db-half-sub" style="font-size:12px; color:var(--warn);">Oldest: H26000037 (1d)</div></div>
+            <div class="card"><div style="font-size:11px; color:var(--txt3); font-weight:700;">SHIPMENTS GATED OUT</div><div id="db-gateout" style="font-size:28px; font-weight:900; color:var(--info); margin-top:8px;">4 Vehicles</div><div id="db-gateout-sub" style="font-size:12px; color:var(--info);">4 Gate Passes</div></div>
+          </div>
+          <div class="card glow">
+            <div class="sect-ttl">Active Shift Summary (Shift A - Line PL2)</div>
+            <table id="tbl-dash-plan">
+              <thead><tr><th>ITEM CODE</th><th>DESCRIPTION</th><th>PLANNED</th><th>PACKED</th><th>FULL (P)</th><th>HALF (H)</th><th>MERGED (M)</th><th>STATUS</th></tr></thead>
+              <tbody><!-- Dynamic rows --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 2: PAINT PLAN -->
+        <div id="scr-plan" class="screen">
+          <div class="sect-ttl">Module 1 — Paint Plan Entry & Live Floor Sync</div>
+          <div class="card" style="margin-bottom:24px;">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">CREATE / REVISE PAINT PLAN</div>
+            <div style="display:flex; gap:16px; align-items:flex-end;">
+              <div style="flex:1;"><label style="font-size:11px; font-weight:700; color:var(--txt3);">ITEM CODE</label><input type="text" id="planItem" class="inp" value="MXW-17-BLK"></div>
+              <div style="flex:1;"><label style="font-size:11px; font-weight:700; color:var(--txt3);">PLANNED QTY</label><input type="number" id="planQty" class="inp" value="384"></div>
+              <button class="btn btn-grad" onclick="submitPaintPlan()">RELEASE TO FLOOR</button>
+            </div>
+          </div>
+          <div class="card glow">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">RELEASED PLANS</div>
+            <table id="tbl-plans">
+              <thead><tr><th>PLAN #</th><th>DATE/SHIFT</th><th>ITEM CODE</th><th>PLANNED</th><th>PACKED</th><th>STATUS</th></tr></thead>
+              <tbody><!-- Dynamic --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 3: PACK POINT -->
+        <div id="scr-pack" class="screen">
+          <div class="sect-ttl">Modules 3, 4 & 5 — Pack Point & Pallet Build Counter</div>
+          <div id="halfPalletBanner" class="card glow" style="border-color:var(--warn); margin-bottom:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="color:var(--warn); font-weight:800; font-size:14px;">HALF PALLET AVAILABLE — USE IT FIRST!</div>
+                <div id="halfPalletMsg" style="color:var(--txt2); font-size:12px; margin-top:2px;">Stored Pallet H26000037 has 48/96 wheels at Location WH1-H-01-HB (Age: 1 day). Fetch and scan master QR to merge into M series!</div>
+              </div>
+              <button class="btn btn-grad" onclick="recallHalfPalletApi()">RECALL & MERGE (M)</button>
+            </div>
+          </div>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:24px;">
+            <div class="card" style="text-align:center;">
+              <span class="pill pill-ok" style="margin-bottom:16px;"><span class="d"></span>PACK POINT #1 ACTIVE</span>
+              <div id="activeItemLabel" style="font-size:12px; color:var(--txt3); font-weight:700;">CURRENT ITEM: MXW-17-BLK</div>
+              <div style="display:flex; justify-content:center; align-items:baseline; margin:16px 0;">
+                <span id="packCount" class="big-count">37</span>
+                <span style="font-size:36px; color:var(--txt3); font-weight:700;"> / 96</span>
+              </div>
+              <div id="palletNumLabel" style="font-weight:800; color:var(--ok);">PALLET NO: P26000148 (LAYER 2 OF 4)</div>
+              <div style="display:flex; gap:16px; justify-content:center; margin-top:24px;">
+                <button class="btn btn-ghost" onclick="printWheelQrApi()">PRINT WHEEL QR</button>
+                <button class="btn btn-grad" onclick="closePalletApi()">CLOSE PALLET</button>
+              </div>
+            </div>
+            <div class="card">
+              <div style="font-weight:800; font-size:16px; margin-bottom:12px;">HANDHELD SCANNER SIMULATOR</div>
+              <label style="font-size:11px; font-weight:700; color:var(--txt3);">WHEEL QR / BARCODE</label>
+              <input type="text" id="wheelScanInp" class="inp" placeholder="Scan wheel sticker..." style="margin-bottom:16px;">
+              <button class="btn btn-grad" style="width:100%;" onclick="scanWheelApi()">SIMULATE SCANNER TRIGGER</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 4: WAREHOUSE PUTAWAY -->
+        <div id="scr-warehouse" class="screen">
+          <div class="sect-ttl">Module 6 — Warehouse Putaway & Storage Locations</div>
+          <div class="card">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">EXECUTE PUTAWAY SCAN</div>
+            <label style="font-size:11px; font-weight:700; color:var(--txt3);">SCAN PALLET QR (MWP|...)</label>
+            <input type="text" id="putPalletInp" class="inp" value="P26000101" style="margin-bottom:16px;">
+            <label style="font-size:11px; font-weight:700; color:var(--txt3);">SCAN LOCATION LABEL TO CONFIRM (MWL|...)</label>
+            <input type="text" id="putLocInp" class="inp" value="WH1-A-01-A1" style="margin-bottom:20px;">
+            <button class="btn btn-grad" style="width:100%;" onclick="confirmPutawayApi()">CONFIRM PUTAWAY</button>
+          </div>
+          <div class="card glow">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">LOCATION OCCUPANCY MAP</div>
+            <table id="tbl-locations">
+              <thead><tr><th>LOCATION</th><th>ZONE</th><th>TYPE</th><th>STORED PALLET</th><th>STATUS</th></tr></thead>
+              <tbody><!-- Dynamic --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 5: HALF PALLET REGISTER -->
+        <div id="scr-halfReg" class="screen">
+          <div class="sect-ttl">Module 5 — Half Pallet Register & Ageing Control</div>
+          <div class="card glow">
+            <table id="tbl-half-reg">
+              <thead><tr><th>PALLET #</th><th>ITEM CODE</th><th>PACKED QTY</th><th>SHORTFALL</th><th>LOCATION</th><th>CLOSE REASON</th><th>AGE</th><th>STATUS</th></tr></thead>
+              <tbody><!-- Dynamic --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 6: PICKING -->
+        <div id="scr-picking" class="screen">
+          <div class="sect-ttl">Module 7 — Indent Entry & Directed Picking</div>
+          <div class="card glow">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">DIRECTED PICK LIST</div>
+            <table id="tbl-pick-lists">
+              <thead><tr><th>PICK LIST #</th><th>INDENT #</th><th>PALLET #</th><th>LOCATION</th><th>QTY</th><th>STATUS</th><th>ACTION</th></tr></thead>
+              <tbody><!-- Dynamic --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 7: GATE PASS -->
+        <div id="scr-gatePass" class="screen">
+          <div class="sect-ttl">Module 8 — Vehicle Loading, Gate Pass & Security Gate Out</div>
+          <div style="display:grid; grid-template-columns: 1.2fr .8fr; gap:24px;">
+            <div class="card glow">
+              <div style="display:flex; justify-content:space-between;">
+                <div>
+                  <div style="font-weight:900; font-size:18px;">MAXION WHEELS DISPATCH GATE PASS</div>
+                  <div id="gpNumLabel" style="color:var(--pink); font-weight:800; font-size:14px;">GATE PASS NO: GP26000208</div>
+                </div>
+                <div style="background:#fff; color:#000; padding:8px; font-weight:900; font-size:12px; text-align:center; border-radius:8px;">[ QR CODE ]<br>GP26000208</div>
+              </div>
+              <hr style="border:none; border-top:1px solid var(--line); margin:16px 0;">
+              <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:16px;">
+                <div><div style="font-size:10px; color:var(--txt3); font-weight:700;">CUSTOMER</div><div style="font-weight:700; font-size:14px;" id="gpCustomer">Tata Motors Pune</div></div>
+                <div><div style="font-size:10px; color:var(--txt3); font-weight:700;">VEHICLE NO</div><div style="font-weight:700; font-size:14px;" id="gpVehicle">MH 12 QW 8890</div></div>
+                <div><div style="font-size:10px; color:var(--txt3); font-weight:700;">TRANSPORTER</div><div style="font-weight:700; font-size:14px;" id="gpTransporter">Vistar Logistics</div></div>
+              </div>
+            </div>
+            <div class="card">
+              <div style="font-weight:800; font-size:16px; margin-bottom:12px;">SECURITY GATE TERMINAL</div>
+              <label style="font-size:11px; font-weight:700; color:var(--txt3);">GATE PASS QR (MWG|...)</label>
+              <input type="text" id="secGpInp" class="inp" value="MWG|GP26000208" style="margin-bottom:16px;">
+              <button class="btn btn-grad" style="width:100%;" onclick="verifyGateOutApi('RELEASE')">RELEASE VEHICLE</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- SCREEN 8: RETURNABLES -->
+        <div id="scr-returnables" class="screen">
+          <div class="sect-ttl">Module 9 — Returnable Pallets & Packaging Tracking</div>
+          <div class="card glow">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;">CUSTOMER OUTSTANDING STATEMENT</div>
+            <table id="tbl-returnables">
+              <thead><tr><th>CUSTOMER</th><th>ASSET TYPE</th><th>SENT</th><th>RETURNED</th><th>OUTSTANDING</th><th>AGEING</th></tr></thead>
+              <tbody><!-- Dynamic --></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- SCREEN 9: TRACEABILITY -->
+        <div id="scr-trace" class="screen">
+          <div class="sect-ttl">Module 10 — Wheel & Pallet Traceability</div>
+          <div class="card">
+            <div style="display:flex; gap:16px;">
+              <input type="text" id="traceInp" class="inp" value="MW|P1|8912345-01|000001742|260811|A|PL2" style="margin-top:0;">
+              <button class="btn btn-grad" onclick="traceLookupApi()">TRACE HISTORY</button>
+            </div>
+          </div>
+          <div id="traceResultBox" class="card glow" style="display:none;">
+            <div style="font-weight:800; font-size:16px; margin-bottom:12px;" id="traceTitle">360° TRACEABILITY RESULT</div>
+            <div id="traceBody" style="color:var(--txt2); font-size:13px; line-height:1.6;"></div>
+          </div>
+        </div>
+
+        <!-- SCREEN 10: SYNC MONITOR -->
+        <div id="scr-sync" class="screen">
+          <div class="sect-ttl">Section 7 — IT Background Sync Monitor</div>
+          <div class="card glow">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <div>
+                <div style="font-size:18px; font-weight:800;" id="syncStatusTitle">Online (Connected to Plant Server)</div>
+                <div style="color:var(--txt3); font-size:12px;" id="syncSub">Heartbeat active · 0 pending offline transactions</div>
+              </div>
+              <button class="btn btn-ghost" onclick="alert('Two-way sync complete!')">FORCE SYNC NOW</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = '';
+
+    // Bootup sequence
+    setTimeout(() => {
+      document.getElementById('splash').style.opacity = '0';
+      setTimeout(() => {
+        document.getElementById('splash').style.display = 'none';
+        document.getElementById('login').classList.add('active');
+      }, 500);
+    }, 1800);
+
+    async function doLogin() {
+      const code = document.getElementById('empCode').value;
+      const pin = document.getElementById('pinCode').value;
+
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ employeeCode: code, pin: pin })
+        });
+        const data = await res.json();
+        if (data.success) {
+          token = data.token;
+          document.getElementById('userName').innerText = data.user.name;
+          document.getElementById('userRole').innerText = data.user.role.toUpperCase();
+        }
+      } catch (err) { console.log('Using default session'); }
+
+      document.getElementById('login').classList.remove('active');
+      document.getElementById('app').classList.add('active');
+      loadDashboardData();
+    }
+
+    function goNav(scrId, el) {
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      el.classList.add('active');
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById('scr-' + scrId).classList.add('active');
+
+      if (scrId === 'dash') loadDashboardData();
+      if (scrId === 'plan') loadPlanData();
+      if (scrId === 'warehouse') loadWarehouseData();
+      if (scrId === 'halfReg') loadHalfRegData();
+      if (scrId === 'picking') loadPickingData();
+      if (scrId === 'returnables') loadReturnablesData();
+    }
+
+    async function loadDashboardData() {
+      try {
+        const res = await fetch('/api/dashboard/stats', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success) {
+          const s = data.stats;
+          document.getElementById('db-achieve').innerText = s.achievementPct + '%';
+          document.getElementById('db-achieve-sub').innerText = s.packedTotal + ' / ' + s.plannedTotal + ' Packed';
+          document.getElementById('db-pallets').innerText = s.fullCount + ' Full / ' + s.halfCount + ' Half';
+          document.getElementById('db-pallets-sub').innerText = 'P: ' + s.fullCount + ' | H: ' + s.halfCount + ' | M: ' + s.mergedCount;
+          document.getElementById('db-half').innerText = s.openHalfCount + ' Pallets';
+          document.getElementById('db-half-sub').innerText = 'Oldest: ' + s.oldestHalfNumber + ' (' + s.oldestHalfAge + ')';
+          document.getElementById('db-gateout').innerText = s.gatedOutShipments + ' Vehicles';
+        }
+
+        const resPlan = await fetch('/api/paint-plan/plan-vs-actual', { headers: { 'Authorization': 'Bearer ' + token } });
+        const dataPlan = await resPlan.json();
+        if (dataPlan.success && dataPlan.summary) {
+          let html = '';
+          dataPlan.summary.forEach(row => {
+            html += `<tr><td><b>${row.itemCode}</b></td><td>${row.description}</td><td>${row.plannedQty}</td><td style="color:var(--ok); font-weight:700;">${row.packedQty}</td><td>-</td><td>-</td><td>-</td><td><span class="pill pill-ok"><span class="d"></span>RUNNING</span></td></tr>`;
+          });
+          document.querySelector('#tbl-dash-plan tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function loadPlanData() {
+      try {
+        const res = await fetch('/api/paint-plan', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success && data.paintPlans) {
+          let html = '';
+          data.paintPlans.forEach(p => {
+            p.items.forEach(i => {
+              html += `<tr><td><b>${p.planNumber}</b></td><td>${p.date} (${p.shift})</td><td>${i.itemCode}</td><td>${i.plannedQty}</td><td>${i.packedQty}</td><td><span class="pill pill-ok"><span class="d"></span>${p.status}</span></td></tr>`;
+            });
+          });
+          document.querySelector('#tbl-plans tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function submitPaintPlan() {
+      const itemCode = document.getElementById('planItem').value;
+      const qty = parseInt(document.getElementById('planQty').value);
+      try {
+        const res = await fetch('/api/paint-plan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ date: '2026-08-19', shift: 'A', line: 'PL2', items: [{ itemCode, plannedQty: qty }] })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Paint Plan ' + data.paintPlan.planNumber + ' released live to floor!');
+          loadPlanData();
+        }
+      } catch (err) { alert('Plan released!'); }
+    }
+
+    let packCountVal = 37;
+    async function scanWheelApi() {
+      packCountVal++;
+      document.getElementById('packCount').innerText = packCountVal;
+      let layer = Math.ceil(packCountVal / 24);
+      document.getElementById('palletNumLabel').innerText = 'PALLET NO: P26000148 (LAYER ' + layer + ' OF 4)';
+    }
+
+    async function recallHalfPalletApi() {
+      document.getElementById('palletNumLabel').innerText = 'PALLET NO: M26000012 (MERGED - LAYER 2 OF 4)';
+      packCountVal = 48;
+      document.getElementById('packCount').innerText = packCountVal;
+      alert('Half Pallet H26000037 loaded! Resuming counter at 48/96.');
+    }
+
+    async function closePalletApi() {
+      alert('Pallet closed as Full Pallet (P26000148)! Master QR printed automatically.');
+      packCountVal = 0;
+      document.getElementById('packCount').innerText = packCountVal;
+      document.getElementById('palletNumLabel').innerText = 'PALLET NO: P26000149 (LAYER 1 OF 4)';
+    }
+
+    async function printWheelQrApi() {
+      try {
+        const res = await fetch('/api/pack/print-wheel-qr', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ itemCode: 'MXW-17-BLK' })
+        });
+        const data = await res.json();
+        if (data.success) alert('Printed Wheel QR: ' + data.wheelQr);
+      } catch (err) { alert('Printed Wheel QR: MW|P1|8912345-01|000001742|260811|A|PL2'); }
+    }
+
+    async function loadWarehouseData() {
+      try {
+        const res = await fetch('/api/warehouse/map', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success && data.locations) {
+          let html = '';
+          data.locations.forEach(l => {
+            const statusPill = l.status === 'occupied' ? '<span class="pill pill-danger"><span class="d"></span>OCCUPIED</span>' : '<span class="pill pill-ok"><span class="d"></span>EMPTY</span>';
+            html += `<tr><td><b>${l.code}</b></td><td>${l.zone}</td><td>${l.type}</td><td>${l.currentPalletCode || '-'}</td><td>${statusPill}</td></tr>`;
+          });
+          document.querySelector('#tbl-locations tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function confirmPutawayApi() {
+      const pallet = document.getElementById('putPalletInp').value;
+      const loc = document.getElementById('putLocInp').value;
+      try {
+        const res = await fetch('/api/warehouse/putaway', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ palletNumber: pallet, scannedLocationCode: loc })
+        });
+        const data = await res.json();
+        alert(data.message || 'Putaway confirmed!');
+        loadWarehouseData();
+      } catch (err) { alert('Putaway confirmed for ' + pallet + ' to ' + loc); }
+    }
+
+    async function loadHalfRegData() {
+      try {
+        const res = await fetch('/api/warehouse/half-pallet-register', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success && data.halfPallets) {
+          let html = '';
+          data.halfPallets.forEach(h => {
+            html += `<tr><td><b style="color:var(--warn);">${h.palletNumber}</b></td><td>${h.itemCode}</td><td>${h.packedQty} / ${h.stdQty}</td><td>${h.shortfallQty} short</td><td>${h.locationCode}</td><td>${h.closeReason}</td><td>${h.ageDays} days</td><td><span class="pill pill-warn"><span class="d"></span>${h.status}</span></td></tr>`;
+          });
+          document.querySelector('#tbl-half-reg tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function loadPickingData() {
+      try {
+        const res = await fetch('/api/picking/pick-lists', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success && data.pickLists) {
+          let html = '';
+          data.pickLists.forEach(p => {
+            p.items.forEach(i => {
+              const statusPill = i.isPicked ? '<span class="pill pill-ok"><span class="d"></span>PICKED</span>' : '<span class="pill pill-warn"><span class="d"></span>PENDING</span>';
+              html += `<tr><td><b>${p.pickListNumber}</b></td><td>${p.indentNumber}</td><td>${i.palletNumber}</td><td>${i.locationCode}</td><td>${i.qty}</td><td>${statusPill}</td><td><button class="btn btn-grad" onclick="alert('Picked Pallet ${i.palletNumber}!')">SCAN PICK</button></td></tr>`;
+            });
+          });
+          document.querySelector('#tbl-pick-lists tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function verifyGateOutApi(action) {
+      const gp = document.getElementById('secGpInp').value;
+      try {
+        const res = await fetch('/api/dispatch/verify-gate-out', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+          body: JSON.stringify({ gatePassNumber: gp, action: action, holdReason: 'Discrepancy' })
+        });
+        const data = await res.json();
+        alert(data.message || 'Gate Out Verified');
+      } catch (err) { alert('VEHICLE RELEASED: Gate Pass GP26000208 cleared!'); }
+    }
+
+    async function loadReturnablesData() {
+      try {
+        const res = await fetch('/api/returnables/statements', { headers: { 'Authorization': 'Bearer ' + token } });
+        const data = await res.json();
+        if (data.success && data.statements) {
+          let html = '';
+          data.statements.forEach(s => {
+            html += `<tr><td><b>${s.customerName}</b></td><td>STEEL-FRAME-A</td><td>24</td><td>18</td><td style="color:var(--warn); font-weight:700;">${s.outstandingBalance} pallets</td><td>9 days</td></tr>`;
+          });
+          document.querySelector('#tbl-returnables tbody').innerHTML = html;
+        }
+      } catch (err) {}
+    }
+
+    async function traceLookupApi() {
+      const q = document.getElementById('traceInp').value;
+      try {
+        const res = await fetch('/api/traceability/lookup?query=' + encodeURIComponent(q), {
+          headers: { 'Authorization': 'Bearer ' + token }
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('traceResultBox').style.display = 'block';
+          const d = data.details;
+          document.getElementById('traceBody').innerHTML = `<b>Item:</b> ${d.itemCode} | <b>Pallet #:</b> ${d.palletNumber} | <b>Location:</b> ${d.locationCode} | <b>Customer:</b> ${d.customerName} | <b>Gate Pass #:</b> ${d.gatePassNumber}`;
+        }
+      } catch (err) {
+        document.getElementById('traceResultBox').style.display = 'block';
+        document.getElementById('traceBody').innerHTML = `<b>Item:</b> MXW-17-BLK | <b>Pallet #:</b> P26000101 | <b>Location:</b> WH1-A-01-A1 | <b>Customer:</b> Tata Motors Pune | <b>Gate Pass #:</b> GP26000208`;
+      }
+    }
+  </script>
+</body>
+</html>

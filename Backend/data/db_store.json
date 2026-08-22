@@ -1,0 +1,837 @@
+{
+  "users": [
+    {
+      "id": "usr-1",
+      "employeeCode": "EMP001",
+      "badgeBarcode": "BADGE001",
+      "name": "Tanmay (Admin)",
+      "role": "superAdmin",
+      "pin": "1234",
+      "permissions": [
+        "PAINT_PLAN_MANAGE",
+        "PREPARATION_MANAGE",
+        "WHEEL_QR_PRINT",
+        "PALLET_PACK",
+        "PALLET_CLOSE",
+        "PALLET_MERGE",
+        "PUTAWAY_EXECUTE",
+        "INDENT_CREATE",
+        "PICKING_EXECUTE",
+        "LOADING_EXECUTE",
+        "GATEPASS_MANAGE",
+        "GATE_OUT_VERIFY",
+        "RETURNABLES_MANAGE",
+        "TRACEABILITY_VIEW",
+        "REPORTS_VIEW",
+        "MASTERS_MANAGE",
+        "QUALITY_HOLD_MANAGE"
+      ]
+    },
+    {
+      "id": "usr-2",
+      "employeeCode": "EMP002",
+      "badgeBarcode": "BADGE002",
+      "name": "Ramesh (Pack Operator)",
+      "role": "packOperator",
+      "pin": "1111",
+      "permissions": [
+        "WHEEL_QR_PRINT",
+        "PALLET_PACK",
+        "PALLET_CLOSE",
+        "PALLET_MERGE",
+        "TRACEABILITY_VIEW"
+      ]
+    },
+    {
+      "id": "usr-3",
+      "employeeCode": "EMP003",
+      "badgeBarcode": "BADGE003",
+      "name": "Suresh (Warehouse Manager)",
+      "role": "warehouseManager",
+      "pin": "2222",
+      "permissions": [
+        "PUTAWAY_EXECUTE",
+        "PICKING_EXECUTE",
+        "QUALITY_HOLD_MANAGE",
+        "REPORTS_VIEW",
+        "TRACEABILITY_VIEW"
+      ]
+    },
+    {
+      "id": "usr-4",
+      "employeeCode": "EMP004",
+      "badgeBarcode": "BADGE004",
+      "name": "Vikram (Security Guard)",
+      "role": "security",
+      "pin": "3333",
+      "permissions": [
+        "GATE_OUT_VERIFY",
+        "RETURNABLES_MANAGE"
+      ]
+    },
+    {
+      "id": "usr-5",
+      "employeeCode": "EMP005",
+      "badgeBarcode": "BADGE005",
+      "name": "John (HHT Forklift Operator)",
+      "role": "picker",
+      "pin": "4444",
+      "permissions": [
+        "PICKING_EXECUTE",
+        "PUTAWAY_EXECUTE",
+        "LOADING_EXECUTE",
+        "TRACEABILITY_VIEW"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "itemCode": "MXW-17-BLK",
+      "description": "17 Inch Steel Wheel - Gloss Black",
+      "stdPalletQty": 96,
+      "wheelsPerLayer": 24,
+      "layersPerPallet": 4,
+      "palletType": "STEEL-FRAME-A",
+      "separatorType": "CORRUGATED-17",
+      "separatorQtyPerPallet": 3,
+      "unitWeightKg": 9.5,
+      "defaultCustomer": "Tata Motors Pune",
+      "allowMerge": true
+    },
+    {
+      "itemCode": "MXW-18-SLV",
+      "description": "18 Inch Alloy Wheel - Liquid Silver",
+      "stdPalletQty": 80,
+      "wheelsPerLayer": 20,
+      "layersPerPallet": 4,
+      "palletType": "WOOD-PALLET-B",
+      "separatorType": "FOAM-18",
+      "separatorQtyPerPallet": 3,
+      "unitWeightKg": 11.2,
+      "defaultCustomer": "Mahindra Nashik",
+      "allowMerge": true
+    },
+    {
+      "itemCode": "MXW-16-MAT",
+      "description": "16 Inch Heavy Truck Wheel - Matte Black",
+      "stdPalletQty": 64,
+      "wheelsPerLayer": 16,
+      "layersPerPallet": 4,
+      "palletType": "HEAVY-STILLAGE-C",
+      "separatorType": "RUBBER-16",
+      "separatorQtyPerPallet": 3,
+      "unitWeightKg": 14.8,
+      "defaultCustomer": "Ashok Leyland Hosur",
+      "allowMerge": true
+    }
+  ],
+  "locations": [
+    {
+      "code": "WH1-A-01-A1",
+      "zone": "Zone A",
+      "aisle": "A1",
+      "type": "rack",
+      "capacity": 2,
+      "currentPalletCode": "P26000101",
+      "status": "occupied"
+    },
+    {
+      "code": "WH1-A-01-A2",
+      "zone": "Zone A",
+      "aisle": "A1",
+      "type": "rack",
+      "capacity": 2,
+      "currentPalletCode": null,
+      "status": "empty"
+    },
+    {
+      "code": "WH1-A-02-B1",
+      "zone": "Zone A",
+      "aisle": "A2",
+      "type": "rack",
+      "capacity": 2,
+      "currentPalletCode": "M26000012",
+      "status": "occupied"
+    },
+    {
+      "code": "WH1-H-01-HB",
+      "zone": "Half Pallet Bay",
+      "aisle": "HB1",
+      "type": "half_pallet_bay",
+      "capacity": 10,
+      "currentPalletCode": "H26000037",
+      "status": "occupied"
+    },
+    {
+      "code": "WH1-STG-01",
+      "zone": "Staging Area",
+      "aisle": "STG",
+      "type": "staging",
+      "capacity": 20,
+      "currentPalletCode": null,
+      "status": "empty"
+    },
+    {
+      "code": "WH1-DCK-01",
+      "zone": "Loading Dock 1",
+      "aisle": "DCK",
+      "type": "dock",
+      "capacity": 10,
+      "currentPalletCode": null,
+      "status": "empty"
+    }
+  ],
+  "paintPlans": [
+    {
+      "planNumber": "PLN26081103",
+      "date": "2026-08-19",
+      "shift": "A",
+      "line": "PL2",
+      "status": "RELEASED",
+      "version": 1,
+      "releasedBy": "Dispatch Planner",
+      "releasedAt": "2026-08-19T06:00:00Z",
+      "items": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "plannedQty": 384,
+          "fullPalletsExpected": 4,
+          "looseWheelsExpected": 0,
+          "packedQty": 240
+        },
+        {
+          "itemCode": "MXW-18-SLV",
+          "plannedQty": 240,
+          "fullPalletsExpected": 3,
+          "looseWheelsExpected": 0,
+          "packedQty": 80
+        }
+      ]
+    }
+  ],
+  "pallets": [
+    {
+      "palletNumber": "H26000042",
+      "typeSeries": "H",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 94,
+      "stdQty": 96,
+      "status": "RESERVED_FOR_PICK",
+      "locationCode": "WH1-HALF-BAY",
+      "masterQr": "MWP|H26000042",
+      "closeReason": "Re-issued from QA Inspection short closure of H26000041",
+      "createdAt": "2026-08-22T05:54:12.573Z",
+      "createdBy": "QA Tester"
+    },
+    {
+      "palletNumber": "H26000041",
+      "typeSeries": "H",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 94,
+      "stdQty": 96,
+      "status": "CLOSED_QA_SHORT",
+      "locationCode": "WH1-HALF-BAY",
+      "masterQr": "MWP|H26000041",
+      "closeReason": "Created from SPD Split",
+      "createdAt": "2026-08-22T05:54:12.566Z",
+      "createdBy": "SPD Test User",
+      "previousStatus": "STORED_HALF",
+      "qaLock": false,
+      "qaInspectionRef": "QA-AUDIT-001",
+      "revisionCount": 0,
+      "lastInspectedAt": "2026-08-22T05:54:12.571Z",
+      "lastInspectedBy": "QA Tester",
+      "closedAsPointer": "H26000042"
+    },
+    {
+      "palletNumber": "H26000039",
+      "typeSeries": "H",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 95,
+      "stdQty": 96,
+      "status": "SPLIT_CONSUMED",
+      "locationCode": "WH1-HALF-BAY",
+      "masterQr": "MWP|H26000039",
+      "closeReason": "Created from SPD Split",
+      "createdAt": "2026-08-22T05:53:49.927Z",
+      "createdBy": "SPD Test User",
+      "closedAs": "Split into 1 SPD Packs & Residual 94 Half Pallet"
+    },
+    {
+      "palletNumber": "P26000101",
+      "typeSeries": "P",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 96,
+      "stdQty": 96,
+      "status": "STORED",
+      "locationCode": "WH1-A-01-A1",
+      "isHold": false,
+      "holdReason": null,
+      "createdAt": "2026-08-19T07:30:00Z",
+      "createdBy": "Ramesh (Pack Operator)",
+      "oldHalfPalletNumber": null,
+      "wheels": [],
+      "closedAs": "Split into 1 SPD Packs & Residual 95 Half Pallet"
+    },
+    {
+      "palletNumber": "H26000037",
+      "typeSeries": "H",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 48,
+      "stdQty": 96,
+      "status": "RESERVED_FOR_PICK",
+      "locationCode": "WH1-H-01-HB",
+      "isHold": false,
+      "holdReason": null,
+      "closeReason": "Sudden Item Changeover",
+      "createdAt": "2026-08-19T08:15:00Z",
+      "createdBy": "Ramesh (Pack Operator)",
+      "oldHalfPalletNumber": null,
+      "ageDays": 1,
+      "wheels": []
+    },
+    {
+      "palletNumber": "M26000012",
+      "typeSeries": "M",
+      "itemCode": "MXW-17-BLK",
+      "packedQty": 96,
+      "stdQty": 96,
+      "status": "RESERVED_FOR_PICK",
+      "locationCode": "WH1-A-02-B1",
+      "isHold": false,
+      "holdReason": null,
+      "createdAt": "2026-08-19T09:45:00Z",
+      "createdBy": "Ramesh (Pack Operator)",
+      "oldHalfPalletNumber": "H26000010",
+      "wheels": []
+    }
+  ],
+  "wheels": [
+    {
+      "wheelQr": "MW|P1|8912345-01|000001742|260811|A|PL2",
+      "itemCode": "MXW-17-BLK",
+      "serialNumber": "000001742",
+      "palletNumber": "P26000101",
+      "productionDate": "2026-08-19",
+      "shift": "A",
+      "line": "PL2",
+      "packedBy": "Ramesh (Pack Operator)",
+      "packedAt": "2026-08-19T07:15:00Z"
+    },
+    {
+      "wheelQr": "MW|P1|MXW-17-BLK|78052570|260822|A|PL2",
+      "itemCode": "MXW-17-BLK",
+      "serialNumber": "78052570",
+      "palletNumber": "H26000041",
+      "productionDate": "2026-08-22",
+      "shift": "A",
+      "line": "PL2",
+      "packedBy": "QA Tester",
+      "packedAt": "2026-08-22T05:54:12.571Z",
+      "isQaReplacement": true
+    }
+  ],
+  "indents": [
+    {
+      "indentNumber": "IND26000392",
+      "customerName": "Tata Motors Pune",
+      "shipToAddress": "Plot 45, Chakan Industrial Area, Pune 410501",
+      "requiredDate": "2026-08-22",
+      "priority": "NORMAL",
+      "status": "OPEN",
+      "items": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "requestedQty": 192,
+          "allocatedPalletNumbers": [
+            "H26000037",
+            "H26000042",
+            "M26000012"
+          ]
+        }
+      ],
+      "createdAt": "2026-08-22T06:17:54.224Z",
+      "createdBy": "Tanmay (Admin)"
+    },
+    {
+      "indentNumber": "IND26000391",
+      "customerName": "Tata Motors Pune",
+      "shipToAddress": "Plot 45, Chakan Industrial Area, Pune 410501",
+      "requiredDate": "2026-08-20",
+      "priority": "HIGH",
+      "status": "PICK_IN_PROGRESS",
+      "items": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "requestedQty": 192,
+          "allocatedPalletNumbers": [
+            "P26000101",
+            "M26000012"
+          ]
+        }
+      ],
+      "createdAt": "2026-08-19T10:00:00Z",
+      "createdBy": "Dispatch Executive"
+    }
+  ],
+  "pickLists": [
+    {
+      "pickListNumber": "PKL26000456",
+      "indentNumber": "IND26000392",
+      "pickerName": "John (HHT Forklift Operator)",
+      "assignedToCode": "EMP005",
+      "assignedToName": "John (HHT Forklift Operator)",
+      "status": "OPEN",
+      "items": [
+        {
+          "locationCode": "WH1-H-01-HB",
+          "palletNumber": "H26000037",
+          "itemCode": "MXW-17-BLK",
+          "qty": 48,
+          "isPicked": false
+        },
+        {
+          "locationCode": "WH1-HALF-BAY",
+          "palletNumber": "H26000042",
+          "itemCode": "MXW-17-BLK",
+          "qty": 94,
+          "isPicked": false
+        },
+        {
+          "locationCode": "WH1-A-02-B1",
+          "palletNumber": "M26000012",
+          "itemCode": "MXW-17-BLK",
+          "qty": 96,
+          "isPicked": false
+        }
+      ]
+    },
+    {
+      "pickListNumber": "PKL26000455",
+      "indentNumber": "IND26000391",
+      "pickerName": "Suresh (Warehouse Manager)",
+      "status": "IN_PROGRESS",
+      "items": [
+        {
+          "locationCode": "WH1-A-01-A1",
+          "palletNumber": "P26000101",
+          "itemCode": "MXW-17-BLK",
+          "qty": 96,
+          "isPicked": true
+        },
+        {
+          "locationCode": "WH1-A-02-B1",
+          "palletNumber": "M26000012",
+          "itemCode": "MXW-17-BLK",
+          "qty": 96,
+          "isPicked": false
+        }
+      ]
+    }
+  ],
+  "gatePasses": [
+    {
+      "gatePassNumber": "GP26000210",
+      "gatePassQr": "MWG|GP26000210",
+      "indentNumber": "IND26000391",
+      "customerName": "Tata Motors Pune",
+      "shipToAddress": "Plot 45, Chakan Industrial Area, Pune 410501",
+      "vehicleNumber": "MH 12 QW 8890",
+      "transporterName": "Vistar Logistics Express",
+      "driverName": "Rajesh Kumar",
+      "driverLicence": "DL-99201928",
+      "driverPhone": "+91 98765 43210",
+      "sealNumber": "SEAL-9921",
+      "status": "READY_FOR_GATE_OUT",
+      "pokaYokeStatus": "PASSED",
+      "sapInvoiceNumber": "INV-SAP-9988",
+      "totalPallets": 2,
+      "loadedPalletsCount": 0,
+      "totalWheels": 192,
+      "totalWeightKg": 1824,
+      "allPalletNumbers": [
+        "P26000101",
+        "M26000012"
+      ],
+      "loadedPalletNumbers": [],
+      "loadedSpdPackNumbers": [],
+      "returnableAssetsSent": [
+        "RP0001842"
+      ],
+      "pokaYokeResults": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "invoiceQty": 192,
+          "loadedQty": 192,
+          "difference": 0,
+          "status": "MATCH"
+        }
+      ],
+      "createdAt": "2026-08-22T05:54:12.576Z",
+      "gateOutAt": null
+    },
+    {
+      "gatePassNumber": "GP26000209",
+      "gatePassQr": "MWG|GP26000209",
+      "indentNumber": "IND26000391",
+      "customerName": "Tata Motors Pune",
+      "shipToAddress": "Plot 45, Chakan Industrial Area, Pune 410501",
+      "vehicleNumber": "MH 12 QW 8890",
+      "transporterName": "Vistar Logistics Express",
+      "driverName": "Rajesh Kumar",
+      "driverLicence": "DL-99201928",
+      "driverPhone": "+91 98765 43210",
+      "sealNumber": "SEAL-9921",
+      "status": "READY_FOR_GATE_OUT",
+      "pokaYokeStatus": "PASSED",
+      "sapInvoiceNumber": "INV-SAP-9988",
+      "totalPallets": 2,
+      "loadedPalletsCount": 0,
+      "totalWheels": 192,
+      "totalWeightKg": 1824,
+      "allPalletNumbers": [
+        "P26000101",
+        "M26000012"
+      ],
+      "loadedPalletNumbers": [],
+      "loadedSpdPackNumbers": [],
+      "returnableAssetsSent": [
+        "RP0001842"
+      ],
+      "pokaYokeResults": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "invoiceQty": 192,
+          "loadedQty": 192,
+          "difference": 0,
+          "status": "MATCH"
+        }
+      ],
+      "createdAt": "2026-08-22T05:53:49.932Z",
+      "gateOutAt": null
+    },
+    {
+      "gatePassNumber": "GP26000208",
+      "indentNumber": "IND26000391",
+      "customerName": "Tata Motors Pune",
+      "vehicleNumber": "MH 12 QW 8890",
+      "transporterName": "Vistar Logistics Express",
+      "driverName": "Rajesh Kumar",
+      "driverLicence": "DL-99201928",
+      "driverPhone": "+91 98765 43210",
+      "sealNumber": "SEAL-9921",
+      "status": "LOADING",
+      "totalPallets": 2,
+      "loadedPalletsCount": 1,
+      "totalWheels": 192,
+      "totalWeightKg": 1824,
+      "loadedPalletNumbers": [
+        "P26000101"
+      ],
+      "returnableAssetsSent": [
+        "RP0001842"
+      ],
+      "createdAt": "2026-08-19T11:00:00Z",
+      "gateOutAt": null
+    }
+  ],
+  "returnableAssets": [
+    {
+      "assetTag": "MWR|RP0001842",
+      "assetNumber": "RP0001842",
+      "type": "STEEL-FRAME-A",
+      "condition": "Good",
+      "status": "With Customer",
+      "customerName": "Tata Motors Pune",
+      "issueDate": "2026-08-10",
+      "expectedReturnDate": "2026-09-09",
+      "ageingDays": 9
+    },
+    {
+      "assetTag": "MWR|RP0001843",
+      "assetNumber": "RP0001843",
+      "type": "WOOD-PALLET-B",
+      "condition": "Good",
+      "status": "In Stock (Empty)",
+      "locationCode": "WH1-A-01-A2",
+      "customerName": null,
+      "issueDate": null,
+      "expectedReturnDate": null,
+      "ageingDays": 0
+    }
+  ],
+  "syncLogs": [
+    {
+      "deviceId": "HH-GUN-01",
+      "pendingCount": 0,
+      "lastSyncTime": "2026-08-19T11:30:00Z",
+      "status": "OK"
+    }
+  ],
+  "counters": {
+    "P": 151,
+    "H": 43,
+    "M": 12,
+    "RP": 1846,
+    "PLN": 107,
+    "IND": 393,
+    "PKL": 457,
+    "LD": 211,
+    "GP": 211,
+    "PM": 15,
+    "SR": 46,
+    "SP": 419,
+    "QA": 118,
+    "JC": 5,
+    "CNV": 1,
+    "BX": 24
+  },
+  "qaInspections": [
+    {
+      "inspectionId": "QA2600117",
+      "inspectionRef": "QA-AUDIT-001",
+      "palletNumber": "H26000041",
+      "itemCode": "MXW-17-BLK",
+      "originalQty": 94,
+      "removedWheels": [
+        "MW|P1|MXW-17-BLK|000001742|260819|A|PL2"
+      ],
+      "replacementWheels": [
+        "MW|P1|MXW-17-BLK|78052570|260822|A|PL2"
+      ],
+      "reason": "Routine Surface & Weight Inspection",
+      "status": "COMPLETED",
+      "openedAt": "2026-08-22T05:54:12.569Z",
+      "inspectorName": "QA Tester",
+      "closedAt": "2026-08-22T05:54:12.573Z",
+      "outcome": "Inspection closed short (94/96). Original H26000041 closed; Re-issued as Half Pallet H26000042"
+    },
+    {
+      "inspectionId": "QA-20260819-01",
+      "palletNumber": "P26000101",
+      "inspectorName": "IOC-QA Team (Inspector A)",
+      "removedWheelsCount": 2,
+      "replacedWheelsCount": 2,
+      "reason": "Routine Production Quality Audit & Destructive Test",
+      "timestamp": "2026-08-19T09:00:00Z"
+    }
+  ],
+  "conversions": [
+    {
+      "conversionId": "SR2600045",
+      "type": "PALLET_SPLIT_TO_SPD_PACKS",
+      "spdRequestNumber": "SR2600044",
+      "sourcePalletNumber": "H26000039",
+      "spdPacksCreatedCount": 1,
+      "residualHalfPalletNumber": "H26000041",
+      "residualQty": 94,
+      "convertedBy": "SPD Test User",
+      "timestamp": "2026-08-22T05:54:12.566Z"
+    },
+    {
+      "conversionId": "SR2600042",
+      "type": "PALLET_SPLIT_TO_SPD_PACKS",
+      "spdRequestNumber": "SR2600041",
+      "sourcePalletNumber": "P26000101",
+      "spdPacksCreatedCount": 1,
+      "residualHalfPalletNumber": "H26000039",
+      "residualQty": 95,
+      "convertedBy": "SPD Test User",
+      "timestamp": "2026-08-22T05:53:49.928Z"
+    },
+    {
+      "conversionId": "CNV-20260819-01",
+      "type": "PALLET_TO_BOXES",
+      "sourceType": "OEM",
+      "targetType": "SPD",
+      "sourcePalletNumber": "P26000101",
+      "generatedBoxesCount": 24,
+      "convertedBy": "SPD Planning Team",
+      "timestamp": "2026-08-19T10:15:00Z"
+    }
+  ],
+  "boxes": [],
+  "spdRequests": [
+    {
+      "spdRequestNumber": "SR2600044",
+      "itemCode": "MXW-17-BLK",
+      "itemDescription": "17 Inch Steel Wheel - Gloss Black",
+      "qtyRequired": 10,
+      "qtyServed": 1,
+      "customerName": "SPD Aftermarket Pune",
+      "shipToAddress": "Plant 2 Warehouse, Chakan",
+      "requiredDate": "2026-08-22",
+      "reference": "PO-SPD-9921",
+      "status": "IN_PROGRESS",
+      "createdAt": "2026-08-22T05:54:12.560Z",
+      "createdBy": "SPD Test User"
+    },
+    {
+      "spdRequestNumber": "SR2600041",
+      "itemCode": "MXW-17-BLK",
+      "itemDescription": "17 Inch Steel Wheel - Gloss Black",
+      "qtyRequired": 10,
+      "qtyServed": 1,
+      "customerName": "SPD Aftermarket Pune",
+      "shipToAddress": "Plant 2 Warehouse, Chakan",
+      "requiredDate": "2026-08-22",
+      "reference": "PO-SPD-9921",
+      "status": "IN_PROGRESS",
+      "createdAt": "2026-08-22T05:53:49.923Z",
+      "createdBy": "SPD Test User"
+    },
+    {
+      "spdRequestNumber": "SR2600039",
+      "itemCode": "MXW-17-BLK",
+      "itemDescription": "17 Inch Steel Wheel - Gloss Black",
+      "qtyRequired": 10,
+      "qtyServed": 0,
+      "customerName": "SPD Aftermarket Pune",
+      "shipToAddress": "Plant 2 Warehouse, Chakan",
+      "requiredDate": "2026-08-22",
+      "reference": "PO-SPD-9921",
+      "status": "OPEN",
+      "createdAt": "2026-08-22T05:53:28.697Z",
+      "createdBy": "SPD Test User"
+    }
+  ],
+  "spdPacks": [
+    {
+      "spdPackNumber": "SP26000418",
+      "spdPackQr": "MWS|SP26000418",
+      "spdRequestNumber": "SR2600044",
+      "itemCode": "MXW-17-BLK",
+      "originalWheelQr": "MW|P1|MXW-17-BLK|000001742|260822|A|PL2",
+      "sourcePalletNumber": "H26000039",
+      "productionDate": "2026-08-22",
+      "customerName": "SPD Aftermarket Pune",
+      "status": "STORED_SPD_PACK",
+      "locationCode": "WH1-SPD-BAY",
+      "createdAt": "2026-08-22T05:54:12.564Z",
+      "packedBy": "SPD Test User"
+    },
+    {
+      "spdPackNumber": "SP26000415",
+      "spdPackQr": "MWS|SP26000415",
+      "spdRequestNumber": "SR2600041",
+      "itemCode": "MXW-17-BLK",
+      "originalWheelQr": "MW|P1|MXW-17-BLK|000001742|260822|A|PL2",
+      "sourcePalletNumber": "P26000101",
+      "productionDate": "2026-08-19",
+      "customerName": "SPD Aftermarket Pune",
+      "status": "STORED_SPD_PACK",
+      "locationCode": "WH1-SPD-BAY",
+      "createdAt": "2026-08-22T05:53:49.925Z",
+      "packedBy": "SPD Test User"
+    }
+  ],
+  "jobCards": [
+    {
+      "jobCardNumber": "JC260822A",
+      "date": "2026-08-22",
+      "shift": "A",
+      "line": "PL2",
+      "fullPalletsCount": 1,
+      "totalWheels": 96,
+      "status": "APPROVED",
+      "maxionBookingRef": null,
+      "itemSummary": [
+        {
+          "itemCode": "MXW-17-BLK",
+          "fullPalletsCount": 1,
+          "wheelsPerPallet": 96,
+          "totalWheels": 96
+        }
+      ],
+      "halfPalletsNote": {
+        "halfPalletsCount": 2,
+        "totalHalfWheels": 143,
+        "note": "Half pallets produced in the same period are shown separately for information and are NOT part of the stock booking figure."
+      },
+      "signatures": {
+        "preparedBy": "Shift Supervisor",
+        "checkedBy": "Production Supervisor",
+        "approvedBy": "Dispatch Head"
+      },
+      "submittedBy": "Shift Supervisor",
+      "submittedAt": "2026-08-22T05:53:49.935Z",
+      "palletsIncluded": [
+        "M26000012"
+      ],
+      "palletDetails": [
+        {
+          "palletNumber": "M26000012",
+          "itemCode": "MXW-17-BLK",
+          "typeSeries": "M",
+          "packedQty": 96,
+          "locationCode": "WH1-A-02-B1",
+          "closedAt": "2026-08-19T09:45:00Z"
+        }
+      ],
+      "approvedBy": "Dispatch Head",
+      "approvedAt": "2026-08-22T11:31:02.942Z"
+    },
+    {
+      "jobCardNumber": "JC26081901",
+      "date": "2026-08-19",
+      "shift": "A",
+      "line": "PL2",
+      "fullPalletsCount": 2,
+      "totalWheels": 192,
+      "status": "BOOKED_TO_MAXION",
+      "maxionBookingRef": "MXN-ERP-99210",
+      "submittedBy": "Shift Supervisor",
+      "submittedAt": "2026-08-19T12:00:00Z",
+      "palletsIncluded": [
+        "P26000101",
+        "PM26000012"
+      ]
+    }
+  ],
+  "hhtDevices": [
+    {
+      "deviceId": "HHT-UNL-01",
+      "deviceCode": "HHT-GUN-01",
+      "name": "Unloading Gun 1",
+      "roleCategory": "UNLOADING",
+      "assignedUser": "Unloading Operator 1",
+      "location": "Dock 1 - Inbound Unloading",
+      "status": "ACTIVE",
+      "batteryLevel": 92,
+      "lastPing": "2026-08-22T11:31:30.519Z"
+    },
+    {
+      "deviceId": "HHT-UNL-02",
+      "deviceCode": "HHT-GUN-02",
+      "name": "Unloading Gun 2",
+      "roleCategory": "UNLOADING",
+      "assignedUser": "Unloading Operator 2",
+      "location": "Dock 2 - Raw Stock Staging",
+      "status": "ACTIVE",
+      "batteryLevel": 85,
+      "lastPing": "2026-08-22T05:53:28.667Z"
+    },
+    {
+      "deviceId": "HHT-LDG-01",
+      "deviceCode": "HHT-GUN-03",
+      "name": "Loading Gun 1",
+      "roleCategory": "LOADING",
+      "assignedUser": "Loading Operator 1",
+      "location": "Dispatch Dock 1",
+      "status": "ACTIVE",
+      "batteryLevel": 98,
+      "lastPing": "2026-08-22T05:53:28.667Z"
+    },
+    {
+      "deviceId": "HHT-MRG-01",
+      "deviceCode": "HHT-GUN-04",
+      "name": "Merging / Binning Gun 1",
+      "roleCategory": "MERGING_BINNING",
+      "assignedUser": "Warehouse Operator 1",
+      "location": "Half Pallet Binning Bay",
+      "status": "ACTIVE",
+      "batteryLevel": 78,
+      "lastPing": "2026-08-22T05:53:28.667Z"
+    }
+  ]
+}

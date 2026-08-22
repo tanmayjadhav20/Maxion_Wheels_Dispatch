@@ -1,0 +1,11 @@
+{
+    "name": "Maxion Wheels Dispatch Operations Digitalization",
+    "short_name": "Maxion Dispatch",
+    "start_url": ".",
+    "display": "standalone",
+    "background_color": "#0d1117",
+    "theme_color": "#ff6b00",
+    "description": "Maxion Wheels Dispatch Operations Digitalization Flutter App by Vistar Logitek",
+    "orientation": "portrait-primary",
+    "prefer_related_applications": false
+}

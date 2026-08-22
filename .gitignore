@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+Backend/node_modules/
+Frontend/.dart_tool/
+Frontend/.pub/
+Frontend/.pub-cache/
+Frontend/build/
+
+# OS / IDE Junk
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.log
+
+# Environment & Secrets
+.env
+Backend/.env
+*.env.local
+*.pem
+*.key
+
+# Android / iOS Local Builds
+Frontend/android/local.properties
+Frontend/android/.gradle/
+Frontend/android/app/build/
