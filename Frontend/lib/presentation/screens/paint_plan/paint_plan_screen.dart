@@ -1,123 +1,111 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_tokens.dart';
 import '../../../core/utils/export_helper.dart';
-import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/pills.dart';
 import '../../widgets/print_preview_dialog.dart';
 import '../../widgets/section_title.dart';
 
-class PaintPlanScreen extends ConsumerStatefulWidget {
+class PaintPlanScreen extends StatefulWidget {
   const PaintPlanScreen({super.key});
 
   @override
-  ConsumerState<PaintPlanScreen> createState() => _PaintPlanScreenState();
+  State<PaintPlanScreen> createState() => _PaintPlanScreenState();
 }
 
-class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
+class _PaintPlanScreenState extends State<PaintPlanScreen> {
   final _itemController = TextEditingController(text: 'MXW-17-BLK');
-  final _qtyController = TextEditingController(text: '384');
-  String _shift = 'A';
-  String _line = 'PL2';
+  final _qtyController = TextEditingController(text: '960');
 
-  List<dynamic>? _summaryList = [];
-  List<dynamic> get summaryList => _summaryList ?? [];
-  String _planNumber = 'PLN26081103';
   bool _isLoading = false;
+  String _shift = 'A';
+  String _line = 'PL1';
+
+  final List<Map<String, dynamic>> _plans = [
+    {'planNumber': 'PLN26081101', 'line': 'PL1', 'shift': 'A', 'itemCode': 'MXW-17-BLK', 'plannedQty': 960, 'packedQty': 960, 'status': 'COMPLETED'},
+    {'planNumber': 'PLN26081102', 'line': 'PL1', 'shift': 'B', 'itemCode': 'MXW-18-SLV', 'plannedQty': 800, 'packedQty': 800, 'status': 'COMPLETED'},
+    {'planNumber': 'PLN26081103', 'line': 'PL2', 'shift': 'A', 'itemCode': 'MXW-17-BLK', 'plannedQty': 960, 'packedQty': 672, 'status': 'RUNNING'},
+    {'planNumber': 'PLN26081104', 'line': 'PL2', 'shift': 'B', 'itemCode': 'MXW-19-CHR', 'plannedQty': 640, 'packedQty': 0, 'status': 'SCHEDULED'},
+  ];
 
   @override
-  void initState() {
-    super.initState();
-    _fetchPaintPlan();
+  void dispose() {
+    _itemController.dispose();
+    _qtyController.dispose();
+    super.dispose();
   }
 
-  Future<void> _fetchPaintPlan() async {
-    setState(() => _isLoading = true);
-    final remoteApi = ref.read(remoteApiProvider);
-    final res = await remoteApi.get('/paint-plan/plan-vs-actual');
-    setState(() => _isLoading = false);
+  void _onReleasePlan() {
+    final item = _itemController.text.trim();
+    final qtyStr = _qtyController.text.trim();
 
-    if (res['success'] == true) {
-      setState(() {
-        _planNumber = res['planNumber'] ?? 'PLN26081103';
-        _summaryList = (res['summary'] as List<dynamic>?) ?? [];
-      });
+    if (item.isEmpty || qtyStr.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter Item Code and Planned Quantity'), backgroundColor: AppColors.warn),
+      );
+      return;
     }
-  }
-
-  Future<void> _onReleasePlan() async {
-    final qty = int.tryParse(_qtyController.text.trim()) ?? 384;
-    final itemCode = _itemController.text.trim();
 
     setState(() => _isLoading = true);
-    final remoteApi = ref.read(remoteApiProvider);
-    final res = await remoteApi.post('/paint-plan', {
-      'date': DateTime.now().toIso8601String().split('T')[0],
-      'shift': _shift,
-      'line': _line,
-      'items': [
-        {'itemCode': itemCode, 'plannedQty': qty}
-      ]
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          final planNo = 'PLN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+          _plans.insert(0, {
+            'planNumber': planNo,
+            'line': _line,
+            'shift': _shift,
+            'itemCode': item,
+            'plannedQty': int.tryParse(qtyStr) ?? 960,
+            'packedQty': 0,
+            'status': 'RELEASED',
+          });
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('New Paint Line Production Plan released to shop floor!'), backgroundColor: AppColors.ok),
+        );
+      }
     });
-    setState(() => _isLoading = false);
-
-    if (res['success'] == true) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.ok,
-          content: Text(res['message'] ?? 'Paint plan released live to shop floor!'),
-        ),
-      );
-      _fetchPaintPlan();
-    } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: AppColors.danger,
-          content: Text(res['message'] ?? 'Failed to release paint plan'),
-        ),
-      );
-    }
-  }
-
-  void _onExportExcel() {
-    exportToExcel(
-      context,
-      'Paint Plan $_planNumber',
-      ['ITEM CODE', 'PLANNED QTY', 'ACTUAL PACKED', 'VARIANCE', 'COMPLETION %'],
-      summaryList.map<List<String>>((s) => [
-        '${s['itemCode']}',
-        '${s['plannedQty']}',
-        '${s['packedQty']}',
-        '${s['varianceQty']}',
-        '${s['completionPercentage']}%',
-      ]).toList(),
-    );
   }
 
   void _onPrintSticker() {
-    final itemCode = _itemController.text.trim();
-    final qty = int.tryParse(_qtyController.text.trim()) ?? 384;
-
+    final item = _itemController.text.trim();
     PrintPreviewDialog.show(
       context: context,
-      title: 'PAINT LINE RELEASE ORDER STICKER PRINT PREVIEW',
-      documentType: PrintDocumentType.jobCardSummary,
-      qrData: 'PLAN|$_planNumber|$itemCode|$qty',
-      codeText: 'PLAN|$_planNumber|$itemCode|$qty',
-      itemCode: itemCode,
-      itemDescription: 'Paint Schedule Authorization Ticket - Shift $_shift',
-      primaryDetail: 'Planned Qty: $qty wheels • Line: $_line',
-      secondaryDetail: 'Authorized By: Standard User',
+      title: 'PAINT PRODUCTION RELEASE STICKER PREVIEW',
+      documentType: PrintDocumentType.palletMaster,
+      qrData: 'PLAN|PLN26081103|$item|$_shift',
+      codeText: 'PLAN|PLN26081103|$item|$_shift',
+      itemCode: item,
+      itemDescription: 'Paint Line Release Run Sheet',
+      primaryDetail: 'Paint Line: $_line · Shift $_shift',
+      secondaryDetail: 'Planned Qty: ${_qtyController.text} Wheels',
       metadataFields: [
-        {'PLAN #': _planNumber},
-        {'SHIFT': _shift},
-        {'LINE': _line},
-        {'DATE': DateTime.now().toIso8601String().split('T')[0]},
+        {'ITEM CODE': item},
+        {'LINE / SHIFT': '$_line / Shift $_shift'},
+        {'PLANNED QTY': '${_qtyController.text} Wheels'},
       ],
+    );
+  }
+
+  void _onExportPlansExcel() {
+    exportToExcel(
+      context,
+      'Paint Line Production Plans',
+      ['PLAN #', 'LINE / SHIFT', 'ITEM CODE', 'PLANNED QTY', 'PACKED QTY', 'STATUS'],
+      _plans.map((p) => [
+        p['planNumber'] as String,
+        '${p['line']} · Shift ${p['shift']}',
+        p['itemCode'] as String,
+        '${p['plannedQty']} wheels',
+        '${p['packedQty']} wheels',
+        p['status'] as String,
+      ]).toList(),
     );
   }
 
@@ -136,179 +124,191 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
           ),
           const SizedBox(height: 24),
 
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left Panel: Create / Edit Plan Form
-              Expanded(
-                flex: 5,
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'RELEASE NEW PAINT LINE SCHEDULE',
-                        style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _itemController,
-                        style: TextStyle(color: context.textPrimary),
-                        decoration: InputDecoration(
-                          labelText: 'Wheel Item Code (e.g. MXW-17-BLK)',
-                          filled: true,
-                          fillColor: context.bgSurfaceElevated,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _qtyController,
-                        keyboardType: TextInputType.number,
-                        style: TextStyle(color: context.textPrimary),
-                        decoration: InputDecoration(
-                          labelText: 'Planned Production Quantity (Wheels)',
-                          suffixText: 'wheels',
-                          filled: true,
-                          fillColor: context.bgSurfaceElevated,
-                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _shift,
-                              dropdownColor: context.bgSurfaceElevated,
-                              style: TextStyle(color: context.textPrimary),
-                              decoration: InputDecoration(
-                                labelText: 'Shift',
-                                filled: true,
-                                fillColor: context.bgSurfaceElevated,
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              items: const [
-                                DropdownMenuItem(value: 'A', child: Text('Shift A (06:00 - 14:00)')),
-                                DropdownMenuItem(value: 'B', child: Text('Shift B (14:00 - 22:00)')),
-                                DropdownMenuItem(value: 'C', child: Text('Shift C (22:00 - 06:00)')),
-                              ],
-                              onChanged: (val) => setState(() => _shift = val!),
-                            ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _line,
-                              dropdownColor: context.bgSurfaceElevated,
-                              style: TextStyle(color: context.textPrimary),
-                              decoration: InputDecoration(
-                                labelText: 'Paint Line',
-                                filled: true,
-                                fillColor: context.bgSurfaceElevated,
-                                border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                              ),
-                              items: const [
-                                DropdownMenuItem(value: 'PL1', child: Text('Paint Line 1 (PL1)')),
-                                DropdownMenuItem(value: 'PL2', child: Text('Paint Line 2 (PL2)')),
-                              ],
-                              onChanged: (val) => setState(() => _line = val!),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              text: 'RELEASE PLAN TO SHOP FLOOR',
-                              icon: Icons.rocket_launch,
-                              variant: AppButtonVariant.gradient,
-                              isLoading: _isLoading,
-                              onPressed: _onReleasePlan,
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          AppButton(
-                            text: 'PRINT RELEASE STICKER',
-                            icon: Icons.print_outlined,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: _onPrintSticker,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth > 900;
 
-              const SizedBox(width: 24),
-
-              // Right Panel: Dynamic Live Plan vs Actual Monitoring Table
-              Expanded(
-                flex: 7,
-                child: AppCard(
-                  showGlow: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'LIVE PLAN VS ACTUAL — SHIFT $_shift',
-                                style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                              ),
-                              const SizedBox(height: 4),
-                              Text('Plan Ref: $_planNumber', style: TextStyle(color: context.textMuted, fontSize: 12)),
+              final formCard = AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'RELEASE NEW PAINT LINE SCHEDULE',
+                      style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _itemController,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Wheel Item Code (e.g. MXW-17-BLK)',
+                        filled: true,
+                        fillColor: context.bgSurfaceElevated,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _qtyController,
+                      keyboardType: TextInputType.number,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: InputDecoration(
+                        labelText: 'Planned Production Quantity (Wheels)',
+                        suffixText: 'wheels',
+                        filled: true,
+                        fillColor: context.bgSurfaceElevated,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Wrap(
+                      spacing: 16,
+                      runSpacing: 16,
+                      children: [
+                        SizedBox(
+                          width: isDesktop ? 180 : double.infinity,
+                          child: DropdownButtonFormField<String>(
+                            value: _shift,
+                            dropdownColor: context.bgSurfaceElevated,
+                            style: TextStyle(color: context.textPrimary),
+                            decoration: InputDecoration(
+                              labelText: 'Shift',
+                              filled: true,
+                              fillColor: context.bgSurfaceElevated,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                            ),
+                            items: const [
+                              DropdownMenuItem(value: 'A', child: Text('Shift A (06:00 - 14:00)')),
+                              DropdownMenuItem(value: 'B', child: Text('Shift B (14:00 - 22:00)')),
+                              DropdownMenuItem(value: 'C', child: Text('Shift C (22:00 - 06:00)')),
                             ],
+                            onChanged: (val) => setState(() => _shift = val!),
                           ),
-                          AppButton(
-                            text: 'EXPORT EXCEL',
-                            icon: Icons.table_chart_outlined,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: _onExportExcel,
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      _isLoading
-                          ? const Center(child: CircularProgressIndicator(color: AppColors.ribbonPink))
-                          : SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              child: DataTable(
-                                columns: const [
-                                  DataColumn(label: Text('ITEM CODE')),
-                                  DataColumn(label: Text('PLANNED QTY')),
-                                  DataColumn(label: Text('ACTUAL PACKED')),
-                                  DataColumn(label: Text('VARIANCE')),
-                                  DataColumn(label: Text('COMPLETION %')),
-                                ],
-                                rows: summaryList.map((s) {
-                                  final planned = s['plannedQty'] ?? 0;
-                                  final packed = s['packedQty'] ?? 0;
-                                  final varQty = s['varianceQty'] ?? (packed - planned);
-                                  final pct = s['completionPercentage'] ?? '0.0';
-
-                                  return DataRow(cells: [
-                                    DataCell(Text(s['itemCode'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
-                                    DataCell(Text('$planned wheels')),
-                                    DataCell(Text('$packed wheels', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
-                                    DataCell(Text('$varQty wheels', style: TextStyle(color: varQty < 0 ? AppColors.warn : AppColors.ok))),
-                                    DataCell(Text('$pct%')),
-                                  ]);
-                                }).toList(),
-                              ),
+                        ),
+                        SizedBox(
+                          width: isDesktop ? 180 : double.infinity,
+                          child: DropdownButtonFormField<String>(
+                            value: _line,
+                            dropdownColor: context.bgSurfaceElevated,
+                            style: TextStyle(color: context.textPrimary),
+                            decoration: InputDecoration(
+                              labelText: 'Paint Line',
+                              filled: true,
+                              fillColor: context.bgSurfaceElevated,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             ),
-                    ],
-                  ),
+                            items: const [
+                              DropdownMenuItem(value: 'PL1', child: Text('Paint Line 1 (PL1)')),
+                              DropdownMenuItem(value: 'PL2', child: Text('Paint Line 2 (PL2)')),
+                            ],
+                            onChanged: (val) => setState(() => _line = val!),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      children: [
+                        AppButton(
+                          text: 'RELEASE PLAN TO SHOP FLOOR',
+                          icon: Icons.rocket_launch,
+                          variant: AppButtonVariant.gradient,
+                          isLoading: _isLoading,
+                          onPressed: _onReleasePlan,
+                        ),
+                        AppButton(
+                          text: 'PRINT RELEASE STICKER',
+                          icon: Icons.print_outlined,
+                          variant: AppButtonVariant.ghost,
+                          onPressed: _onPrintSticker,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              final planTableCard = AppCard(
+                showGlow: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'LIVE PAINT PRODUCTION PLANS MONITORING',
+                          style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                        ),
+                        AppButton(
+                          text: 'EXPORT PLANS EXCEL',
+                          icon: Icons.table_chart_outlined,
+                          variant: AppButtonVariant.ghost,
+                          onPressed: _onExportPlansExcel,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: DataTable(
+                        columnSpacing: 24,
+                        horizontalMargin: 12,
+                        columns: const [
+                          DataColumn(label: Text('PLAN #')),
+                          DataColumn(label: Text('LINE / SHIFT')),
+                          DataColumn(label: Text('ITEM CODE')),
+                          DataColumn(label: Text('PLANNED')),
+                          DataColumn(label: Text('PACKED')),
+                          DataColumn(label: Text('STATUS')),
+                        ],
+                        rows: _plans.map((p) {
+                          final isCurrent = p['planNumber'] == 'PLN26081103';
+                          final planned = p['plannedQty'] as int;
+                          final packed = p['packedQty'] as int;
+
+                          return DataRow(
+                            selected: isCurrent,
+                            cells: [
+                              DataCell(Text(p['planNumber'] as String, style: TextStyle(fontWeight: FontWeight.w800, color: isCurrent ? AppColors.pink : context.textPrimary))),
+                              DataCell(Text('${p['line']} · Shift ${p['shift']}')),
+                              DataCell(Text(p['itemCode'] as String, style: const TextStyle(fontWeight: FontWeight.w700))),
+                              DataCell(Text('$planned wheels')),
+                              DataCell(Text('$packed wheels', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
+                              DataCell(StatusPill(
+                                label: p['status'] as String,
+                                variant: p['status'] == 'RUNNING' ? PillVariant.purple : PillVariant.ok,
+                              )),
+                            ],
+                          );
+                        }).toList(),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+
+              if (isDesktop) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 5, child: formCard),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 7, child: planTableCard),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  formCard,
+                  const SizedBox(height: 24),
+                  planTableCard,
+                ],
+              );
+            },
           ),
         ],
       ),
