@@ -48,10 +48,55 @@ class _HalfPalletRegisterScreenState extends ConsumerState<HalfPalletRegisterScr
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktopHeader = constraints.maxWidth > 750;
+
+              if (isDesktopHeader) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle(title: 'Module 5 — Stored Half Pallet Register & Ageing Alert'),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Track open short pallets (H series) stored in HB bays. Shows age in days and highlights ageing pallets (>3 days) to force FIFO recall.',
+                            style: TextStyle(color: context.textSecondary, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton(
+                      text: 'EXPORT HALF PALLETS EXCEL',
+                      icon: Icons.table_chart_outlined,
+                      variant: AppButtonVariant.ghost,
+                      onPressed: () {
+                        exportToExcel(
+                          context,
+                          'Half Pallet Register',
+                          ['PALLET #', 'ITEM CODE', 'PACKED QTY', 'LOCATION', 'AGE (DAYS)', 'STATUS'],
+                          (_halfPallets ?? []).map<List<String>>((h) => [
+                            '${h['palletNumber'] ?? h['palletId']}',
+                            '${h['itemCode']}',
+                            '${h['packedQty'] ?? h['quantity']}',
+                            '${h['locationCode'] ?? h['location'] ?? "WH1-H-01-HB"}',
+                            '${h['ageDays'] ?? 1}',
+                            (h['ageDays'] ?? 0) >= 3 ? "AGEING WARNING" : "NORMAL STORED",
+                          ]).toList(),
+                        );
+                      },
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SectionTitle(title: 'Module 5 — Stored Half Pallet Register & Ageing Alert'),
@@ -60,31 +105,30 @@ class _HalfPalletRegisterScreenState extends ConsumerState<HalfPalletRegisterScr
                     'Track open short pallets (H series) stored in HB bays. Shows age in days and highlights ageing pallets (>3 days) to force FIFO recall.',
                     style: TextStyle(color: context.textSecondary, fontSize: 13),
                   ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: 'EXPORT HALF PALLETS EXCEL',
+                    icon: Icons.table_chart_outlined,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: () {
+                      exportToExcel(
+                        context,
+                        'Half Pallet Register',
+                        ['PALLET #', 'ITEM CODE', 'PACKED QTY', 'LOCATION', 'AGE (DAYS)', 'STATUS'],
+                        (_halfPallets ?? []).map<List<String>>((h) => [
+                          '${h['palletNumber'] ?? h['palletId']}',
+                          '${h['itemCode']}',
+                          '${h['packedQty'] ?? h['quantity']}',
+                          '${h['locationCode'] ?? h['location'] ?? "WH1-H-01-HB"}',
+                          '${h['ageDays'] ?? 1}',
+                          (h['ageDays'] ?? 0) >= 3 ? "AGEING WARNING" : "NORMAL STORED",
+                        ]).toList(),
+                      );
+                    },
+                  ),
                 ],
-              ),
-              AppButton(
-                text: 'EXPORT HALF PALLETS EXCEL',
-                icon: Icons.table_chart_outlined,
-                variant: AppButtonVariant.ghost,
-                onPressed: () {
-                  exportToExcel(
-                    context,
-                    'Half Pallet Register',
-                    ['PALLET #', 'ITEM CODE', 'PACKED QTY', 'SHORTFALL', 'LOCATION', 'REASON', 'AGE (DAYS)', 'STATUS'],
-                    halfPallets.map<List<String>>((h) => [
-                      '${h['palletNumber']}',
-                      '${h['itemCode']}',
-                      '${h['packedQty']} / ${h['stdQty'] ?? 96}',
-                      '${(h['stdQty'] ?? 96) - (h['packedQty'] as int)} wheels short',
-                      '${h['locationCode'] ?? "WH1-H-01-HB"}',
-                      '${h['closeReason'] ?? "Item Changeover"}',
-                      '${h['ageDays'] ?? 1}',
-                      '${h['status']}',
-                    ]).toList(),
-                  );
-                },
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           AppCard(

@@ -127,10 +127,40 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktopHeader = constraints.maxWidth > 750;
+
+              if (isDesktopHeader) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle(title: 'Module 13 — Job Card Report for Stock Booking (SSR Section 9)'),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Full pallet production (P pallets & PM-Full pallets) is collected automatically at shift end for SAP stock booking. Excludes half pallets.',
+                            style: TextStyle(color: context.textSecondary, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton(
+                      text: '+ GENERATE SHIFT JOB CARD (JC...)',
+                      variant: AppButtonVariant.gradient,
+                      onPressed: _onGenerateJobCard,
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SectionTitle(title: 'Module 13 — Job Card Report for Stock Booking (SSR Section 9)'),
@@ -139,14 +169,15 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
                     'Full pallet production (P pallets & PM-Full pallets) is collected automatically at shift end for SAP stock booking. Excludes half pallets.',
                     style: TextStyle(color: context.textSecondary, fontSize: 13),
                   ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: '+ GENERATE SHIFT JOB CARD (JC...)',
+                    variant: AppButtonVariant.gradient,
+                    onPressed: _onGenerateJobCard,
+                  ),
                 ],
-              ),
-              AppButton(
-                text: '+ GENERATE SHIFT JOB CARD (JC...)',
-                variant: AppButtonVariant.gradient,
-                onPressed: _onGenerateJobCard,
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 20),
 

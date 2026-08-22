@@ -142,10 +142,41 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktopHeader = constraints.maxWidth > 750;
+
+              if (isDesktopHeader) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle(title: 'Handheld Devices (HHT) Gun Allocation & Management'),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Live monitoring & role allocation for the 4 required HHT scanner guns (Unloading: 2, Loading: 1, Merging/Binning: 1).',
+                            style: TextStyle(color: context.textSecondary, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton(
+                      text: 'EXPORT HHT REGISTER EXCEL',
+                      icon: Icons.table_chart_outlined,
+                      variant: AppButtonVariant.ghost,
+                      onPressed: _onExportHhtRegister,
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SectionTitle(title: 'Handheld Devices (HHT) Gun Allocation & Management'),
@@ -154,15 +185,16 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                     'Live monitoring & role allocation for the 4 required HHT scanner guns (Unloading: 2, Loading: 1, Merging/Binning: 1).',
                     style: TextStyle(color: context.textSecondary, fontSize: 13),
                   ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: 'EXPORT HHT REGISTER EXCEL',
+                    icon: Icons.table_chart_outlined,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: _onExportHhtRegister,
+                  ),
                 ],
-              ),
-              AppButton(
-                text: 'EXPORT HHT REGISTER EXCEL',
-                icon: Icons.table_chart_outlined,
-                variant: AppButtonVariant.ghost,
-                onPressed: _onExportHhtRegister,
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
 

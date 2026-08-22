@@ -153,10 +153,41 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header Bar
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktopHeader = constraints.maxWidth > 700;
+
+              if (isDesktopHeader) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SectionTitle(title: 'HHT Mobile Scanner — Forklift Operator Terminal'),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Operator: ${user?.name ?? "John (HHT Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
+                            style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    AppButton(
+                      text: 'REFRESH PICKLISTS',
+                      icon: Icons.refresh_outlined,
+                      variant: AppButtonVariant.ghost,
+                      onPressed: _fetchMyPickLists,
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const SectionTitle(title: 'HHT Mobile Scanner — Forklift Operator Terminal'),
@@ -165,15 +196,16 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                     'Operator: ${user?.name ?? "John (HHT Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
                     style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
                   ),
+                  const SizedBox(height: 12),
+                  AppButton(
+                    text: 'REFRESH PICKLISTS',
+                    icon: Icons.refresh_outlined,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: _fetchMyPickLists,
+                  ),
                 ],
-              ),
-              AppButton(
-                text: 'REFRESH PICKLISTS',
-                icon: Icons.refresh_outlined,
-                variant: AppButtonVariant.ghost,
-                onPressed: _fetchMyPickLists,
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 20),
 
