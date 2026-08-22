@@ -6,7 +6,6 @@ import '../../../core/utils/export_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
-import '../../widgets/pills.dart';
 import '../../widgets/print_preview_dialog.dart';
 import '../../widgets/section_title.dart';
 
