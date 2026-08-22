@@ -123,6 +123,7 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                   children: [
                     Expanded(
                       child: Column(
+                        mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const Text(
