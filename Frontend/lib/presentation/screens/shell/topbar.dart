@@ -66,13 +66,15 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
                       onPressed: () => Scaffold.of(ctx).openDrawer(),
                     ),
                   ),
-                const StatusPill(
-                  label: AppTokens.documentId,
-                  variant: PillVariant.purple,
-                ),
+                if (constraints.maxWidth > 420)
+                  const StatusPill(
+                    label: AppTokens.documentId,
+                    variant: PillVariant.purple,
+                  ),
                 const Spacer(),
-                // Role Switcher Dropdown
-                _buildRoleDropdown(context, ref, currentRoleCode, roles, isDark),
+                Flexible(
+                  child: _buildRoleDropdown(context, ref, currentRoleCode, roles, isDark),
+                ),
                 const SizedBox(width: 4),
                 // Theme Toggle Button
                 IconButton(
