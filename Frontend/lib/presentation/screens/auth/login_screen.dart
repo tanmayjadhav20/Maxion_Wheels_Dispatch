@@ -241,54 +241,56 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           ),
                         ),
                       ),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const VistarLogo(size: 68),
-                          const SizedBox(height: 52),
-                          ShaderMask(
-                            shaderCallback: (bounds) => AppColors.ribbonGradient.createShader(bounds),
-                            child: const Text(
-                              'MAXION WHEELS',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 44,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 2.0,
+                      SingleChildScrollView(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const VistarLogo(size: 68),
+                            const SizedBox(height: 36),
+                            ShaderMask(
+                              shaderCallback: (bounds) => AppColors.ribbonGradient.createShader(bounds),
+                              child: const Text(
+                                'MAXION WHEELS',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 44,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2.0,
+                                ),
                               ),
                             ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Dispatch Floor Digitalization Platform',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 26,
-                              fontWeight: FontWeight.w800,
+                            const SizedBox(height: 6),
+                            Text(
+                              'Dispatch Floor Digitalization Platform',
+                              style: TextStyle(
+                                color: context.textPrimary,
+                                fontSize: 26,
+                                fontWeight: FontWeight.w800,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            'Digital paint line planning, 100% QR traceability for every wheel & pallet, full/half/merged pallet control, directed picking & printed gate passes.',
-                            style: TextStyle(
-                              color: context.textSecondary,
-                              fontSize: 15,
-                              height: 1.6,
+                            const SizedBox(height: 16),
+                            Text(
+                              'Digital paint line planning, 100% QR traceability for every wheel & pallet, full/half/merged pallet control, directed picking & printed gate passes.',
+                              style: TextStyle(
+                                color: context.textSecondary,
+                                fontSize: 15,
+                                height: 1.6,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 52),
-                          // Stats Row
-                          Row(
-                            children: [
-                              _buildStat(context, '0%', 'Lost Scans', '100% Offline Mode'),
-                              const SizedBox(width: 36),
-                              _buildStat(context, '<1s', 'Scan Response', 'Poka-Yoke Verified'),
-                              const SizedBox(width: 36),
-                              _buildStat(context, '<5 min', 'Gate Out Time', 'Automated Pass'),
-                            ],
-                          ),
-                        ],
+                            const SizedBox(height: 36),
+                            // Stats Row with Wrap for responsiveness
+                            Wrap(
+                              spacing: 32,
+                              runSpacing: 16,
+                              children: [
+                                _buildStat(context, '0%', 'Lost Scans', '100% Offline Mode'),
+                                _buildStat(context, '<1s', 'Scan Response', 'Poka-Yoke Verified'),
+                                _buildStat(context, '<5 min', 'Gate Out Time', 'Automated Pass'),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),

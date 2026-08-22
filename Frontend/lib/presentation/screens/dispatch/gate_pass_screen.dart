@@ -311,208 +311,164 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> {
             ),
           ),
           const SizedBox(height: 24),
+          // PRINTABLE GATE PASS & SECURITY TERMINAL ROW (RESPONSIVE)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth > 900;
 
-          // PRINTABLE GATE PASS & SECURITY TERMINAL ROW
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: Printable Gate Pass Document View
-              Expanded(
-                flex: 6,
-                child: AppCard(
-                  showGlow: true,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
+              Widget passCard = AppCard(
+                showGlow: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'MAXION WHEELS DISPATCH GATE PASS',
+                              style: TextStyle(color: context.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
+                            ),
+                            Text(
+                              'GATE PASS NO: ${_activeGatePass?['gatePassNumber'] ?? "GP26000208"}',
+                              style: const TextStyle(color: AppColors.ribbonPink, fontSize: 14, fontWeight: FontWeight.w800),
+                            ),
+                            if (_activeGatePass?['sapInvoiceNumber'] != null)
                               Text(
-                                'MAXION WHEELS DISPATCH GATE PASS',
-                                style: TextStyle(color: context.textPrimary, fontSize: 18, fontWeight: FontWeight.w900),
+                                'SAP INVOICE NO: ${_activeGatePass!['sapInvoiceNumber']}',
+                                style: const TextStyle(color: AppColors.ok, fontSize: 12, fontWeight: FontWeight.w700),
                               ),
-                              Text(
-                                'GATE PASS NO: ${_activeGatePass?['gatePassNumber'] ?? "GP26000208"}',
-                                style: const TextStyle(color: AppColors.ribbonPink, fontSize: 14, fontWeight: FontWeight.w800),
-                              ),
-                              if (_activeGatePass?['sapInvoiceNumber'] != null)
-                                Text(
-                                  'SAP INVOICE NO: ${_activeGatePass!['sapInvoiceNumber']}',
-                                  style: const TextStyle(color: AppColors.ok, fontSize: 12, fontWeight: FontWeight.w700),
-                                ),
-                            ],
-                          ),
-                          QrImageView(
-                            data: _activeGatePass?['gatePassQr'] ?? 'MWG|GP26000208',
-                            version: QrVersions.auto,
-                            size: 72.0,
-                            eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: qrColor),
-                            dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: qrColor),
-                          ),
-                        ],
-                      ),
-                      Divider(height: 32, color: Theme.of(context).dividerColor),
-                      Row(
-                        children: [
-                          _buildField('Customer', _activeGatePass?['customerName'] ?? 'Tata Motors Pune'),
-                          _buildField('Vehicle No', _activeGatePass?['vehicleNumber'] ?? 'MH 12 QW 8890'),
-                          _buildField('Transporter', _activeGatePass?['transporterName'] ?? 'Vistar Logistics'),
-                        ],
-                      ),
-                      const SizedBox(height: 16),
-                      Row(
-                        children: [
-                          _buildField('Driver Name', _activeGatePass?['driverName'] ?? 'Rajesh Kumar'),
-                          _buildField('Licence', _activeGatePass?['driverLicence'] ?? 'DL-99201928'),
-                          _buildField('Seal Number', _activeGatePass?['sealNumber'] ?? 'SEAL-9921'),
-                        ],
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        'MANIFEST ITEMS & PALLETS',
-                        style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('PALLET / PACK #')),
-                            DataColumn(label: Text('ITEM CODE')),
-                            DataColumn(label: Text('QTY')),
-                            DataColumn(label: Text('WEIGHT (KG)')),
-                          ],
-                          rows: const [
-                            DataRow(cells: [
-                              DataCell(Text('P26000101')),
-                              DataCell(Text('MXW-17-BLK')),
-                              DataCell(Text('96')),
-                              DataCell(Text('912 kg')),
-                            ]),
-                            DataRow(cells: [
-                              DataCell(Text('PM26000012')),
-                              DataCell(Text('MXW-17-BLK')),
-                              DataCell(Text('96')),
-                              DataCell(Text('912 kg')),
-                            ]),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          AppButton(
-                            text: 'EXPORT REGISTER EXCEL',
-                            icon: Icons.table_chart_outlined,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: () {
-                              exportToExcel(
-                                context,
-                                'Gate Pass Register GP26000208',
-                                ['GATE PASS #', 'SAP INVOICE #', 'CUSTOMER', 'VEHICLE NO', 'TOTAL WHEELS', 'POKA-YOKE STATUS'],
-                                [
-                                  [
-                                    _activeGatePass?['gatePassNumber'] ?? 'GP26000208',
-                                    _activeGatePass?['sapInvoiceNumber'] ?? 'INV-SAP-9921',
-                                    _activeGatePass?['customerName'] ?? 'Tata Motors Pune',
-                                    _activeGatePass?['vehicleNumber'] ?? 'MH 12 QW 8890',
-                                    '${_activeGatePass?['totalWheels'] ?? 192}',
-                                    _activeGatePass?['pokaYokeStatus'] ?? 'PASSED',
-                                  ],
-                                ],
-                              );
-                            },
-                          ),
-                          const SizedBox(width: 12),
-                          AppButton(
-                            text: 'PRINT A4 GATE PASS WITH SAP INVOICE #',
-                            icon: Icons.print,
-                            onPressed: () {
-                              final gpNo = _activeGatePass?['gatePassNumber'] ?? 'GP26000208';
-                              final invNo = _activeGatePass?['sapInvoiceNumber'] ?? 'INV-SAP-2026-9921';
-                              PrintPreviewDialog.show(
-                                context: context,
-                                title: 'DISPATCH GATE PASS A4 PRINT PREVIEW',
-                                documentType: PrintDocumentType.gatePassA4,
-                                qrData: _activeGatePass?['gatePassQr'] ?? 'MWG|GP26000208',
-                                codeText: 'MWG|$gpNo',
-                                itemCode: 'SAP INVOICE: $invNo',
-                                itemDescription: 'Official Maxion Wheels Dispatch Gate Pass Document',
-                                primaryDetail: 'Customer: ${_activeGatePass?['customerName'] ?? "Tata Motors Pune"}',
-                                secondaryDetail: 'Vehicle: ${_activeGatePass?['vehicleNumber'] ?? "MH 12 QW 8890"} • Transporter: ${_activeGatePass?['transporterName'] ?? "Vistar Logistics"}',
-                                metadataFields: [
-                                  {'GATE PASS #': gpNo},
-                                  {'SAP INVOICE #': invNo},
-                                  {'DRIVER': _activeGatePass?['driverName'] ?? 'Rajesh Kumar'},
-                                  {'SEAL #': _activeGatePass?['sealNumber'] ?? 'SEAL-9921'},
-                                ],
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-
-              const SizedBox(width: 24),
-
-              // Right: Security Gate Out Terminal
-              Expanded(
-                flex: 4,
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'SECURITY GATE OUT TERMINAL (SEC 10.5)',
-                        style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Security Guard scans Gate Pass QR at plant exit, verifies paper invoice in driver hand vs screen invoice number:',
-                        style: TextStyle(color: context.textSecondary, fontSize: 13),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _securityGatePassQrController,
-                        decoration: const InputDecoration(
-                          labelText: 'GATE PASS QR (MWG|...)',
-                          prefixIcon: Icon(Icons.qr_code_scanner, color: AppColors.ribbonPink),
+                        QrImageView(
+                          data: _activeGatePass?['gatePassQr'] ?? 'MWG|GP26000208',
+                          version: QrVersions.auto,
+                          size: 72.0,
+                          eyeStyle: QrEyeStyle(eyeShape: QrEyeShape.square, color: qrColor),
+                          dataModuleStyle: QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: qrColor),
                         ),
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: AppButton(
-                              text: 'RELEASE VEHICLE',
-                              icon: Icons.check_circle,
-                              variant: AppButtonVariant.gradient,
-                              onPressed: () => _onVerifyGateOut('RELEASE'),
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: AppButton(
-                              text: 'RAISE HOLD',
-                              icon: Icons.block,
-                              variant: AppButtonVariant.danger,
-                              onPressed: () => _onVerifyGateOut('HOLD'),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+                    Divider(height: 32, color: Theme.of(context).dividerColor),
+                    Wrap(
+                      spacing: 24,
+                      runSpacing: 16,
+                      children: [
+                        _buildField('Customer', _activeGatePass?['customerName'] ?? 'Tata Motors Pune'),
+                        _buildField('Vehicle No', _activeGatePass?['vehicleNumber'] ?? 'MH 12 QW 8890'),
+                        _buildField('Transporter', _activeGatePass?['transporterName'] ?? 'Vistar Logistics Express'),
+                        _buildField('Driver Name', _activeGatePass?['driverName'] ?? 'Rajesh Kumar'),
+                        _buildField('Driver Licence', _activeGatePass?['driverLicence'] ?? 'DL-99201928'),
+                        _buildField('Driver Phone', _activeGatePass?['driverPhone'] ?? '+91 98765 43210'),
+                        _buildField('Seal Number', _activeGatePass?['sealNumber'] ?? 'SEAL-9921'),
+                        _buildField('Total Pallets', '${_activeGatePass?['totalPallets'] ?? 2}'),
+                        _buildField('Total Wheels', '${_activeGatePass?['totalWheels'] ?? 192} (${_activeGatePass?['totalWeightKg'] ?? 1824} kg)'),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        AppButton(
+                          text: 'PRINT GATE PASS (PDF/ZPL)',
+                          icon: Icons.print_outlined,
+                          variant: AppButtonVariant.gradient,
+                          onPressed: () {
+                            final gpNo = _activeGatePass?['gatePassNumber'] ?? "GP26000208";
+                            final invNo = _activeGatePass?['sapInvoiceNumber'] ?? "INV-SAP-2026-9921";
+                            PrintPreviewDialog.show(
+                              context: context,
+                              title: 'DISPATCH GATE PASS #$gpNo',
+                              documentType: PrintDocumentType.gatePassA4,
+                              qrData: _activeGatePass?['gatePassQr'] ?? 'MWG|GP26000208',
+                              codeText: 'MWG|$gpNo',
+                              itemCode: 'SAP INVOICE: $invNo',
+                              itemDescription: 'Official Maxion Wheels Dispatch Gate Pass Document',
+                              primaryDetail: 'Customer: ${_activeGatePass?['customerName'] ?? "Tata Motors Pune"}',
+                              secondaryDetail: 'Vehicle: ${_activeGatePass?['vehicleNumber'] ?? "MH 12 QW 8890"} • Transporter: ${_activeGatePass?['transporterName'] ?? "Vistar Logistics"}',
+                              metadataFields: [
+                                {'GATE PASS #': gpNo},
+                                {'SAP INVOICE #': invNo},
+                                {'DRIVER': _activeGatePass?['driverName'] ?? 'Rajesh Kumar'},
+                                {'SEAL #': _activeGatePass?['sealNumber'] ?? 'SEAL-9921'},
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              Widget securityCard = AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'SECURITY GATE OUT TERMINAL (SEC 10.5)',
+                      style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Security Guard scans Gate Pass QR at plant exit, verifies paper invoice in driver hand vs screen invoice number:',
+                      style: TextStyle(color: context.textSecondary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _securityGatePassQrController,
+                      decoration: const InputDecoration(
+                        labelText: 'GATE PASS QR (MWG|...)',
+                        prefixIcon: Icon(Icons.qr_code_scanner, color: AppColors.ribbonPink),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: AppButton(
+                            text: 'RELEASE VEHICLE',
+                            icon: Icons.check_circle,
+                            variant: AppButtonVariant.gradient,
+                            onPressed: () => _onVerifyGateOut('RELEASE'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: AppButton(
+                            text: 'RAISE HOLD',
+                            icon: Icons.block,
+                            variant: AppButtonVariant.danger,
+                            onPressed: () => _onVerifyGateOut('HOLD'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              );
+
+              if (isDesktop) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 6, child: passCard),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 5, child: securityCard),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  passCard,
+                  const SizedBox(height: 24),
+                  securityCard,
+                ],
+              );
+            },
           ),
         ],
       ),

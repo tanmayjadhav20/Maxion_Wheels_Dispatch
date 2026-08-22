@@ -56,34 +56,31 @@ class _OrbitLoaderState extends State<OrbitLoader> with TickerProviderStateMixin
               // Outer Counter-Spin Ring (r1)
               Transform.rotate(
                 angle: _spinController.value * 2 * math.pi,
-                child: Container(
-                  width: widget.size,
-                  height: widget.size,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border(
-                      top: BorderSide(color: AppColors.pink.withValues(alpha: 0.7), width: 2),
-                      right: BorderSide(color: AppColors.orange.withValues(alpha: 0.5), width: 2),
-                      bottom: const BorderSide(color: Colors.transparent, width: 2),
-                      left: const BorderSide(color: Colors.transparent, width: 2),
-                    ),
+                child: CustomPaint(
+                  size: Size(widget.size, widget.size),
+                  painter: _OrbitArcPainter(
+                    colors: [
+                      AppColors.pink.withValues(alpha: 0.8),
+                      AppColors.orange.withValues(alpha: 0.6),
+                      Colors.transparent,
+                    ],
+                    strokeWidth: 2.0,
                   ),
                 ),
               ),
               // Inner Reverse Spin Ring (r2)
               Transform.rotate(
                 angle: -_spinController.value * 2 * math.pi,
-                child: Container(
-                  width: widget.size * 0.78,
-                  height: widget.size * 0.78,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border(
-                      bottom: BorderSide(color: AppColors.violet.withValues(alpha: 0.7), width: 2),
-                      left: BorderSide(color: AppColors.amber.withValues(alpha: 0.5), width: 2),
-                      top: const BorderSide(color: Colors.transparent, width: 2),
-                      right: const BorderSide(color: Colors.transparent, width: 2),
-                    ),
+                child: CustomPaint(
+                  size: Size(widget.size * 0.78, widget.size * 0.78),
+                  painter: _OrbitArcPainter(
+                    colors: [
+                      AppColors.violet.withValues(alpha: 0.8),
+                      AppColors.amber.withValues(alpha: 0.6),
+                      Colors.transparent,
+                    ],
+                    strokeWidth: 2.0,
+                    startAngleOffset: math.pi,
                   ),
                 ),
               ),
@@ -109,4 +106,37 @@ class _OrbitLoaderState extends State<OrbitLoader> with TickerProviderStateMixin
       },
     );
   }
+}
+
+class _OrbitArcPainter extends CustomPainter {
+  final List<Color> colors;
+  final double strokeWidth;
+  final double startAngleOffset;
+
+  _OrbitArcPainter({
+    required this.colors,
+    required this.strokeWidth,
+    this.startAngleOffset = 0.0,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = strokeWidth
+      ..strokeCap = StrokeCap.round
+      ..shader = SweepGradient(
+        colors: colors,
+        stops: const [0.0, 0.65, 1.0],
+        transform: GradientRotation(startAngleOffset),
+      ).createShader(rect);
+
+    final inset = strokeWidth / 2;
+    final arcRect = Rect.fromLTWH(inset, inset, size.width - strokeWidth, size.height - strokeWidth);
+    canvas.drawArc(arcRect, startAngleOffset, math.pi * 1.5, false, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitArcPainter oldDelegate) => true;
 }

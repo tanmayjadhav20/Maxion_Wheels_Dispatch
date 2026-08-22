@@ -48,13 +48,15 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
 
     return Container(
       height: 64,
-      padding: const EdgeInsets.symmetric(horizontal: 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
         color: isDark ? AppColors.bg : Theme.of(context).cardColor,
         border: Border(bottom: BorderSide(color: isDark ? AppColors.line : Theme.of(context).dividerColor)),
       ),
-      child: Row(
-        children: [
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
+          children: [
           // Document ID pill
           const StatusPill(
             label: AppTokens.documentId,
@@ -205,6 +207,7 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
             ),
         ],
       ),
+    ),
     );
   }
 }
