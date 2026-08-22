@@ -98,7 +98,12 @@ class Sidebar extends ConsumerWidget {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 3),
                         child: InkWell(
-                          onTap: () => context.go(item.path),
+                          onTap: () {
+                            if (Scaffold.maybeOf(context)?.isDrawerOpen ?? false) {
+                              Navigator.of(context).pop();
+                            }
+                            context.go(item.path);
+                          },
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

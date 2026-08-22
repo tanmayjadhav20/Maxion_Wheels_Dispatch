@@ -53,6 +53,17 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       child: Row(
         children: [
+          // Drawer Hamburger Button for Mobile
+          if (Scaffold.maybeOf(context)?.hasDrawer ?? false) ...[
+            Builder(
+              builder: (ctx) => IconButton(
+                icon: const Icon(Icons.menu, color: AppColors.pink),
+                tooltip: 'Open Navigation Menu',
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           // Document ID pill
           const StatusPill(
             label: AppTokens.documentId,

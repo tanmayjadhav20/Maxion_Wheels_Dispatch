@@ -211,7 +211,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           );
 
-          if (!isDesktop) return formPanel;
+          if (!isDesktop) {
+            return Scaffold(
+              backgroundColor: AppColors.bg,
+              body: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+                  child: formPanel,
+                ),
+              ),
+            );
+          }
 
           return Row(
             children: [
