@@ -16,33 +16,26 @@ class SectionTitle extends StatelessWidget {
     final titleColor = Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.textPrimary;
 
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
+        Container(
+          width: 5,
+          height: 16,
+          decoration: BoxDecoration(
+            gradient: AppColors.ribbonGradient,
+            borderRadius: BorderRadius.circular(6),
+          ),
+        ),
+        const SizedBox(width: 9),
         Expanded(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 5,
-                height: 16,
-                decoration: BoxDecoration(
-                  gradient: AppColors.ribbonGradient,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-              ),
-              const SizedBox(width: 9),
-              Flexible(
-                child: Text(
-                  title,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: titleColor,
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ),
-            ],
+          child: Text(
+            title,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              color: titleColor,
+              fontSize: 15,
+              fontWeight: FontWeight.w800,
+            ),
           ),
         ),
         if (trailing != null) ...[

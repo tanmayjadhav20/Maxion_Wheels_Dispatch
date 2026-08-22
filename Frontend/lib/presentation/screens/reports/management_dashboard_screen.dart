@@ -113,13 +113,64 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
-            children: [
-              Column(
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktopHeader = constraints.maxWidth > 700;
+
+              if (isDesktopHeader) {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text(
+                            'DISPATCH OPERATIONS DASHBOARD',
+                            style: TextStyle(
+                              color: AppColors.ribbonPink,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Maxion Wheels Dispatch Control Center',
+                            style: TextStyle(
+                              color: context.textPrimary,
+                              fontSize: 24,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppButton(
+                          text: 'LIVE TV BOARD',
+                          icon: Icons.tv,
+                          variant: AppButtonVariant.ghost,
+                          onPressed: _onToggleTvBoard,
+                        ),
+                        const SizedBox(width: 12),
+                        AppButton(
+                          text: 'EXCEL REPORT',
+                          icon: Icons.download_outlined,
+                          variant: AppButtonVariant.gradient,
+                          onPressed: _onExportDashboardExcel,
+                        ),
+                      ],
+                    ),
+                  ],
+                );
+              }
+
+              return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -136,31 +187,32 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                     'Maxion Wheels Dispatch Control Center',
                     style: TextStyle(
                       color: context.textPrimary,
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.w800,
                     ),
                   ),
-                ],
-              ),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  AppButton(
-                    text: 'LIVE TV BOARD',
-                    icon: Icons.tv,
-                    variant: AppButtonVariant.ghost,
-                    onPressed: _onToggleTvBoard,
+                  const SizedBox(height: 12),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      AppButton(
+                        text: 'LIVE TV BOARD',
+                        icon: Icons.tv,
+                        variant: AppButtonVariant.ghost,
+                        onPressed: _onToggleTvBoard,
+                      ),
+                      AppButton(
+                        text: 'EXCEL REPORT',
+                        icon: Icons.download_outlined,
+                        variant: AppButtonVariant.gradient,
+                        onPressed: _onExportDashboardExcel,
+                      ),
+                    ],
                   ),
-                  AppButton(
-                    text: 'EXCEL REPORT',
-                    icon: Icons.download_outlined,
-                    variant: AppButtonVariant.gradient,
-                    onPressed: _onExportDashboardExcel,
-                  ),
                 ],
-              ),
-            ],
+              );
+            },
           ),
           const SizedBox(height: 24),
           // Key KPI Cards Grid
@@ -247,31 +299,33 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                   style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 6),
               Container(
-                width: 36,
-                height: 36,
+                width: 32,
+                height: 32,
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Icon(icon, color: color, size: 20),
+                child: Icon(icon, color: color, size: 18),
               ),
             ],
           ),
+          const SizedBox(height: 4),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               val,
-              style: TextStyle(color: context.textPrimary, fontSize: 24, fontWeight: FontWeight.w900),
+              style: TextStyle(color: context.textPrimary, fontSize: 20, fontWeight: FontWeight.w900),
             ),
           ),
+          const SizedBox(height: 2),
           Text(
             sub,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
+            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
           ),
         ],
       ),
