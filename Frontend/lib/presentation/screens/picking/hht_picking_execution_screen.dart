@@ -326,17 +326,27 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'HHT HANDHELD SCANNER — ${currentList?['pickListNumber'] ?? "SELECT PICKLIST"}',
-                    style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                  ),
-                  const SizedBox(height: 2),
-                  Text('Directed Pick Route (Physical Scan Required)', style: TextStyle(color: context.textMuted, fontSize: 12)),
-                ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'HHT SCANNER — ${currentList?['pickListNumber'] ?? "SELECT PICKLIST"}',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Directed Pick Route (Physical Scan Required)',
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: TextStyle(color: context.textMuted, fontSize: 11.5),
+                    ),
+                  ],
+                ),
               ),
+              const SizedBox(width: 8),
               StatusPill(
                 label: isCompleted ? 'COMPLETED' : 'READY TO SCAN',
                 variant: isCompleted ? PillVariant.ok : PillVariant.purple,
