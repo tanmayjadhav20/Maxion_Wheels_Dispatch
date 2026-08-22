@@ -304,118 +304,129 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
           ),
           const SizedBox(height: 24),
 
-          // Main Pack Point Counter Layout
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Left: Large Live Counter Card
-              Expanded(
-                flex: 6,
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const StatusPill(label: 'PACK POINT #1 ACTIVE', variant: PillVariant.ok),
-                      const SizedBox(height: 16),
-                      Text(
-                        'CURRENT ITEM: $_activeItem • PALLET: $_palletNumber',
-                        style: TextStyle(color: context.textMuted, fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      // Gigantic Count Display
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                          Text(
-                            '$_packedCount',
-                            style: const TextStyle(
-                              color: AppColors.ribbonPink,
-                              fontSize: 88,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            ' / $_stdQty',
-                            style: TextStyle(
-                              color: context.textMuted,
-                              fontSize: 36,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                      Text(
-                        'LAYER $_currentLayer OF 4 (24 WHEELS / LAYER)',
-                        style: const TextStyle(color: AppColors.ok, fontSize: 14, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          AppButton(
-                            text: 'PRINT WHEEL QR STICKERS (BATCH 96)',
-                            icon: Icons.print_outlined,
-                            variant: AppButtonVariant.ghost,
-                            onPressed: _onPrintWheelQrBatch,
-                          ),
-                          const SizedBox(width: 16),
-                          AppButton(
-                            text: 'CLOSE PALLET',
-                            icon: Icons.check_circle_outline,
-                            variant: AppButtonVariant.gradient,
-                            isLoading: _isLoading,
-                            onPressed: _onClosePallet,
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+          // Main Pack Point Counter Layout (Responsive)
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isDesktop = constraints.maxWidth > 900;
 
-              const SizedBox(width: 24),
-
-              // Right: Handheld Scanner Simulator
-              Expanded(
-                flex: 4,
-                child: AppCard(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'HANDHELD GUN SCANNER',
-                        style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Simulate hardware scanner trigger or manual key-in:',
-                        style: TextStyle(color: context.textSecondary, fontSize: 13),
-                      ),
-                      const SizedBox(height: 16),
-                      TextField(
-                        controller: _wheelQrController,
-                        style: TextStyle(color: context.textPrimary),
-                        decoration: const InputDecoration(
-                          labelText: 'WHEEL QR / BARCODE',
-                          prefixIcon: Icon(Icons.qr_code, color: AppColors.ribbonPink),
+              Widget leftCounterCard = AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const StatusPill(label: 'PACK POINT #1 ACTIVE', variant: PillVariant.ok),
+                    const SizedBox(height: 16),
+                    Text(
+                      'CURRENT ITEM: $_activeItem • PALLET: $_palletNumber',
+                      style: TextStyle(color: context.textMuted, fontSize: 12, fontWeight: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 8),
+                    // Gigantic Count Display
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          '$_packedCount',
+                          style: const TextStyle(
+                            color: AppColors.ribbonPink,
+                            fontSize: 88,
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                        onSubmitted: (_) => _onScanWheel(),
-                      ),
-                      const SizedBox(height: 16),
-                      AppButton(
-                        text: 'SIMULATE HARDWARE TRIGGER SCAN',
-                        icon: Icons.flash_on,
-                        isFullWidth: true,
-                        isLoading: _isLoading,
-                        onPressed: _onScanWheel,
-                      ),
-                    ],
-                  ),
+                        Text(
+                          ' / $_stdQty',
+                          style: TextStyle(
+                            color: context.textMuted,
+                            fontSize: 36,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'LAYER $_currentLayer OF 4 (24 WHEELS / LAYER)',
+                      style: const TextStyle(color: AppColors.ok, fontSize: 14, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 24),
+                    Wrap(
+                      alignment: WrapAlignment.center,
+                      spacing: 16,
+                      runSpacing: 12,
+                      children: [
+                        AppButton(
+                          text: 'PRINT WHEEL QR STICKERS (BATCH 96)',
+                          icon: Icons.print_outlined,
+                          variant: AppButtonVariant.ghost,
+                          onPressed: _onPrintWheelQrBatch,
+                        ),
+                        AppButton(
+                          text: 'CLOSE PALLET',
+                          icon: Icons.check_circle_outline,
+                          variant: AppButtonVariant.gradient,
+                          isLoading: _isLoading,
+                          onPressed: _onClosePallet,
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              Widget rightScannerCard = AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'HANDHELD GUN SCANNER',
+                      style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'Simulate hardware scanner trigger or manual key-in:',
+                      style: TextStyle(color: context.textSecondary, fontSize: 13),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: _wheelQrController,
+                      style: TextStyle(color: context.textPrimary),
+                      decoration: const InputDecoration(
+                        labelText: 'WHEEL QR / BARCODE',
+                        prefixIcon: Icon(Icons.qr_code, color: AppColors.ribbonPink),
+                      ),
+                      onSubmitted: (_) => _onScanWheel(),
+                    ),
+                    const SizedBox(height: 16),
+                    AppButton(
+                      text: 'SIMULATE HARDWARE TRIGGER SCAN',
+                      icon: Icons.flash_on,
+                      isFullWidth: true,
+                      isLoading: _isLoading,
+                      onPressed: _onScanWheel,
+                    ),
+                  ],
+                ),
+              );
+
+              if (isDesktop) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 6, child: leftCounterCard),
+                    const SizedBox(width: 24),
+                    Expanded(flex: 4, child: rightScannerCard),
+                  ],
+                );
+              }
+
+              return Column(
+                children: [
+                  leftCounterCard,
+                  const SizedBox(height: 24),
+                  rightScannerCard,
+                ],
+              );
+            },
           ),
         ],
       ),

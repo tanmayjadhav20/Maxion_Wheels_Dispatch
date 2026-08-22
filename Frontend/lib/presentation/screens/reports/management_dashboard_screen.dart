@@ -113,8 +113,11 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
             children: [
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,6 +143,7 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                 ],
               ),
               Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   AppButton(
                     text: 'LIVE TV BOARD',
@@ -172,7 +176,7 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                       physics: const NeverScrollableScrollPhysics(),
                       mainAxisSpacing: 16,
                       crossAxisSpacing: 16,
-                      childAspectRatio: 1.6,
+                      childAspectRatio: width < 400 ? 1.3 : 1.6,
                       children: [
                         _buildKpiCard(context, 'Plan Achievement', '$achievementPct%', '$packedTotal / $plannedTotal Wheels Packed', Icons.pie_chart_outline, AppColors.ok),
                         _buildKpiCard(context, 'Pallets Closed Today', '$fullCount Full / $halfCount Half', 'P: $fullCount | H: $halfCount | M: $mergedCount', Icons.inventory_2_outlined, AppColors.ribbonPink),
@@ -194,6 +198,8 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                 SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
+                    columnSpacing: 28,
+                    horizontalMargin: 12,
                     columns: const [
                       DataColumn(label: Text('ITEM CODE')),
                       DataColumn(label: Text('PLANNED')),
@@ -234,10 +240,14 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
+                ),
               ),
+              const SizedBox(width: 8),
               Container(
                 width: 36,
                 height: 36,
@@ -249,12 +259,18 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
               ),
             ],
           ),
-          Text(
-            val,
-            style: TextStyle(color: context.textPrimary, fontSize: 26, fontWeight: FontWeight.w900),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              val,
+              style: TextStyle(color: context.textPrimary, fontSize: 24, fontWeight: FontWeight.w900),
+            ),
           ),
           Text(
             sub,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
