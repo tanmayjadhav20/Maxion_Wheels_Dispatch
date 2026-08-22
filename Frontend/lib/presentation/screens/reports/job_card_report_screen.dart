@@ -219,109 +219,113 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Row(
-                                            children: [
-                                              const Icon(Icons.assignment_outlined, color: AppColors.ribbonPink, size: 24),
-                                              const SizedBox(width: 12),
-                                              Text(
-                                                jc['jobCardNumber'] ?? '',
-                                                style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              StatusPill(
-                                                label: isSubmitted
-                                                    ? 'SUBMITTED TO MAXION'
-                                                    : isApproved
-                                                        ? 'APPROVED'
-                                                        : 'DRAFT REPORT',
-                                                variant: isSubmitted
-                                                    ? PillVariant.ok
-                                                    : isApproved
-                                                        ? PillVariant.info
-                                                        : PillVariant.warn,
-                                              ),
-                                            ],
-                                          ),
-                                          Row(
-                                            children: [
-                                              AppButton(
-                                                text: 'EXPORT EXCEL',
-                                                icon: Icons.table_chart_outlined,
-                                                variant: AppButtonVariant.ghost,
-                                                onPressed: () {
-                                                  exportToExcel(
-                                                    context,
-                                                    'Job Card ${jc['jobCardNumber']}',
-                                                    ['JOB CARD #', 'DATE', 'SHIFT', 'FULL PALLETS', 'TOTAL WHEELS', 'STATUS', 'MAXION REF'],
-                                                    [
-                                                      ['${jc['jobCardNumber']}', '${jc['date']}', '${jc['shift']}', '${jc['fullPalletsCount']}', '${jc['totalWheels']}', '${jc['status']}', '${jc['maxionBookingRef'] ?? "Pending"}'],
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(width: 8),
-                                              AppButton(
-                                                text: 'PRINT JOB CARD',
-                                                icon: Icons.print_outlined,
-                                                variant: AppButtonVariant.ghost,
-                                                onPressed: () {
-                                                  PrintPreviewDialog.show(
-                                                    context: context,
-                                                    title: 'JOB CARD REPORT PRINT PREVIEW',
-                                                    documentType: PrintDocumentType.jobCardSummary,
-                                                    qrData: jc['jobCardNumber'] ?? 'JC260822A',
-                                                    codeText: jc['jobCardNumber'] ?? 'JC260822A',
-                                                    itemCode: 'STOCK BOOKING JOB CARD',
-                                                    itemDescription: 'Full Pallet Production Report for Stock Booking',
-                                                    primaryDetail: 'Full Pallets: ${jc['fullPalletsCount']} • Total Wheels: ${jc['totalWheels']}',
-                                                    secondaryDetail: 'Status: ${jc['status']}',
-                                                    metadataFields: [
-                                                      {'JOB CARD #': jc['jobCardNumber'] ?? ''},
-                                                      {'DATE': jc['date'] ?? ''},
-                                                      {'SHIFT': jc['shift'] ?? 'A'},
-                                                      {'PREPARED BY': jc['submittedBy'] ?? 'Supervisor'},
-                                                    ],
-                                                  );
-                                                },
-                                              ),
-                                              const SizedBox(width: 8),
-                                              if (status == 'DRAFT')
-                                                AppButton(
-                                                  text: 'APPROVE',
-                                                  variant: AppButtonVariant.secondary,
-                                                  onPressed: () => _onApproveJobCard(jc['jobCardNumber']),
-                                                ),
-                                              if (isApproved)
-                                                AppButton(
-                                                  text: 'SUBMIT TO MAXION ERP',
-                                                  variant: AppButtonVariant.gradient,
-                                                  onPressed: () => _onSubmitJobCard(jc['jobCardNumber']),
-                                                ),
-                                              if (isSubmitted)
-                                                Text(
-                                                  'MAXION REF: ${jc['maxionBookingRef'] ?? ''}',
-                                                  style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700, fontSize: 12),
-                                                ),
-                                            ],
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Divider(color: Theme.of(context).dividerColor),
-                                      const SizedBox(height: 12),
+                                       Wrap(
+                                         alignment: WrapAlignment.spaceBetween,
+                                         crossAxisAlignment: WrapCrossAlignment.center,
+                                         spacing: 12,
+                                         runSpacing: 12,
+                                         children: [
+                                           Wrap(
+                                             spacing: 8,
+                                             crossAxisAlignment: WrapCrossAlignment.center,
+                                             children: [
+                                               const Icon(Icons.assignment_outlined, color: AppColors.ribbonPink, size: 24),
+                                               Text(
+                                                 jc['jobCardNumber'] ?? '',
+                                                 style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                                               ),
+                                               StatusPill(
+                                                 label: isSubmitted
+                                                     ? 'SUBMITTED TO MAXION'
+                                                     : isApproved
+                                                         ? 'APPROVED'
+                                                         : 'DRAFT REPORT',
+                                                 variant: isSubmitted
+                                                     ? PillVariant.ok
+                                                     : isApproved
+                                                         ? PillVariant.info
+                                                         : PillVariant.warn,
+                                               ),
+                                             ],
+                                           ),
+                                           Wrap(
+                                             spacing: 8,
+                                             runSpacing: 8,
+                                             children: [
+                                               AppButton(
+                                                 text: 'EXPORT EXCEL',
+                                                 icon: Icons.table_chart_outlined,
+                                                 variant: AppButtonVariant.ghost,
+                                                 onPressed: () {
+                                                   exportToExcel(
+                                                     context,
+                                                     'Job Card ${jc['jobCardNumber']}',
+                                                     ['JOB CARD #', 'DATE', 'SHIFT', 'FULL PALLETS', 'TOTAL WHEELS', 'STATUS', 'MAXION REF'],
+                                                     [
+                                                       ['${jc['jobCardNumber']}', '${jc['date']}', '${jc['shift']}', '${jc['fullPalletsCount']}', '${jc['totalWheels']}', '${jc['status']}', '${jc['maxionBookingRef'] ?? "Pending"}'],
+                                                     ],
+                                                   );
+                                                 },
+                                               ),
+                                               AppButton(
+                                                 text: 'PRINT JOB CARD',
+                                                 icon: Icons.print_outlined,
+                                                 variant: AppButtonVariant.ghost,
+                                                 onPressed: () {
+                                                   PrintPreviewDialog.show(
+                                                     context: context,
+                                                     title: 'JOB CARD REPORT PRINT PREVIEW',
+                                                     documentType: PrintDocumentType.jobCardSummary,
+                                                     qrData: jc['jobCardNumber'] ?? 'JC260822A',
+                                                     codeText: jc['jobCardNumber'] ?? 'JC260822A',
+                                                     itemCode: 'STOCK BOOKING JOB CARD',
+                                                     itemDescription: 'Full Pallet Production Report for Stock Booking',
+                                                     primaryDetail: 'Full Pallets: ${jc['fullPalletsCount']} • Total Wheels: ${jc['totalWheels']}',
+                                                     secondaryDetail: 'Status: ${jc['status']}',
+                                                     metadataFields: [
+                                                       {'JOB CARD #': jc['jobCardNumber'] ?? ''},
+                                                       {'DATE': jc['date'] ?? ''},
+                                                       {'SHIFT': jc['shift'] ?? 'A'},
+                                                       {'PREPARED BY': jc['submittedBy'] ?? 'Supervisor'},
+                                                     ],
+                                                   );
+                                                 },
+                                               ),
+                                               if (status == 'DRAFT')
+                                                 AppButton(
+                                                   text: 'APPROVE',
+                                                   variant: AppButtonVariant.secondary,
+                                                   onPressed: () => _onApproveJobCard(jc['jobCardNumber']),
+                                                 ),
+                                               if (isApproved)
+                                                 AppButton(
+                                                   text: 'SUBMIT TO MAXION ERP',
+                                                   variant: AppButtonVariant.gradient,
+                                                   onPressed: () => _onSubmitJobCard(jc['jobCardNumber']),
+                                                 ),
+                                               if (isSubmitted)
+                                                 Text(
+                                                   'MAXION REF: ${jc['maxionBookingRef'] ?? ''}',
+                                                   style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700, fontSize: 12),
+                                                 ),
+                                             ],
+                                           ),
+                                         ],
+                                       ),
+                                       const SizedBox(height: 12),
+                                       Divider(color: Theme.of(context).dividerColor),
+                                       const SizedBox(height: 12),
 
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text('Date: ${jc['date']} (Shift ${jc['shift']})', style: TextStyle(color: context.textSecondary, fontSize: 13)),
-                                          Text('Full Pallets: ${jc['fullPalletsCount']}', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
-                                          Text('Total Wheels: ${jc['totalWheels']}', style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w800)),
-                                          Text('Prepared By: ${jc['submittedBy'] ?? "Supervisor"}', style: TextStyle(color: context.textMuted, fontSize: 12)),
-                                        ],
-                                      ),
+                                       Wrap(
+                                         spacing: 20,
+                                         runSpacing: 8,
+                                         children: [
+                                           Text('Date: ${jc['date']} (Shift ${jc['shift']})', style: TextStyle(color: context.textSecondary, fontSize: 13)),
+                                           Text('Full Pallets: ${jc['fullPalletsCount']}', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
+                                           Text('Total Wheels: ${jc['totalWheels']}', style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w800)),
+                                           Text('Prepared By: ${jc['submittedBy'] ?? "Supervisor"}', style: TextStyle(color: context.textMuted, fontSize: 12)),
+                                         ],
+                                       ),
                                       const SizedBox(height: 16),
 
                                       // HALF PALLETS NOTE (Section 9.1)
