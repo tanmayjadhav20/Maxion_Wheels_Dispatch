@@ -513,7 +513,8 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> {
   }
 
   Widget _buildField(String label, String val) {
-    return Expanded(
+    return SizedBox(
+      width: 160,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
