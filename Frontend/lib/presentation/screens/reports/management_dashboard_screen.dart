@@ -142,8 +142,9 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                   ),
                 ],
               ),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
                 children: [
                   AppButton(
                     text: 'LIVE TV BOARD',
@@ -151,7 +152,6 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                     variant: AppButtonVariant.ghost,
                     onPressed: _onToggleTvBoard,
                   ),
-                  const SizedBox(width: 12),
                   AppButton(
                     text: 'EXCEL REPORT',
                     icon: Icons.download_outlined,

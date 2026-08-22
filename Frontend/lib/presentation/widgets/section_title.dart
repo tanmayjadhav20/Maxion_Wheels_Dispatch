@@ -18,29 +18,37 @@ class SectionTitle extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 5,
-              height: 16,
-              decoration: BoxDecoration(
-                gradient: AppColors.ribbonGradient,
-                borderRadius: BorderRadius.circular(6),
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 5,
+                height: 16,
+                decoration: BoxDecoration(
+                  gradient: AppColors.ribbonGradient,
+                  borderRadius: BorderRadius.circular(6),
+                ),
               ),
-            ),
-            const SizedBox(width: 9),
-            Text(
-              title,
-              style: TextStyle(
-                color: titleColor,
-                fontSize: 15,
-                fontWeight: FontWeight.w800,
+              const SizedBox(width: 9),
+              Flexible(
+                child: Text(
+                  title,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: titleColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        if (trailing != null) trailing!,
+        if (trailing != null) ...[
+          const SizedBox(width: 8),
+          trailing!,
+        ],
       ],
     );
   }
