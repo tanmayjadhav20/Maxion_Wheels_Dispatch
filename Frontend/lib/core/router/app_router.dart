@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../../presentation/providers/auth_provider.dart';
 import '../../presentation/screens/auth/login_screen.dart';
 import '../../presentation/screens/auth/splash_screen.dart';
 import '../../presentation/screens/dispatch/gate_pass_screen.dart';
 import '../../presentation/screens/pack_point/pallet_build_screen.dart';
+import '../../presentation/screens/pack_point/wheel_qr_print_screen.dart';
 import '../../presentation/screens/paint_plan/paint_plan_screen.dart';
 import '../../presentation/screens/picking/indent_entry_screen.dart';
 import '../../presentation/screens/picking/hht_picking_execution_screen.dart';
@@ -65,6 +65,19 @@ final routerProvider = Provider<GoRouter>((ref) {
                   child: RefreshGate(
                     onRefresh: () {},
                     child: const PaintPlanScreen(),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/wheel-qr-print',
+                pageBuilder: (context, state) => NoTransitionPage(
+                  child: RefreshGate(
+                    onRefresh: () {},
+                    child: const WheelQrPrintScreen(),
                   ),
                 ),
               ),

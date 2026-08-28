@@ -53,44 +53,11 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
       ),
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final isMobile = constraints.maxWidth < 768;
-
-          if (isMobile) {
-            return Row(
-              children: [
-                if (Scaffold.maybeOf(context)?.hasDrawer ?? false)
-                  Builder(
-                    builder: (ctx) => IconButton(
-                      icon: const Icon(Icons.menu, color: AppColors.pink),
-                      tooltip: 'Open Navigation Menu',
-                      onPressed: () => Scaffold.of(ctx).openDrawer(),
-                    ),
-                  ),
-                if (constraints.maxWidth > 420)
-                  const StatusPill(
-                    label: AppTokens.documentId,
-                    variant: PillVariant.purple,
-                  ),
-                const Spacer(),
-                Flexible(
-                  child: _buildRoleDropdown(context, ref, currentRoleCode, roles, isDark),
-                ),
-                const SizedBox(width: 4),
-                // Theme Toggle Button
-                IconButton(
-                  tooltip: isDark ? 'Light Mode' : 'Dark Mode',
-                  icon: Icon(
-                    isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-                    color: isDark ? AppColors.amber : AppColors.pink,
-                    size: 18,
-                  ),
-                  onPressed: () {
-                    ref.read(themeModeProvider.notifier).state = isDark ? ThemeMode.light : ThemeMode.dark;
-                  },
-                ),
-              ],
-            );
-          }
+          final width = constraints.maxWidth;
+          final showAvatar = width >= 850;
+          final showSyncPill = width >= 1050;
+          final showSearch = width >= 900;
+          final showDocPill = width >= 650;
 
           return Row(
             children: [
@@ -102,61 +69,76 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
                     onPressed: () => Scaffold.of(ctx).openDrawer(),
                   ),
                 ),
+                const SizedBox(width: 4),
+              ],
+              if (showDocPill) ...[
+                const StatusPill(
+                  label: AppTokens.documentId,
+                  variant: PillVariant.purple,
+                ),
                 const SizedBox(width: 8),
               ],
-              const StatusPill(
-                label: AppTokens.documentId,
-                variant: PillVariant.purple,
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Container(
-                  height: 38,
-                  constraints: const BoxConstraints(maxWidth: 320),
-                  child: TextField(
-                    style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'Scan or search Wheel QR / Pallet QR / Location...',
-                      prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textMuted),
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
-                      fillColor: isDark ? AppColors.surface2 : const Color(0xFFF8FAFC),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: BorderSide(color: isDark ? AppColors.line : Theme.of(context).dividerColor),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        borderSide: const BorderSide(color: AppColors.pink, width: 1.5),
+              if (showSearch) ...[
+                Expanded(
+                  child: Container(
+                    height: 38,
+                    constraints: const BoxConstraints(maxWidth: 280),
+                    child: TextField(
+                      style: TextStyle(color: Theme.of(context).textTheme.bodyLarge?.color, fontSize: 13),
+                      decoration: InputDecoration(
+                        hintText: 'Scan or search Wheel QR / Pallet QR...',
+                        prefixIcon: const Icon(Icons.search, size: 18, color: AppColors.textMuted),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 12),
+                        fillColor: isDark ? AppColors.surface2 : const Color(0xFFF8FAFC),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: BorderSide(color: isDark ? AppColors.line : Theme.of(context).dividerColor),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          borderSide: const BorderSide(color: AppColors.pink, width: 1.5),
+                        ),
                       ),
                     ),
                   ),
                 ),
+                const SizedBox(width: 8),
+              ] else ...[
+                const Spacer(),
+              ],
+              if (showSyncPill) ...[
+                StatusPill(
+                  label: syncState.isOnline
+                      ? (syncState.pendingCount == 0 ? 'ONLINE · SYNCED' : 'ONLINE · PENDING ${syncState.pendingCount}')
+                      : 'OFFLINE MODE',
+                  variant: syncState.isOnline
+                      ? (syncState.pendingCount == 0 ? PillVariant.ok : PillVariant.warn)
+                      : PillVariant.danger,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Container(
+                  constraints: const BoxConstraints(maxWidth: 145),
+                  child: _buildRoleDropdown(context, ref, currentRoleCode, roles, isDark),
+                ),
               ),
-              const SizedBox(width: 16),
-              StatusPill(
-                label: syncState.isOnline
-                    ? (syncState.pendingCount == 0 ? 'ONLINE · SYNCED' : 'ONLINE · PENDING ${syncState.pendingCount}')
-                    : 'OFFLINE MODE',
-                variant: syncState.isOnline
-                    ? (syncState.pendingCount == 0 ? PillVariant.ok : PillVariant.warn)
-                    : PillVariant.danger,
-              ),
-              const SizedBox(width: 12),
-              _buildRoleDropdown(context, ref, currentRoleCode, roles, isDark),
-              const SizedBox(width: 12),
+              const SizedBox(width: 4),
               IconButton(
                 tooltip: isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode',
                 icon: Icon(
                   isDark ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
                   color: isDark ? AppColors.amber : AppColors.pink,
-                  size: 20,
+                  size: 18,
                 ),
                 onPressed: () {
-                  ref.read(themeModeProvider.notifier).state = isDark ? ThemeMode.light : ThemeMode.dark;
+                  ref.read(themeModeProvider.notifier).toggleTheme();
                 },
               ),
-              const SizedBox(width: 8),
-              if (user != null) _buildUserAvatar(context, user, isDark),
+              if (user != null && showAvatar) ...[
+                const SizedBox(width: 4),
+                _buildUserAvatar(context, user, isDark),
+              ],
             ],
           );
         },
@@ -166,7 +148,8 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
 
   Widget _buildRoleDropdown(BuildContext context, WidgetRef ref, String currentRoleCode, List<Map<String, String>> roles, bool isDark) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      width: 145,
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: isDark ? AppColors.surface2 : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
@@ -175,9 +158,9 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.supervisor_account, size: 16, color: AppColors.pink),
+          const Icon(Icons.supervisor_account, size: 15, color: AppColors.pink),
           const SizedBox(width: 4),
-          Flexible(
+          Expanded(
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: currentRoleCode,
@@ -192,7 +175,11 @@ class Topbar extends ConsumerWidget implements PreferredSizeWidget {
                 items: roles.map((r) {
                   return DropdownMenuItem<String>(
                     value: r['code'],
-                    child: Text(r['label']!, overflow: TextOverflow.ellipsis),
+                    child: Text(
+                      r['label']!,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                    ),
                   );
                 }).toList(),
                 onChanged: (newCode) async {

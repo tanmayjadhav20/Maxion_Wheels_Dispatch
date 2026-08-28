@@ -82,7 +82,8 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
-              value: selectedRole,
+              initialValue: selectedRole,
+              isExpanded: true,
               dropdownColor: ctx.bgSurfaceElevated,
               style: TextStyle(color: ctx.textPrimary),
               decoration: InputDecoration(
@@ -103,8 +104,9 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.ribbonPink),
+          AppButton(
+            text: 'SAVE GUN ALLOCATION',
+            variant: AppButtonVariant.gradient,
             onPressed: () async {
               Navigator.pop(ctx);
               final remoteApi = ref.read(remoteApiProvider);
@@ -115,7 +117,6 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
               });
               _fetchHhtDevices();
             },
-            child: const Text('SAVE GUN ALLOCATION'),
           ),
         ],
       ),
@@ -138,7 +139,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -199,44 +200,62 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
           const SizedBox(height: 24),
 
           // Top Summary Badges for the 4 Guns
-          Row(
-            children: [
-              Expanded(
-                child: AppCard(
-                  child: Column(
-                    children: [
-                      Text('UNLOADING GUNS', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      const Text('2 / 2 ACTIVE', style: TextStyle(color: AppColors.ok, fontSize: 18, fontWeight: FontWeight.w800)),
-                    ],
-                  ),
+          LayoutBuilder(
+            builder: (context, cardConstraints) {
+              final isNarrow = cardConstraints.maxWidth < 600;
+
+              final card1 = AppCard(
+                child: Column(
+                  children: [
+                    Text('UNLOADING GUNS', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    const Text('2 / 2 ACTIVE', style: TextStyle(color: AppColors.ok, fontSize: 18, fontWeight: FontWeight.w800)),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppCard(
-                  child: Column(
-                    children: [
-                      Text('LOADING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.ribbonPink, fontSize: 18, fontWeight: FontWeight.w800)),
-                    ],
-                  ),
+              );
+
+              final card2 = AppCard(
+                child: Column(
+                  children: [
+                    Text('LOADING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.ribbonPink, fontSize: 18, fontWeight: FontWeight.w800)),
+                  ],
                 ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: AppCard(
-                  child: Column(
-                    children: [
-                      Text('MERGING / BINNING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
-                      const SizedBox(height: 6),
-                      const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.warn, fontSize: 18, fontWeight: FontWeight.w800)),
-                    ],
-                  ),
+              );
+
+              final card3 = AppCard(
+                child: Column(
+                  children: [
+                    Text('MERGING / BINNING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 6),
+                    const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.warn, fontSize: 18, fontWeight: FontWeight.w800)),
+                  ],
                 ),
-              ),
-            ],
+              );
+
+              if (isNarrow) {
+                return Column(
+                  children: [
+                    card1,
+                    const SizedBox(height: 12),
+                    card2,
+                    const SizedBox(height: 12),
+                    card3,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(child: card1),
+                  const SizedBox(width: 16),
+                  Expanded(child: card2),
+                  const SizedBox(width: 16),
+                  Expanded(child: card3),
+                ],
+              );
+            },
           ),
           const SizedBox(height: 24),
 
@@ -252,28 +271,51 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 16),
                   child: AppCard(
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(14),
-                          decoration: BoxDecoration(
-                            color: roleColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(Icons.qr_code_scanner_outlined, color: roleColor, size: 28),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
+                    child: LayoutBuilder(
+                      builder: (context, cardConstraints) {
+                        final isMobile = cardConstraints.maxWidth < 620;
+
+                        if (isMobile) {
+                          return Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Text(
-                                    device['name'] ?? '',
-                                    style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                                  Container(
+                                    padding: const EdgeInsets.all(10),
+                                    decoration: BoxDecoration(
+                                      color: roleColor.withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(10),
+                                    ),
+                                    child: Icon(Icons.qr_code_scanner_outlined, color: roleColor, size: 22),
                                   ),
                                   const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Text(
+                                      device['name'] ?? '',
+                                      style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        battery > 50 ? Icons.battery_full : Icons.battery_alert,
+                                        color: battery > 20 ? AppColors.ok : AppColors.danger,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text('$battery%', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 12)),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              Wrap(
+                                spacing: 8,
+                                runSpacing: 6,
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
                                   StatusPill(
                                     label: role.replaceAll('_', ' '),
                                     variant: role == 'UNLOADING'
@@ -282,39 +324,91 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                                             ? PillVariant.purple
                                             : PillVariant.warn,
                                   ),
+                                  Text(
+                                    '${device['assignedUser']} • ${device['location']}',
+                                    style: TextStyle(color: context.textSecondary, fontSize: 12),
+                                  ),
                                 ],
                               ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Assigned Operator: ${device['assignedUser']} • Location: ${device['location']}',
-                                style: TextStyle(color: context.textSecondary, fontSize: 12),
+                              const SizedBox(height: 14),
+                              AppButton(
+                                text: 'CONFIGURE ROLE',
+                                isFullWidth: true,
+                                variant: AppButtonVariant.gradient,
+                                onPressed: () => _onReassignGun(device),
                               ),
                             ],
-                          ),
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
+                          );
+                        }
+
+                        return Row(
                           children: [
-                            Row(
+                            Container(
+                              padding: const EdgeInsets.all(14),
+                              decoration: BoxDecoration(
+                                color: roleColor.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Icon(Icons.qr_code_scanner_outlined, color: roleColor, size: 28),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Wrap(
+                                    spacing: 12,
+                                    runSpacing: 6,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        device['name'] ?? '',
+                                        style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                                      ),
+                                      StatusPill(
+                                        label: role.replaceAll('_', ' '),
+                                        variant: role == 'UNLOADING'
+                                            ? PillVariant.ok
+                                            : role == 'LOADING'
+                                                ? PillVariant.purple
+                                                : PillVariant.warn,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'Assigned Operator: ${device['assignedUser']} • Location: ${device['location']}',
+                                    style: TextStyle(color: context.textSecondary, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
-                                Icon(
-                                  battery > 50 ? Icons.battery_full : Icons.battery_alert,
-                                  color: battery > 20 ? AppColors.ok : AppColors.danger,
-                                  size: 18,
+                                Row(
+                                  children: [
+                                    Icon(
+                                      battery > 50 ? Icons.battery_full : Icons.battery_alert,
+                                      color: battery > 20 ? AppColors.ok : AppColors.danger,
+                                      size: 18,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text('$battery%', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
+                                  ],
                                 ),
-                                const SizedBox(width: 4),
-                                Text('$battery%', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
+                                const SizedBox(height: 8),
+                                AppButton(
+                                  text: 'CONFIGURE ROLE',
+                                  variant: AppButtonVariant.gradient,
+                                  onPressed: () => _onReassignGun(device),
+                                ),
                               ],
                             ),
-                            const SizedBox(height: 8),
-                            AppButton(
-                              text: 'CONFIGURE ROLE',
-                              variant: AppButtonVariant.gradient,
-                              onPressed: () => _onReassignGun(device),
-                            ),
                           ],
-                        ),
-                      ],
+                        );
+                      },
                     ),
                   ),
                 );

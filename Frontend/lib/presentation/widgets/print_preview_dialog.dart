@@ -19,6 +19,7 @@ class BatchPrintPreviewDialog extends StatefulWidget {
   final String title;
   final String itemCode;
   final String? itemDescription;
+  final String? stickerType;
   final List<Map<String, dynamic>> stickers;
 
   const BatchPrintPreviewDialog({
@@ -26,6 +27,7 @@ class BatchPrintPreviewDialog extends StatefulWidget {
     required this.title,
     required this.itemCode,
     this.itemDescription,
+    this.stickerType,
     required this.stickers,
   });
 
@@ -34,6 +36,7 @@ class BatchPrintPreviewDialog extends StatefulWidget {
     required String title,
     required String itemCode,
     String? itemDescription,
+    String? stickerType,
     required List<Map<String, dynamic>> stickers,
   }) {
     showDialog(
@@ -42,6 +45,7 @@ class BatchPrintPreviewDialog extends StatefulWidget {
         title: title,
         itemCode: itemCode,
         itemDescription: itemDescription,
+        stickerType: stickerType,
         stickers: stickers,
       ),
     );
@@ -54,10 +58,18 @@ class BatchPrintPreviewDialog extends StatefulWidget {
 class _BatchPrintPreviewDialogState extends State<BatchPrintPreviewDialog> {
   String _selectedPrinter = 'Pack Point Thermal Transfer Printer (300 DPI)';
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _triggerBatchPrint();
+    });
+  }
+
   void _triggerBatchPrint() {
     openPrintableStickerBatch(
       context: context,
-      stickerType: 'WHEEL QR STICKER',
+      stickerType: widget.stickerType ?? 'SPD INDIVIDUAL PACK STICKER',
       itemCode: widget.itemCode,
       itemDescription: widget.itemDescription,
       stickers: widget.stickers,
@@ -118,88 +130,96 @@ class _BatchPrintPreviewDialogState extends State<BatchPrintPreviewDialog> {
 
             // Scrollable Grid of all 96 Wheel QR Stickers
             Expanded(
-              child: GridView.builder(
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 2,
-                  childAspectRatio: 2.2,
-                  crossAxisSpacing: 12,
-                  mainAxisSpacing: 12,
-                ),
-                itemCount: widget.stickers.length,
-                itemBuilder: (context, index) {
-                  final s = widget.stickers[index];
-                  final qrData = s['uniqueQrData'] ?? s['wheelQr'] ?? '';
-                  final serialNo = s['serialNumber'] ?? '00000000';
-                  final wheelIdx = s['wheelIndex'] ?? (index + 1);
-
-                  return Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: Colors.black, width: 1.5),
+              child: LayoutBuilder(
+                builder: (context, gridConstraints) {
+                  final isWide = gridConstraints.maxWidth > 650;
+                  final isMedium = gridConstraints.maxWidth > 420;
+                  return GridView.builder(
+                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: isWide ? 3 : (isMedium ? 2 : 1),
+                      childAspectRatio: 1.0,
+                      crossAxisSpacing: 10,
+                      mainAxisSpacing: 10,
                     ),
-                    child: Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(2),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.black),
-                            borderRadius: BorderRadius.circular(3),
-                          ),
-                          child: QrImageView(
-                            data: qrData,
-                            version: QrVersions.auto,
-                            size: 64.0,
-                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.center,
+                    itemCount: widget.stickers.length,
+                    itemBuilder: (context, index) {
+                    final s = widget.stickers[index];
+                    final qrData = s['uniqueQrData'] ?? s['wheelQr'] ?? '';
+                    final serialNo = s['serialNumber'] ?? '00000000';
+                    
+                    String shiftVal = 'A';
+                    String lineVal = 'PL2';
+                    final parts = qrData.split('|');
+                    if (parts.length >= 7) {
+                      shiftVal = parts[5];
+                      lineVal = parts[6];
+                    }
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: Colors.black, width: 2),
+                      ),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    '#$wheelIdx OF ${widget.stickers.length}',
-                                    style: const TextStyle(color: Colors.black54, fontSize: 9, fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    'SERIAL: $serialNo',
-                                    style: const TextStyle(color: Colors.black, fontSize: 9.5, fontWeight: FontWeight.w900),
-                                  ),
-                                ],
+                              const Text(
+                                'MAXION WHEELS',
+                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 10.5, letterSpacing: 0.5),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                qrData,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.black, fontSize: 9.5, fontWeight: FontWeight.w800, fontFamily: 'monospace'),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                widget.itemCode,
-                                style: const TextStyle(color: Color(0xFFE0218A), fontSize: 11, fontWeight: FontWeight.w900),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
+                                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(3)),
+                                child: Text('SHIFT $shiftVal', style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                          const Divider(color: Colors.black, thickness: 1.2, height: 6),
+                          QrImageView(
+                            data: qrData,
+                            version: QrVersions.auto,
+                            size: 68.0,
+                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
+                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
+                          ),
+                          Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                widget.itemCode,
+                                style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.3),
+                              ),
+                              Text(
+                                'SN: $serialNo | LINE $lineVal',
+                                style: const TextStyle(color: Colors.black87, fontSize: 8.5, fontWeight: FontWeight.w700),
+                              ),
+                              Text(
+                                qrData,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.black54, fontSize: 6.5, fontFamily: 'monospace'),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
             ),
-            const SizedBox(height: 14),
+          ),
+        const SizedBox(height: 14),
 
-            DropdownButtonFormField<String>(
-              value: _selectedPrinter,
-              dropdownColor: AppColors.bgSurfaceElevated,
+        DropdownButtonFormField<String>(
+          initialValue: _selectedPrinter,
+          isExpanded: true,
+          dropdownColor: AppColors.bgSurfaceElevated,
               style: const TextStyle(color: AppColors.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Target Industrial Barcode Printer',
@@ -372,18 +392,28 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
 
     return AlertDialog(
       backgroundColor: AppColors.bgSurface,
-      title: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      title: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 12,
+        runSpacing: 8,
         children: [
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.qr_code_2, color: AppColors.ribbonPink),
               const SizedBox(width: 10),
-              Text(widget.title, style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800)),
+              Flexible(
+                child: Text(
+                  widget.title,
+                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
             ],
           ),
           StatusPill(
-            label: isA4 ? 'A4 DOCUMENT PRINT' : 'PHYSICAL QR STICKER LABEL (4x2")',
+            label: isA4 ? 'A4 DOCUMENT' : 'QR STICKER (4x2")',
             variant: PillVariant.info,
           ),
         ],
@@ -494,7 +524,8 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
 
               const SizedBox(height: 20),
               DropdownButtonFormField<String>(
-                value: _selectedPrinter,
+                initialValue: _selectedPrinter,
+                isExpanded: true,
                 dropdownColor: AppColors.bgSurfaceElevated,
                 style: const TextStyle(color: AppColors.textPrimary),
                 decoration: InputDecoration(
@@ -517,15 +548,23 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('CLOSE'),
-        ),
-        AppButton(
-          text: 'PRINT PHYSICAL QR STICKER (CTRL + P)',
-          icon: Icons.print,
-          variant: AppButtonVariant.gradient,
-          onPressed: _triggerSystemPrint,
+        Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.center,
+          spacing: 10,
+          runSpacing: 8,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('CLOSE'),
+            ),
+            AppButton(
+              text: isA4 ? 'PRINT A4 (CTRL + P)' : 'PRINT STICKER (CTRL + P)',
+              icon: Icons.print,
+              variant: AppButtonVariant.gradient,
+              onPressed: _triggerSystemPrint,
+            ),
+          ],
         ),
       ],
     );

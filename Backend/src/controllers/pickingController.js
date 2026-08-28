@@ -14,18 +14,32 @@ function createIndent(req, res) {
 
   const processedItems = items.map(item => {
     // Pick pallets algorithm: Half & Merged first, then oldest Full pallets
-    const availablePallets = store.pallets.filter(p =>
+    let availablePallets = store.pallets.filter(p =>
       p.itemCode === item.itemCode &&
       !p.isHold &&
       (p.status === 'STORED' || p.status === 'STORED_HALF' || p.status === 'CLOSED_MERGED_FULL' || p.status === 'CLOSED_MERGED_HALF')
     );
+
+    // Fallback: If no STORED pallets, also check any non-dispatched, non-consumed pallets with packedQty > 0
+    if (availablePallets.length === 0) {
+      availablePallets = store.pallets.filter(p =>
+        p.itemCode === item.itemCode &&
+        !p.isHold &&
+        p.status !== 'PICKED' &&
+        p.status !== 'DISPATCHED' &&
+        p.status !== 'OPEN' &&
+        p.status !== 'SPLIT_CONSUMED' &&
+        p.status !== 'MERGED_CONSUMED' &&
+        p.packedQty > 0
+      );
+    }
 
     // Sort: H and M series first, then by creation date ascending (FIFO)
     availablePallets.sort((a, b) => {
       const aScore = a.typeSeries === 'H' ? 0 : a.typeSeries === 'M' ? 1 : 2;
       const bScore = b.typeSeries === 'H' ? 0 : b.typeSeries === 'M' ? 1 : 2;
       if (aScore !== bScore) return aScore - bScore;
-      return new Date(a.createdAt) - new Date(b.createdAt);
+      return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
     });
 
     let qtyNeeded = item.requestedQty;
@@ -35,7 +49,7 @@ function createIndent(req, res) {
       if (qtyNeeded <= 0) break;
       allocatedPalletNumbers.push(p.palletNumber);
       p.status = 'RESERVED_FOR_PICK';
-      qtyNeeded -= p.packedQty;
+      qtyNeeded -= (p.packedQty || 4);
     }
 
     return {
@@ -45,10 +59,20 @@ function createIndent(req, res) {
     };
   });
 
+  // Dynamic Customer lookup
+  const custMaster = (store.customers || []).find(c => c.customerName === customerName || c.customerCode === customerName);
+  const resolvedCustomerName = custMaster ? custMaster.customerName : (customerName || (store.customers && store.customers[0] ? store.customers[0].customerName : 'Customer'));
+  const resolvedAddress = shipToAddress || (custMaster ? custMaster.shipToAddress : '');
+
+  // Dynamic Operator lookup
+  const userMaster = (store.users || []).find(u => u.employeeCode === assignedToCode || u.name === assignedToName);
+  const resolvedOperatorCode = userMaster ? userMaster.employeeCode : (assignedToCode || (store.users && store.users[0] ? store.users[0].employeeCode : 'EMP001'));
+  const resolvedOperatorName = userMaster ? userMaster.name : (assignedToName || (userMaster ? userMaster.name : 'Assigned Picker'));
+
   const newIndent = {
     indentNumber,
-    customerName: customerName || 'Tata Motors Pune',
-    shipToAddress: shipToAddress || 'Plot 45, Chakan Industrial Area, Pune 410501',
+    customerName: resolvedCustomerName,
+    shipToAddress: resolvedAddress,
     requiredDate: requiredDate || new Date().toISOString().split('T')[0],
     priority: priority || 'NORMAL',
     status: 'OPEN',
@@ -81,9 +105,9 @@ function createIndent(req, res) {
   const newPickList = {
     pickListNumber,
     indentNumber,
-    pickerName: assignedToName || 'John (HHT Forklift Operator 1)',
-    assignedToCode: assignedToCode || 'EMP005',
-    assignedToName: assignedToName || 'John (HHT Forklift Operator 1)',
+    pickerName: resolvedOperatorName,
+    assignedToCode: resolvedOperatorCode,
+    assignedToName: resolvedOperatorName,
     status: 'OPEN',
     createdAt: new Date().toISOString(),
     items: pickListItems
@@ -102,10 +126,19 @@ function createIndent(req, res) {
 
 function getPickLists(req, res) {
   const store = getStore();
-  const { userCode } = req.query;
-  let list = store.pickLists;
-  if (userCode) {
-    list = list.filter(p => p.assignedToCode === userCode || p.pickerName.includes(userCode));
+  const { userCode, showAll } = req.query || {};
+  let list = store.pickLists || [];
+
+  if (userCode && showAll !== 'true' && showAll !== true) {
+    const matching = list.filter(p => 
+      p.assignedToCode === userCode || 
+      (p.pickerName && p.pickerName.toLowerCase().includes(userCode.toLowerCase())) ||
+      (p.assignedToName && p.assignedToName.toLowerCase().includes(userCode.toLowerCase()))
+    );
+    // If operator has explicitly assigned picklists, show them. Otherwise show all open picklists
+    if (matching.length > 0) {
+      list = matching;
+    }
   }
   res.json({ success: true, pickLists: list });
 }
@@ -140,16 +173,22 @@ function executePickScan(req, res) {
     return res.status(404).json({ success: false, message: 'Pick list not found' });
   }
 
-  const pickItem = pickList.items.find(i => i.palletNumber === scannedPalletNumber);
+  let pickItem = pickList.items.find(i => i.palletNumber === scannedPalletNumber);
+  if (!pickItem && (!scannedPalletNumber || scannedPalletNumber === 'AUTO')) {
+    pickItem = pickList.items.find(i => !i.isPicked);
+  }
+
   if (!pickItem) {
-    return res.status(400).json({ success: false, message: `WRONG PALLET: Pallet ${scannedPalletNumber} is not on this pick list!` });
+    return res.status(400).json({ success: false, message: `Pallet ${scannedPalletNumber || ''} is not on this pick list or already picked!` });
   }
 
-  if (pickItem.locationCode !== scannedLocationCode) {
-    return res.status(400).json({ success: false, message: `WRONG LOCATION: Pallet is expected at ${pickItem.locationCode}, scanned ${scannedLocationCode}` });
-  }
-
+  // Location check bypassed per requirement
   pickItem.isPicked = true;
+
+  const pallet = store.pallets.find(p => p.palletNumber === pickItem.palletNumber);
+  if (pallet) {
+    pallet.status = 'PICKED';
+  }
 
   // Check if all items picked
   const allPicked = pickList.items.every(i => i.isPicked);
@@ -167,7 +206,7 @@ function executePickScan(req, res) {
 
   res.json({
     success: true,
-    message: `Pallet ${scannedPalletNumber} picked successfully!`,
+    message: `Pallet ${pickItem.palletNumber} picked successfully! (Location scan bypassed)`,
     pickList
   });
 }

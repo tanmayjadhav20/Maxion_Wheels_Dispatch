@@ -44,7 +44,7 @@ class _HalfPalletRegisterScreenState extends ConsumerState<HalfPalletRegisterScr
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -136,8 +136,11 @@ class _HalfPalletRegisterScreenState extends ConsumerState<HalfPalletRegisterScr
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     Text(
                       'ACTIVE HALF PALLETS & AGEING CONTROL',

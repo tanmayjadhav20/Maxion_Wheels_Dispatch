@@ -37,7 +37,12 @@ const defaultData = {
       name: 'Suresh (Warehouse Manager)',
       role: 'warehouseManager',
       pin: '2222',
-      permissions: ['PUTAWAY_EXECUTE', 'PICKING_EXECUTE', 'QUALITY_HOLD_MANAGE', 'REPORTS_VIEW', 'TRACEABILITY_VIEW']
+      permissions: [
+        'PAINT_PLAN_MANAGE', 'PREPARATION_MANAGE', 'INDENT_CREATE', 'PUTAWAY_EXECUTE',
+        'PICKING_EXECUTE', 'LOADING_EXECUTE', 'GATEPASS_MANAGE', 'GATE_OUT_VERIFY',
+        'RETURNABLES_MANAGE', 'QUALITY_HOLD_MANAGE', 'REPORTS_VIEW', 'TRACEABILITY_VIEW',
+        'MASTERS_MANAGE'
+      ]
     },
     {
       id: 'usr-4',
@@ -46,15 +51,150 @@ const defaultData = {
       name: 'Vikram (Security Guard)',
       role: 'security',
       pin: '3333',
-      permissions: ['GATE_OUT_VERIFY', 'RETURNABLES_MANAGE']
+      permissions: [
+        'GATE_OUT_VERIFY', 'GATEPASS_MANAGE', 'LOADING_EXECUTE', 'RETURNABLES_MANAGE',
+        'TRACEABILITY_VIEW'
+      ]
+    },
+    {
+      id: 'usr-5',
+      employeeCode: 'EMP005',
+      badgeBarcode: 'BADGE005',
+      name: 'John (HHT Forklift Operator 1)',
+      role: 'picker',
+      pin: '4444',
+      permissions: [
+        'PUTAWAY_EXECUTE',
+        'PICKING_EXECUTE',
+        'LOADING_EXECUTE',
+        'TRACEABILITY_VIEW'
+      ]
+    },
+    {
+      id: 'usr-6',
+      employeeCode: 'EMP006',
+      badgeBarcode: 'BADGE006',
+      name: 'Pooja (SPD Planning Team)',
+      role: 'supervisor',
+      pin: '5555',
+      permissions: ['PAINT_PLAN_MANAGE', 'INDENT_CREATE', 'REPORTS_VIEW', 'TRACEABILITY_VIEW']
+    },
+    {
+      id: 'usr-7',
+      employeeCode: 'EMP007',
+      badgeBarcode: 'BADGE007',
+      name: 'Anand (IOC-QA Inspector)',
+      role: 'supervisor',
+      pin: '6666',
+      permissions: ['QUALITY_HOLD_MANAGE', 'TRACEABILITY_VIEW', 'REPORTS_VIEW']
+    }
+  ],
+  customers: [
+    {
+      customerCode: 'CUST-TATA-PUNE',
+      customerName: 'Tata Motors Pune',
+      shipToAddress: 'Plot 45, Chakan Industrial Area, Phase II, Pune 410501',
+      contactPerson: 'Milind Shinde',
+      phone: '+91 98230 11223',
+      defaultItemCodes: ['MXW-17-BLK', 'MXW-16-BLK']
+    },
+    {
+      customerCode: 'CUST-MAH-NASHIK',
+      customerName: 'Mahindra Nashik',
+      shipToAddress: 'MIDC Satpur, Plant 1 Logistics Gate, Nashik 422007',
+      contactPerson: 'Sanjay Deshmukh',
+      phone: '+91 98220 44556',
+      defaultItemCodes: ['MXW-18-SLV', 'MXW-19-WHT']
+    },
+    {
+      customerCode: 'CUST-ASHOK-HOSUR',
+      customerName: 'Ashok Leyland Hosur',
+      shipToAddress: 'SIPCOT Industrial Complex, Phase 1, Hosur, Tamil Nadu 635126',
+      contactPerson: 'V. Ramanathan',
+      phone: '+91 94430 99887',
+      defaultItemCodes: ['MXW-16-MAT']
+    },
+    {
+      customerCode: 'CUST-SPD-PUNE',
+      customerName: 'SPD Aftermarket Pune',
+      shipToAddress: 'Plant 2 Warehouse, Chakan Midc, Pune 410501',
+      contactPerson: 'Rahul More',
+      phone: '+91 98900 33445',
+      defaultItemCodes: ['MXW-17-BLK', 'MXW-18-SLV']
+    },
+    {
+      customerCode: 'CUST-MARUTI-MANESAR',
+      customerName: 'Maruti Suzuki Manesar',
+      shipToAddress: 'Plot 1, Phase 3A, IMT Manesar, Gurugram 122051',
+      contactPerson: 'Rajiv Mehra',
+      phone: '+91 98110 55667',
+      defaultItemCodes: ['MXW-16-BLK']
+    }
+  ],
+  transporters: [
+    {
+      transporterCode: 'TR-VISTAR',
+      transporterName: 'Vistar Logistics Express',
+      contactPerson: 'Sunil Patil',
+      phone: '+91 98765 43210',
+      defaultVehicles: ['MH 12 QW 8890', 'MH 14 AB 1234', 'MH 12 TR 9988']
+    },
+    {
+      transporterCode: 'TR-MAXION',
+      transporterName: 'Maxion Dedicated Fleet',
+      contactPerson: 'Kailash Kadam',
+      phone: '+91 98811 22334',
+      defaultVehicles: ['MH 12 CD 5678', 'MH 12 EF 9012']
+    },
+    {
+      transporterCode: 'TR-ALLINDIA',
+      transporterName: 'All India Roadways Corp',
+      contactPerson: 'Harpreet Singh',
+      phone: '+91 98140 77889',
+      defaultVehicles: ['HR 55 XY 3344', 'DL 01 GH 6677']
+    }
+  ],
+  palletMasters: [
+    {
+      palletType: 'STEEL-FRAME-A',
+      description: 'Heavy Duty Returnable Steel Stillage Frame A',
+      capacity: 4,
+      layers: 4,
+      wheelsPerLayer: 1,
+      separatorType: 'CORRUGATED-17',
+      separatorQty: 3,
+      tareWeightKg: 45.0,
+      returnable: true
+    },
+    {
+      palletType: 'WOOD-PALLET-B',
+      description: 'Standard Export Wooden Pallet B',
+      capacity: 4,
+      layers: 4,
+      wheelsPerLayer: 1,
+      separatorType: 'FOAM-18',
+      separatorQty: 3,
+      tareWeightKg: 22.5,
+      returnable: true
+    },
+    {
+      palletType: 'HEAVY-STILLAGE-C',
+      description: 'Industrial Commercial Truck Wheel Stillage C',
+      capacity: 4,
+      layers: 4,
+      wheelsPerLayer: 1,
+      separatorType: 'RUBBER-16',
+      separatorQty: 3,
+      tareWeightKg: 65.0,
+      returnable: true
     }
   ],
   items: [
     {
       itemCode: 'MXW-17-BLK',
       description: '17 Inch Steel Wheel - Gloss Black',
-      stdPalletQty: 96,
-      wheelsPerLayer: 24,
+      stdPalletQty: 4,
+      wheelsPerLayer: 1,
       layersPerPallet: 4,
       palletType: 'STEEL-FRAME-A',
       separatorType: 'CORRUGATED-17',
@@ -64,10 +204,23 @@ const defaultData = {
       allowMerge: true
     },
     {
+      itemCode: 'MXW-16-BLK',
+      description: '16 Inch Steel Wheel - Gloss Black',
+      stdPalletQty: 4,
+      wheelsPerLayer: 1,
+      layersPerPallet: 4,
+      palletType: 'STEEL-FRAME-A',
+      separatorType: 'CORRUGATED-16',
+      separatorQtyPerPallet: 3,
+      unitWeightKg: 8.8,
+      defaultCustomer: 'Tata Motors Pune',
+      allowMerge: true
+    },
+    {
       itemCode: 'MXW-18-SLV',
       description: '18 Inch Alloy Wheel - Liquid Silver',
-      stdPalletQty: 80,
-      wheelsPerLayer: 20,
+      stdPalletQty: 4,
+      wheelsPerLayer: 1,
       layersPerPallet: 4,
       palletType: 'WOOD-PALLET-B',
       separatorType: 'FOAM-18',
@@ -77,10 +230,23 @@ const defaultData = {
       allowMerge: true
     },
     {
+      itemCode: 'MXW-19-WHT',
+      description: '19 Inch Alloy Wheel - Polar White',
+      stdPalletQty: 4,
+      wheelsPerLayer: 1,
+      layersPerPallet: 4,
+      palletType: 'WOOD-PALLET-B',
+      separatorType: 'FOAM-19',
+      separatorQtyPerPallet: 3,
+      unitWeightKg: 12.0,
+      defaultCustomer: 'Mahindra Nashik',
+      allowMerge: true
+    },
+    {
       itemCode: 'MXW-16-MAT',
       description: '16 Inch Heavy Truck Wheel - Matte Black',
-      stdPalletQty: 64,
-      wheelsPerLayer: 16,
+      stdPalletQty: 4,
+      wheelsPerLayer: 1,
       layersPerPallet: 4,
       palletType: 'HEAVY-STILLAGE-C',
       separatorType: 'RUBBER-16',
@@ -195,7 +361,9 @@ const defaultData = {
     {
       pickListNumber: 'PKL26000455',
       indentNumber: 'IND26000391',
-      pickerName: 'Suresh (Warehouse Manager)',
+      pickerName: 'John (HHT Forklift Operator 1)',
+      assignedToCode: 'EMP005',
+      assignedToName: 'John (HHT Forklift Operator 1)',
       status: 'IN_PROGRESS',
       items: [
         { locationCode: 'WH1-A-01-A1', palletNumber: 'P26000101', itemCode: 'MXW-17-BLK', qty: 96, isPicked: true },
@@ -229,6 +397,8 @@ const defaultData = {
     {
       assetTag: 'MWR|RP0001842',
       assetNumber: 'RP0001842',
+      palletNumber: 'P26000101',
+      itemCode: 'MXW-17-BLK',
       type: 'STEEL-FRAME-A',
       condition: 'Good',
       status: 'With Customer',
@@ -240,6 +410,8 @@ const defaultData = {
     {
       assetTag: 'MWR|RP0001843',
       assetNumber: 'RP0001843',
+      palletNumber: 'PM26000012',
+      itemCode: 'MXW-17-BLK',
       type: 'WOOD-PALLET-B',
       condition: 'Good',
       status: 'In Stock (Empty)',
@@ -248,6 +420,19 @@ const defaultData = {
       issueDate: null,
       expectedReturnDate: null,
       ageingDays: 0
+    },
+    {
+      assetTag: 'MWR|RP0001844',
+      assetNumber: 'RP0001844',
+      palletNumber: 'P26000105',
+      itemCode: 'MXW-18-SLV',
+      type: 'STEEL-FRAME-A',
+      condition: 'Good',
+      status: 'With Customer',
+      customerName: 'Mahindra Nashik',
+      issueDate: '2026-08-14',
+      expectedReturnDate: '2026-09-13',
+      ageingDays: 5
     }
   ],
   qaInspections: [
@@ -338,6 +523,27 @@ const defaultData = {
   syncLogs: [
     { deviceId: 'HHT-UNL-01', pendingCount: 0, lastSyncTime: '2026-08-19T11:30:00Z', status: 'OK' }
   ],
+  sapInvoices: [
+    {
+      invoiceNumber: 'INV-SAP-2026-9921',
+      invoiceDate: '2026-08-19',
+      customerCode: 'CUST-TATA-PUNE',
+      customerName: 'Tata Motors Pune',
+      vehicleNumber: 'MH 12 QW 8890',
+      transporterName: 'Vistar Logistics Express',
+      gatePassNumber: 'GP26000208',
+      totalWheels: 192,
+      totalAmount: 182400.0,
+      currency: 'INR',
+      status: 'VERIFIED_MATCHED',
+      pokaYokeResult: 'PASSED',
+      items: [
+        { itemCode: 'MXW-17-BLK', description: '17 Inch Steel Wheel - Gloss Black', quantity: 192, unitOfMeasure: 'EA', unitPrice: 950.0 }
+      ],
+      dumpedAt: '2026-08-19T10:45:00Z',
+      dumpedBy: 'SAP Integration Service'
+    }
+  ],
   counters: {
     P: 148,
     H: 37,
@@ -351,7 +557,10 @@ const defaultData = {
     GP: 209,
     JC: 1,
     CNV: 1,
-    BX: 24
+    BX: 24,
+    SR: 38,
+    SP: 411,
+    QA: 114
   }
 };
 
@@ -365,6 +574,24 @@ function loadStore() {
     if (fs.existsSync(DATA_FILE)) {
       const fileData = fs.readFileSync(DATA_FILE, 'utf8');
       store = JSON.parse(fileData);
+      
+      // Ensure all master collections are initialized
+      if (!store.users) store.users = defaultData.users;
+      else {
+        // Merge any default users that might be missing (e.g. EMP005)
+        defaultData.users.forEach(defUser => {
+          if (!store.users.some(u => u.employeeCode === defUser.employeeCode)) {
+            store.users.push(defUser);
+          }
+        });
+      }
+
+      if (!store.customers) store.customers = defaultData.customers;
+      if (!store.transporters) store.transporters = defaultData.transporters;
+      if (!store.palletMasters) store.palletMasters = defaultData.palletMasters;
+      if (!store.items) store.items = defaultData.items;
+      if (!store.locations) store.locations = defaultData.locations;
+
       if (!store.qaInspections) store.qaInspections = defaultData.qaInspections;
       if (!store.conversions) store.conversions = defaultData.conversions;
       if (!store.boxes) store.boxes = defaultData.boxes;
@@ -372,6 +599,8 @@ function loadStore() {
       if (!store.spdPacks) store.spdPacks = [];
       if (!store.jobCards) store.jobCards = defaultData.jobCards;
       if (!store.hhtDevices) store.hhtDevices = defaultData.hhtDevices;
+      if (!store.syncLogs) store.syncLogs = defaultData.syncLogs;
+      if (!store.sapInvoices) store.sapInvoices = defaultData.sapInvoices;
       if (!store.counters) store.counters = defaultData.counters;
       if (!store.counters.PM) store.counters.PM = 12;
       if (!store.counters.SR) store.counters.SR = 38;
@@ -380,6 +609,8 @@ function loadStore() {
       if (!store.counters.JC) store.counters.JC = 1;
       if (!store.counters.CNV) store.counters.CNV = 1;
       if (!store.counters.BX) store.counters.BX = 24;
+      
+      saveStore();
     } else {
       store = defaultData;
       saveStore();
@@ -390,16 +621,57 @@ function loadStore() {
   }
 }
 
-function saveStore() {
-  try {
-    if (!fs.existsSync(DATA_DIR)) {
-      fs.mkdirSync(DATA_DIR, { recursive: true });
+let saveTimeout = null;
+let isSaving = false;
+let pendingSave = false;
+
+function saveStore(immediate = false) {
+  if (immediate) {
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf8');
+    } catch (err) {
+      console.error('Error saving DB store immediately:', err);
     }
-    fs.writeFileSync(DATA_FILE, JSON.stringify(store, null, 2), 'utf8');
-  } catch (err) {
-    console.error('Error saving DB store:', err);
+    return;
   }
+
+  if (saveTimeout) {
+    clearTimeout(saveTimeout);
+  }
+
+  saveTimeout = setTimeout(() => {
+    if (isSaving) {
+      pendingSave = true;
+      return;
+    }
+
+    isSaving = true;
+    try {
+      if (!fs.existsSync(DATA_DIR)) {
+        fs.mkdirSync(DATA_DIR, { recursive: true });
+      }
+      fs.writeFile(DATA_FILE, JSON.stringify(store, null, 2), 'utf8', (err) => {
+        isSaving = false;
+        if (err) {
+          console.error('Error saving DB store:', err);
+        }
+        if (pendingSave) {
+          pendingSave = false;
+          saveStore();
+        }
+      });
+    } catch (err) {
+      isSaving = false;
+      console.error('Error initiating save:', err);
+    }
+  }, 50);
 }
+
+process.on('SIGINT', () => { saveStore(true); process.exit(0); });
+process.on('SIGTERM', () => { saveStore(true); process.exit(0); });
 
 loadStore();
 
@@ -407,3 +679,4 @@ module.exports = {
   getStore: () => store,
   saveStore
 };
+

@@ -28,6 +28,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
   int _selectedIndex = 0;
   String? _statusMessage;
   bool _isSuccessMessage = true;
+  bool _showAllPicks = false;
 
   @override
   void initState() {
@@ -52,7 +53,8 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
     final userCode = user?.employeeCode ?? 'EMP005';
 
     final remoteApi = ref.read(remoteApiProvider);
-    final res = await remoteApi.get('/picking/pick-lists', queryParameters: {'userCode': userCode});
+    final query = _showAllPicks ? {'showAll': 'true'} : {'userCode': userCode};
+    final res = await remoteApi.get('/picking/pick-lists', queryParameters: query);
     setState(() => _isLoading = false);
 
     if (res['success'] == true) {
@@ -62,40 +64,38 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
     }
   }
 
-  void _onExecutePickScan() async {
+  void _onExecutePickScan({String? specificPalletNo}) async {
     if (pickLists.isEmpty) return;
     final currentList = pickLists[_selectedIndex < pickLists.length ? _selectedIndex : 0];
     final pklNo = currentList['pickListNumber'];
+    final items = (currentList['items'] as List<dynamic>?) ?? [];
 
-    final locCode = _locationScanController.text.trim();
-    final palletNo = _palletScanController.text.trim();
+    final unpickedItem = items.firstWhere((i) => i['isPicked'] != true, orElse: () => items.isNotEmpty ? items.first : null);
+    final targetPallet = specificPalletNo ?? _palletScanController.text.trim();
+    final finalPalletNo = targetPallet.isNotEmpty ? targetPallet : (unpickedItem?['palletNumber']?.toString() ?? '');
+    final locCode = _locationScanController.text.trim().isNotEmpty 
+        ? _locationScanController.text.trim() 
+        : (unpickedItem?['locationCode']?.toString() ?? 'WH1-STG-01');
 
-    if (locCode.isEmpty) {
-      _showFeedback('STEP 1 ERROR: Scan Location Barcode before submitting!', isSuccess: false);
-      _locationFocusNode.requestFocus();
-      return;
-    }
-
-    if (palletNo.isEmpty) {
-      _showFeedback('STEP 2 ERROR: Scan Pallet Master QR Code before submitting!', isSuccess: false);
+    if (finalPalletNo.isEmpty) {
+      _showFeedback('Please scan or select a Pallet Master QR code', isSuccess: false);
       _palletFocusNode.requestFocus();
       return;
     }
 
     setState(() => _isLoading = true);
     final remoteApi = ref.read(remoteApiProvider);
-    final res = await remoteApi.scanPick(pklNo, locCode, palletNo);
+    final res = await remoteApi.scanPick(pklNo, locCode, finalPalletNo);
     setState(() => _isLoading = false);
 
     if (!mounted) return;
     if (res['success'] == true) {
-      _showFeedback(res['message'] ?? 'Pallet $palletNo verified & picked successfully!', isSuccess: true);
+      _showFeedback(res['message'] ?? 'Pallet $finalPalletNo picked successfully!', isSuccess: true);
       _locationScanController.clear();
       _palletScanController.clear();
-      _locationFocusNode.requestFocus();
       _fetchMyPickLists();
     } else {
-      _showFeedback(res['message'] ?? 'Pick scan failed! Verify location barcode and pallet QR.', isSuccess: false);
+      _showFeedback(res['message'] ?? 'Pick scan failed!', isSuccess: false);
     }
   }
 
@@ -148,7 +148,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
     final isCompleted = currentList?['status'] == 'COMPLETED';
 
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -156,6 +156,65 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
           LayoutBuilder(
             builder: (context, constraints) {
               final isDesktopHeader = constraints.maxWidth > 700;
+
+              Widget filterPill = Container(
+                padding: const EdgeInsets.all(4),
+                decoration: BoxDecoration(
+                  color: context.bgSurfaceElevated,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Theme.of(context).dividerColor.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        setState(() => _showAllPicks = false);
+                        _fetchMyPickLists();
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: !_showAllPicks ? AppColors.pink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'MY ASSIGNED',
+                          style: TextStyle(
+                            color: !_showAllPicks ? Colors.white : context.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    InkWell(
+                      onTap: () {
+                        setState(() => _showAllPicks = true);
+                        _fetchMyPickLists();
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: _showAllPicks ? AppColors.pink : Colors.transparent,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          'ALL OPEN PICKS',
+                          style: TextStyle(
+                            color: _showAllPicks ? Colors.white : context.textSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
 
               if (isDesktopHeader) {
                 return Row(
@@ -169,7 +228,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                           const SectionTitle(title: 'HHT Mobile Scanner — Forklift Operator Terminal'),
                           const SizedBox(height: 4),
                           Text(
-                            'Operator: ${user?.name ?? "John (HHT Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
+                            'Operator: ${user?.name ?? "Prakash (Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
                             style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -177,8 +236,10 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                       ),
                     ),
                     const SizedBox(width: 12),
+                    filterPill,
+                    const SizedBox(width: 12),
                     AppButton(
-                      text: 'REFRESH PICKLISTS',
+                      text: 'REFRESH',
                       icon: Icons.refresh_outlined,
                       variant: AppButtonVariant.ghost,
                       onPressed: _fetchMyPickLists,
@@ -193,15 +254,21 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                   const SectionTitle(title: 'HHT Mobile Scanner — Forklift Operator Terminal'),
                   const SizedBox(height: 4),
                   Text(
-                    'Operator: ${user?.name ?? "John (HHT Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
+                    'Operator: ${user?.name ?? "Prakash (Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
                     style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
-                  AppButton(
-                    text: 'REFRESH PICKLISTS',
-                    icon: Icons.refresh_outlined,
-                    variant: AppButtonVariant.ghost,
-                    onPressed: _fetchMyPickLists,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      filterPill,
+                      AppButton(
+                        text: 'REFRESH',
+                        icon: Icons.refresh_outlined,
+                        variant: AppButtonVariant.ghost,
+                        onPressed: _fetchMyPickLists,
+                      ),
+                    ],
                   ),
                 ],
               );
@@ -323,30 +390,30 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 8,
+            runSpacing: 8,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'HHT SCANNER — ${currentList?['pickListNumber'] ?? "SELECT PICKLIST"}',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'Directed Pick Route (Physical Scan Required)',
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
-                      style: TextStyle(color: context.textMuted, fontSize: 11.5),
-                    ),
-                  ],
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'HHT SCANNER — ${currentList?['pickListNumber'] ?? "SELECT PICKLIST"}',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Directed Pick Route (Physical Scan Required)',
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                    style: TextStyle(color: context.textMuted, fontSize: 11.5),
+                  ),
+                ],
               ),
-              const SizedBox(width: 8),
               StatusPill(
                 label: isCompleted ? 'COMPLETED' : 'READY TO SCAN',
                 variant: isCompleted ? PillVariant.ok : PillVariant.purple,
@@ -407,10 +474,19 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                 ),
                 const SizedBox(height: 16),
 
-                // Step 1: Scan Location Barcode
-                Text(
-                  'STEP 1: SCAN RACK LOCATION BARCODE',
-                  style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 12),
+                // Step 1: Scan Location Barcode (Bypassed / Optional)
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 8,
+                  runSpacing: 6,
+                  children: [
+                    Text(
+                      'STEP 1: LOCATION BARCODE',
+                      style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 12),
+                    ),
+                    const StatusPill(label: 'BYPASSED (OPTIONAL)', variant: PillVariant.info),
+                  ],
                 ),
                 const SizedBox(height: 6),
                 Row(
@@ -421,7 +497,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                         focusNode: _locationFocusNode,
                         style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700),
                         decoration: InputDecoration(
-                          hintText: 'Scan location barcode (e.g. WH1-A-01-A1)',
+                          hintText: 'Location scan bypassed (auto-assigned)',
                           prefixIcon: const Icon(Icons.place_outlined, color: AppColors.ribbonPink),
                           suffixIcon: _locationScanController.text.isNotEmpty
                               ? IconButton(
@@ -437,16 +513,11 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
+                    AppButton(
+                      text: 'SCAN',
+                      icon: Icons.camera_alt_outlined,
+                      variant: AppButtonVariant.ghost,
                       onPressed: () => _openCameraScannerDialog('LOCATION', items),
-                      icon: const Icon(Icons.camera_alt_outlined, size: 16),
-                      label: const Text('SCAN', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).cardColor,
-                        foregroundColor: AppColors.ribbonPink,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
                     ),
                   ],
                 ),
@@ -482,16 +553,11 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                       ),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton.icon(
+                    AppButton(
+                      text: 'SCAN',
+                      icon: Icons.camera_alt_outlined,
+                      variant: AppButtonVariant.gradient,
                       onPressed: () => _openCameraScannerDialog('PALLET', items),
-                      icon: const Icon(Icons.camera_alt_outlined, size: 16),
-                      label: const Text('SCAN', style: TextStyle(fontSize: 12)),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).cardColor,
-                        foregroundColor: AppColors.ribbonPink,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                      ),
                     ),
                   ],
                 ),
@@ -502,11 +568,11 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                   width: double.infinity,
                   height: 48,
                   child: AppButton(
-                    text: 'VERIFY & CONFIRM PICK SCAN',
+                    text: 'CONFIRM PICK PALLET',
                     icon: Icons.check_circle_outline,
                     variant: AppButtonVariant.gradient,
                     isLoading: _isLoading,
-                    onPressed: isCompleted ? null : _onExecutePickScan,
+                    onPressed: isCompleted ? null : () => _onExecutePickScan(),
                   ),
                 ),
               ],
@@ -514,7 +580,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
           ),
           const SizedBox(height: 24),
 
-          // Required Pallets Route Checklist (No Auto Scan Column)
+          // Required Pallets Route Checklist
           Text(
             'REQUIRED PALLETS FOR THIS PICKLIST:',
             style: TextStyle(color: context.textPrimary, fontSize: 14, fontWeight: FontWeight.w700),
@@ -531,6 +597,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                 DataColumn(label: Text('ITEM CODE')),
                 DataColumn(label: Text('QTY')),
                 DataColumn(label: Text('STATUS')),
+                DataColumn(label: Text('ACTION')),
               ],
               rows: items.map((i) {
                 final isPicked = i['isPicked'] == true;
@@ -543,6 +610,16 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                   DataCell(Text('${i['itemCode'] ?? "MXW-17-BLK"}')),
                   DataCell(Text('${i['qty'] ?? 96}')),
                   DataCell(StatusPill(label: isPicked ? 'PICKED' : 'PENDING', variant: isPicked ? PillVariant.ok : PillVariant.warn)),
+                  DataCell(
+                    isPicked
+                        ? const Icon(Icons.check_circle, color: AppColors.ok, size: 20)
+                        : AppButton(
+                            text: 'PICK',
+                            icon: Icons.check,
+                            variant: AppButtonVariant.gradient,
+                            onPressed: () => _onExecutePickScan(specificPalletNo: pal),
+                          ),
+                  ),
                 ]);
               }).toList(),
             ),

@@ -49,8 +49,8 @@ class _LoadingShimmerState extends State<LoadingShimmer> with SingleTickerProvid
             gradient: LinearGradient(
               colors: [
                 AppColors.bgSurfaceElevated,
-                AppColors.ribbonPink.withOpacity(0.16),
-                AppColors.ribbonOrange.withOpacity(0.12),
+                AppColors.ribbonPink.withValues(alpha: 0.16),
+                AppColors.ribbonOrange.withValues(alpha: 0.12),
                 AppColors.bgSurfaceElevated,
               ],
               stops: const [0.0, 0.4, 0.6, 1.0],

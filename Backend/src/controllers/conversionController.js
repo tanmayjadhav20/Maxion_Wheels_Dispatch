@@ -11,7 +11,7 @@ const { formatNumber, generateSpdPackQr, generatePalletQr } = require('../utils/
 
 // 1. Raise SPD Request
 function createSpdRequest(req, res) {
-  const { itemCode, qtyRequired = 10, customerName = 'SPD Aftermarket Pune', shipToAddress = 'Plant 2 Warehouse, Chakan', requiredDate, reference = 'PO-SPD-9921' } = req.body;
+  const { itemCode, qtyRequired = 10, customerName, shipToAddress, requiredDate, reference } = req.body;
   const store = getStore();
 
   const itemMaster = store.items.find(i => i.itemCode === itemCode);
@@ -19,18 +19,27 @@ function createSpdRequest(req, res) {
     return res.status(404).json({ success: false, message: `Item code ${itemCode} not found in master data` });
   }
 
+  // Dynamic customer lookup
+  const custMaster = (store.customers || []).find(c => c.customerName === customerName || c.customerCode === customerName || c.customerName === itemMaster.defaultCustomer);
+  const resolvedCustomer = customerName || (custMaster ? custMaster.customerName : 'SPD Aftermarket');
+  const resolvedAddress = shipToAddress || (custMaster ? custMaster.shipToAddress : '');
+  const resolvedRef = reference || `PO-SPD-${Math.floor(1000 + Math.random() * 9000)}`;
+
   const spdRequestNumber = formatNumber('SR');
+  const totalQty = Math.max(1, Number(qtyRequired));
+
   const newRequest = {
     spdRequestNumber,
     itemCode,
     itemDescription: itemMaster.description,
-    qtyRequired: Number(qtyRequired),
+    qtyRequired: totalQty,
     qtyServed: 0,
-    customerName,
-    shipToAddress,
+    customerName: resolvedCustomer,
+    shipToAddress: resolvedAddress,
     requiredDate: requiredDate || new Date().toISOString().split('T')[0],
-    reference,
-    status: 'OPEN',
+    reference: resolvedRef,
+    status: 'PENDING_PACKING',
+    spdStickers: [],
     createdAt: new Date().toISOString(),
     createdBy: req.user ? req.user.name : 'SPD Planner'
   };
@@ -40,13 +49,80 @@ function createSpdRequest(req, res) {
   saveStore();
 
   // Find proposed pallet using Order of Preference
-  const proposedPallet = findProposedPalletForSpd(store, itemCode, qtyRequired);
+  const proposedPallet = findProposedPalletForSpd(store, itemCode, totalQty);
 
   res.json({
     success: true,
-    message: `SPD Request ${spdRequestNumber} created for ${qtyRequired} wheel(s) of ${itemCode}`,
+    message: `SPD Request ${spdRequestNumber} created for ${totalQty} wheel(s) of ${itemCode}. Verify information in SPD Packing to generate QR stickers.`,
     spdRequest: newRequest,
     proposedPallet
+  });
+}
+
+// 1b. Generate SPD QR Stickers on Demand (triggered in SPD Packing Page)
+function generateSpdStickers(req, res) {
+  const { spdRequestNumber } = req.body;
+  const store = getStore();
+
+  const spdRequest = (store.spdRequests || []).find(r => r.spdRequestNumber === spdRequestNumber);
+  if (!spdRequest) {
+    return res.status(404).json({ success: false, message: `SPD Request ${spdRequestNumber} not found` });
+  }
+
+  const totalQty = Math.max(1, Number(spdRequest.qtyRequired || 10));
+  const itemMaster = (store.items || []).find(i => i.itemCode === spdRequest.itemCode);
+  const itemDescription = itemMaster ? itemMaster.description : 'Individual Boxed SPD Spare Wheel (SP Series)';
+
+  const spdStickers = [];
+  for (let i = 1; i <= totalQty; i++) {
+    const spNo = formatNumber('SP');
+    const qrData = `MWS|${spNo}`;
+    spdStickers.push({
+      spdPackNumber: spNo,
+      spdPackQr: qrData,
+      uniqueQrData: qrData,
+      codeText: spNo,
+      serialNumber: spNo,
+      itemCode: spdRequest.itemCode,
+      itemDescription,
+      wheelIndex: i,
+      totalBatchCount: totalQty,
+      primaryDetail: `SPD Req: ${spdRequest.spdRequestNumber} • Sticker ${i} of ${totalQty}`,
+      secondaryDetail: `Customer: ${spdRequest.customerName}`,
+      stickerDetails: [
+        { 'PACK #': spNo },
+        { 'REQ #': spdRequest.spdRequestNumber },
+        { 'LABEL': `${i} OF ${totalQty}` },
+        { 'CUSTOMER': spdRequest.customerName }
+      ]
+    });
+  }
+
+  if (!store.spdPacks) store.spdPacks = [];
+  spdStickers.forEach(stk => {
+    const existing = store.spdPacks.find(p => p.spdPackNumber === stk.spdPackNumber);
+    if (!existing) {
+      store.spdPacks.unshift({
+        spdPackNumber: stk.spdPackNumber,
+        spdPackQr: stk.spdPackQr,
+        itemCode: spdRequest.itemCode,
+        spdRequestNumber: spdRequest.spdRequestNumber,
+        customerName: spdRequest.customerName,
+        status: 'STORED_SPD_PACK',
+        createdAt: new Date().toISOString()
+      });
+    }
+  });
+
+  spdRequest.spdStickers = spdStickers;
+  spdRequest.status = 'READY_TO_PACK';
+  saveStore();
+
+  res.json({
+    success: true,
+    message: `Generated ${spdStickers.length} SPD QR Stickers for ${spdRequest.spdRequestNumber}`,
+    spdStickers,
+    spdRequest
   });
 }
 
@@ -88,7 +164,7 @@ function findProposedPalletForSpd(store, itemCode, qtyRequired) {
 
 // Endpoint to get candidate pallet recommendation
 function getProposedPallet(req, res) {
-  const { itemCode, qtyRequired } = req.query;
+  const { itemCode, qtyRequired } = req.query || {};
   const store = getStore();
 
   const proposed = findProposedPalletForSpd(store, itemCode, Number(qtyRequired || 10));
@@ -122,38 +198,66 @@ function packSpdWheel(req, res) {
     return res.status(400).json({ success: false, message: `HARD BLOCK (V-01): Pallet item (${pallet.itemCode}) does not match request item (${spdRequest.itemCode})` });
   }
 
-  const spdPackNumber = formatNumber('SP');
-  const spdPackQr = generateSpdPackQr(spdPackNumber);
-
-  const spdPackObj = {
-    spdPackNumber,
-    spdPackQr,
-    spdRequestNumber,
-    itemCode: spdRequest.itemCode,
-    originalWheelQr: wheelQr || `MW|P1|${spdRequest.itemCode}|${String(Date.now()).slice(-8)}|260822|A|PL2`,
-    sourcePalletNumber,
-    productionDate: pallet.createdAt ? pallet.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
-    customerName: spdRequest.customerName,
-    status: 'STORED_SPD_PACK',
-    locationCode: 'WH1-SPD-BAY',
-    createdAt: new Date().toISOString(),
-    packedBy: req.user ? req.user.name : 'SPD Packing Operator'
-  };
+  const totalQty = Math.max(1, Number(spdRequest.qtyRequired || 10));
+  const createdPacks = [];
+  const generatedStickers = [];
 
   if (!store.spdPacks) store.spdPacks = [];
-  store.spdPacks.unshift(spdPackObj);
 
-  spdRequest.qtyServed = (spdRequest.qtyServed || 0) + 1;
-  if (spdRequest.qtyServed >= spdRequest.qtyRequired) {
-    spdRequest.status = 'IN_PROGRESS';
+  for (let i = 1; i <= totalQty; i++) {
+    const spdPackNumber = formatNumber('SP');
+    const spdPackQr = generateSpdPackQr(spdPackNumber);
+
+    const spdPackObj = {
+      spdPackNumber,
+      spdPackQr,
+      spdRequestNumber,
+      itemCode: spdRequest.itemCode,
+      originalWheelQr: wheelQr || `MW|P1|${spdRequest.itemCode}|${String(Date.now() + i).slice(-8)}|260822|A|PL2`,
+      sourcePalletNumber,
+      productionDate: pallet.createdAt ? pallet.createdAt.split('T')[0] : new Date().toISOString().split('T')[0],
+      customerName: spdRequest.customerName,
+      status: 'STORED_SPD_PACK',
+      locationCode: 'WH1-SPD-BAY',
+      createdAt: new Date().toISOString(),
+      packedBy: req.user ? req.user.name : 'SPD Packing Operator'
+    };
+
+    store.spdPacks.unshift(spdPackObj);
+    createdPacks.push(spdPackObj);
+
+    generatedStickers.push({
+      spdPackNumber,
+      spdPackQr,
+      uniqueQrData: spdPackQr,
+      codeText: spdPackNumber,
+      serialNumber: spdPackNumber,
+      itemCode: spdRequest.itemCode,
+      itemDescription: 'Individual Boxed SPD Spare Wheel (SP Series)',
+      wheelIndex: i,
+      totalBatchCount: totalQty,
+      primaryDetail: `SPD Req: ${spdRequestNumber} • Wheel ${i} of ${totalQty}`,
+      secondaryDetail: `Source: ${sourcePalletNumber} • Customer: ${spdRequest.customerName}`,
+      stickerDetails: [
+        { 'PACK #': spdPackNumber },
+        { 'REQ #': spdRequestNumber },
+        { 'LABEL': `${i} OF ${totalQty}` },
+        { 'SOURCE': sourcePalletNumber }
+      ]
+    });
   }
+
+  spdRequest.qtyServed = totalQty;
+  spdRequest.status = 'COMPLETED';
 
   saveStore();
 
   res.json({
     success: true,
-    message: `SPD Pack ${spdPackNumber} created for wheel. (${spdRequest.qtyServed}/${spdRequest.qtyRequired})`,
-    spdPack: spdPackObj,
+    message: `Successfully packed ${totalQty} wheel(s) into SPD packs with ${totalQty} individual QR stickers.`,
+    spdPacks: createdPacks,
+    spdStickers: generatedStickers,
+    spdPack: createdPacks[0],
     spdRequest
   });
 }
@@ -248,7 +352,7 @@ function convertSpdToPallet(req, res) {
   const totalWheels = validPacks.length;
 
   const itemMaster = store.items.find(i => i.itemCode === itemCode);
-  const stdQty = itemMaster ? itemMaster.stdPalletQty : 96;
+  const stdQty = itemMaster ? itemMaster.stdPalletQty : 4;
 
   const newPalletNumber = totalWheels >= stdQty ? formatNumber('P') : formatNumber('H');
   const typeSeries = totalWheels >= stdQty ? 'P' : 'H';
@@ -320,6 +424,7 @@ function getConversionHistory(req, res) {
 
 module.exports = {
   createSpdRequest,
+  generateSpdStickers,
   getProposedPallet,
   packSpdWheel,
   finishSpdJob,

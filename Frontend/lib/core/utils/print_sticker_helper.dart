@@ -33,16 +33,33 @@ void openPrintableStickerBatch({
   String? itemDescription,
   required List<Map<String, dynamic>> stickers,
 }) {
+  final isWheelSticker = stickerType == 'WHEEL QR STICKER';
   try {
     final stickerPagesHtml = stickers.map((s) {
-      final String qrData = s['uniqueQrData'] ?? s['wheelQr'] ?? 'MW|P1|$itemCode|00000001|260822|A|PL2';
-      final String codeText = s['codeText'] ?? s['wheelQr'] ?? s['serialNumber'] ?? 'WHEEL STICKER';
-      final List<Map<String, String>> details = (s['stickerDetails'] as List<Map<String, String>>?) ?? [
-        {'SERIAL': s['serialNumber'] ?? '00000001'},
-        {'WHEEL NO': '${s['wheelIndex'] ?? 1} of ${s['totalBatchCount'] ?? stickers.length}'},
-        {'DATE': '2026-08-22'},
-        {'WORK POINT': 'Pack Point #1'},
-      ];
+      final String qrData = s['uniqueQrData'] ?? s['spdPackQr'] ?? s['wheelQr'] ?? 'MW|P1|$itemCode|00000001|260826|A|PL2';
+      final String codeText = s['codeText'] ?? s['spdPackNumber'] ?? s['wheelQr'] ?? s['serialNumber'] ?? 'WHEEL STICKER';
+      List<Map<String, String>> details = [];
+      if (s['stickerDetails'] != null && s['stickerDetails'] is List) {
+        try {
+          details = (s['stickerDetails'] as List).map<Map<String, String>>((d) {
+            if (d is Map && d.isNotEmpty) {
+              final k = d.keys.first.toString();
+              final v = d.values.first.toString();
+              return {k: v};
+            }
+            return {'LABEL': d.toString()};
+          }).toList();
+        } catch (_) {}
+      }
+
+      if (details.isEmpty) {
+        details = [
+          {'SERIAL': (s['serialNumber'] ?? s['spdPackNumber'] ?? '43918758').toString()},
+          {'WHEEL NO': '${s['wheelIndex'] ?? 1} of ${s['totalBatchCount'] ?? stickers.length}'},
+          {'DATE': '2026-08-26'},
+          {'WORK POINT': 'Pack Point #1'},
+        ];
+      }
 
       final detailsHtml = details.map((d) {
         final k = d.keys.first;
@@ -57,6 +74,40 @@ void openPrintableStickerBatch({
 
       final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${Uri.encodeComponent(qrData)}';
 
+      final isWheelSticker = stickerType == 'WHEEL QR STICKER';
+
+      if (isWheelSticker) {
+        // Extract shift and line if available
+        String shiftVal = 'A';
+        String lineVal = 'PL2';
+        String serialVal = s['serialNumber'] ?? '00000001';
+
+        final parts = qrData.split('|');
+        if (parts.length >= 7) {
+          shiftVal = parts[5];
+          lineVal = parts[6];
+          serialVal = parts[3];
+        }
+
+        return '''
+        <div class="sticker-page wheel-sticker-page">
+          <div class="wheel-sticker-container">
+            <div class="wheel-header">
+              <span class="wheel-brand">MAXION WHEELS</span>
+              <span class="wheel-shift-pill">SHIFT $shiftVal</span>
+            </div>
+            <div class="wheel-hr"></div>
+            <div class="wheel-qr-center">
+              <img class="wheel-qr-img" src="$qrUrl" onerror="this.onerror=null;this.src='https://chart.googleapis.com/chart?cht=qr&chs=250x250&chl=${Uri.encodeComponent(qrData)}';" alt="Wheel QR" />
+            </div>
+            <div class="wheel-item-code">$itemCode</div>
+            <div class="wheel-sn-line">SN: $serialVal | LINE $lineVal</div>
+            <div class="wheel-payload">$qrData</div>
+          </div>
+        </div>
+        ''';
+      }
+
       return '''
         <div class="sticker-page">
           <div class="sticker-container">
@@ -66,7 +117,7 @@ void openPrintableStickerBatch({
             </div>
 
             <div class="sticker-body">
-              <img class="qr-img" src="$qrUrl" alt="QR Sticker" />
+              <img class="qr-img" src="$qrUrl" onerror="this.onerror=null;this.src='https://chart.googleapis.com/chart?cht=qr&chs=200x200&chl=${Uri.encodeComponent(qrData)}';" alt="QR Sticker" />
               <div class="main-info">
                 <div class="code-text">$codeText</div>
                 <div class="item-code">$itemCode</div>
@@ -90,7 +141,7 @@ void openPrintableStickerBatch({
   <title>BATCH STICKERS - $itemCode (${stickers.length} LABELS)</title>
   <style>
     @page {
-      size: 100mm 60mm; /* Standard 4in x 2.5in Industrial Thermal Sticker Label */
+      size: ${isWheelSticker ? '50mm 50mm' : '100mm 60mm'}; /* 50x50mm square for Wheel stickers, 100x60mm for pallets */
       margin: 0;
     }
     *, *:before, *:after {
@@ -104,9 +155,9 @@ void openPrintableStickerBatch({
       color: #000;
     }
     .sticker-page {
-      width: 100mm;
-      height: 60mm;
-      padding: 6px;
+      width: ${isWheelSticker ? '50mm' : '100mm'};
+      height: ${isWheelSticker ? '50mm' : '60mm'};
+      padding: ${isWheelSticker ? '2.5mm' : '6px'};
       page-break-after: always;
       break-after: page;
       overflow: hidden;
@@ -122,6 +173,93 @@ void openPrintableStickerBatch({
       justify-content: space-between;
       overflow: hidden;
       background: #fff;
+    }
+    .wheel-sticker-container {
+      border: 2px solid #000;
+      border-radius: 8px;
+      padding: 5px 6px;
+      height: 100%;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      background: #fff;
+      text-align: center;
+    }
+    .wheel-header {
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .wheel-brand {
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+    }
+    .wheel-shift-pill {
+      background: #000;
+      color: #fff;
+      font-size: 7.5px;
+      font-weight: 900;
+      padding: 1.5px 4.5px;
+      border-radius: 3px;
+    }
+    .wheel-hr {
+      width: 100%;
+      height: 1.5px;
+      background: #000;
+      margin: 2px 0;
+    }
+    .wheel-qr-center {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 1px 0;
+    }
+    .wheel-qr-img {
+      width: 76px;
+      height: 76px;
+      object-fit: contain;
+    }
+    .wheel-item-code {
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: 0.3px;
+      margin-top: 1px;
+    }
+    .wheel-sn-line {
+      font-size: 8px;
+      font-weight: 700;
+      color: #111;
+      margin-top: 1px;
+    }
+    .wheel-payload {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 6px;
+      color: #555;
+      margin-top: 1px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .wheel-sn-line {
+      font-size: 9.5px;
+      font-weight: 700;
+      color: #222;
+      margin-top: 1px;
+    }
+    .wheel-payload {
+      font-family: 'Consolas', 'Courier New', monospace;
+      font-size: 7.5px;
+      color: #555;
+      margin-top: 1px;
+      max-width: 100%;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
     .sticker-header {
       display: flex;
@@ -233,14 +371,14 @@ void openPrintableStickerBatch({
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         backgroundColor: AppColors.ok,
-        content: Text('Opened Thermal Sticker Print Window for ${stickers.length} labels ($itemCode)!'),
+        content: Text('Opened System Print Window for ${stickers.length} SPD stickers!'),
       ),
     );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
+      const SnackBar(
         backgroundColor: AppColors.ok,
-        content: Text('Sticker Roll formatted for printing!'),
+        content: Text('Sticker Roll sent to print window!'),
       ),
     );
   }

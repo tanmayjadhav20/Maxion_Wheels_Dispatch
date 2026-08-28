@@ -6,20 +6,21 @@
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <meta name="description" content="Maxion Wheels Dispatch Operations Digitalization Flutter App by Vistar Logitek">
-
-  <!-- iOS meta tags & icons -->
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="Maxion Wheels Dispatch">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#070611">
+  <meta name="description" content="Maxion Wheels Dispatch Operations Digitalization Flutter App by Vistar Logitek">
 
   <title>Maxion Wheels Dispatch Operations Digitalization · Vistar Logitek</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Vistar Google Fonts -->
+  <!-- Vistar Google Fonts (Non-Blocking Asynchronous Load) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Inter:wght@400..800&family=JetBrains+Mono:wght@400..700&display=swap" rel="stylesheet">
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap"></noscript>
 
   <style>
     :root {
@@ -33,11 +34,22 @@
       --txt: #F2EEFB; --txt2: #B9B2D6; --txt3: #7E769B;
     }
 
+    html, body, canvas, flt-glass-pane, flt-scene-host, flt-scene {
+      -webkit-font-smoothing: antialiased !important;
+      -moz-osx-font-smoothing: grayscale !important;
+      text-rendering: optimizeLegibility !important;
+      image-rendering: -webkit-optimize-contrast !important;
+      font-smooth: always !important;
+      transform: translateZ(0);
+      will-change: transform;
+      backface-visibility: hidden;
+    }
+
     body {
       background-color: var(--bg);
       margin: 0;
       padding: 0;
-      font-family: 'Inter', sans-serif;
+      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
       color: var(--txt);
       overflow-x: hidden;
     }
@@ -65,6 +77,130 @@
   </style>
 </head>
 <body>
+  <!-- jsQR & Multi-Format Barcode Decoder Library -->
+  <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+  <script>
+    window.decodeVideoFrameQr = function(videoElement) {
+      try {
+        if (!videoElement || videoElement.readyState < 2) return null;
+        var width = videoElement.videoWidth || 640;
+        var height = videoElement.videoHeight || 480;
+        if (width === 0 || height === 0) return null;
+
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        var ctx = canvas.getContext('2d');
+        ctx.drawImage(videoElement, 0, 0, width, height);
+        var imageData = ctx.getImageData(0, 0, width, height);
+
+        // 1. Try jsQR for 2D QR codes (fastest & most reliable)
+        if (typeof jsQR !== 'undefined') {
+          var code = jsQR(imageData.data, imageData.width, imageData.height, {
+            inversionAttempts: "attemptBoth"
+          });
+          if (code && code.data && code.data.trim().length > 0) {
+            return code.data.trim();
+          }
+        }
+
+        // 2. Try native BarcodeDetector if available (for Code 128, Code 39, Data Matrix, EAN)
+        if ('BarcodeDetector' in window) {
+          if (!window._cachedBarcodeDetector) {
+            try {
+              window._cachedBarcodeDetector = new BarcodeDetector({
+                formats: ['qr_code', 'code_128', 'code_39', 'data_matrix', 'ean_13', 'pdf417']
+              });
+            } catch (err) {}
+          }
+          if (window._cachedBarcodeDetector) {
+            window._cachedBarcodeDetector.detect(canvas).then(function(barcodes) {
+              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                window._lastBarcodeDetected = barcodes[0].rawValue.trim();
+              }
+            }).catch(function(){});
+
+            if (window._lastBarcodeDetected) {
+              var val = window._lastBarcodeDetected;
+              window._lastBarcodeDetected = null;
+              return val;
+            }
+          }
+        }
+      } catch (e) {
+        console.error("Barcode/QR decode error:", e);
+      }
+      return null;
+    };
+
+    window.printStickerBatchHtml = function(htmlContent) {
+      try {
+        var blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
+        var url = URL.createObjectURL(blob);
+        var printWin = window.open(url, '_blank');
+        if (printWin && !printWin.closed) {
+          printWin.focus();
+          return true;
+        }
+      } catch(e) {
+        console.warn("Blob window.open failed, falling back to direct document write:", e);
+      }
+
+      try {
+        var printDoc = window.open('', '_blank', 'width=900,height=700');
+        if (printDoc && !printDoc.closed) {
+          printDoc.document.open();
+          printDoc.document.write(htmlContent);
+          printDoc.document.close();
+          printDoc.focus();
+          setTimeout(function() {
+            try {
+              printDoc.print();
+            } catch(e) {}
+          }, 500);
+          return true;
+        }
+      } catch(e) {
+        console.warn("Direct document write failed, falling back to iframe:", e);
+      }
+
+      try {
+        var iframe = document.createElement('iframe');
+        iframe.id = 'stickerPrintIframe';
+        iframe.style.position = 'fixed';
+        iframe.style.right = '0';
+        iframe.style.bottom = '0';
+        iframe.style.width = '0';
+        iframe.style.height = '0';
+        iframe.style.border = '0';
+        iframe.style.visibility = 'hidden';
+        document.body.appendChild(iframe);
+
+        var doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(htmlContent);
+        doc.close();
+
+        setTimeout(function() {
+          try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+          } catch(err) {
+            console.error("Iframe print error:", err);
+          }
+          setTimeout(function() {
+            if (iframe.parentNode) {
+              iframe.parentNode.removeChild(iframe);
+            }
+          }, 4000);
+        }, 500);
+        return true;
+      } catch(err) {
+        console.error("Print sticker failed:", err);
+        return false;
+      }
+    };
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

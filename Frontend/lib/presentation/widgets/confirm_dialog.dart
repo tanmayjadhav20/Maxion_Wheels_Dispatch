@@ -51,15 +51,16 @@ class ConfirmDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: 12,
+              runSpacing: 8,
               children: [
                 AppButton(
                   text: cancelText,
                   variant: AppButtonVariant.ghost,
                   onPressed: () => Navigator.of(context).pop(false),
                 ),
-                const SizedBox(width: 12),
                 AppButton(
                   text: confirmText,
                   variant: isDestructive ? AppButtonVariant.danger : AppButtonVariant.gradient,

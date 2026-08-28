@@ -11,6 +11,24 @@ class AppTokens {
   static const EdgeInsets pCard = EdgeInsets.all(18.0);
   static const EdgeInsets pButton = EdgeInsets.symmetric(horizontal: 18.0, vertical: 14.0);
 
+  static EdgeInsets screenPadding(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    if (w < 600) {
+      return const EdgeInsets.symmetric(horizontal: 12.0, vertical: 14.0);
+    } else if (w < 900) {
+      return const EdgeInsets.all(18.0);
+    }
+    return const EdgeInsets.all(24.0);
+  }
+
+  static EdgeInsets cardPadding(BuildContext context) {
+    final w = MediaQuery.of(context).size.width;
+    if (w < 600) {
+      return const EdgeInsets.all(13.0);
+    }
+    return const EdgeInsets.all(18.0);
+  }
+
   static const Duration animFast = Duration(milliseconds: 180);
   static const Duration animNormal = Duration(milliseconds: 300);
 

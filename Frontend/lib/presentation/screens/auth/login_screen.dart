@@ -16,25 +16,52 @@ class LoginScreen extends ConsumerStatefulWidget {
 }
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _codeController = TextEditingController(text: 'EMP001');
-  final _pinController = TextEditingController(text: '1234');
-  String _selectedRole = 'superAdmin';
+  final _codeController = TextEditingController();
+  final _pinController = TextEditingController();
+  String? _selectedEmpCode;
 
-  final List<Map<String, String>> _roles = [
-    {'code': 'superAdmin', 'label': 'Admin / Super User'},
-    {'code': 'packOperator', 'label': 'Pack Point Operator'},
-    {'code': 'warehouseManager', 'label': 'Warehouse Manager'},
-    {'code': 'picker', 'label': 'HHT Forklift Operator'},
-    {'code': 'security', 'label': 'Security Officer'},
-  ];
+  List<Map<String, dynamic>> _users = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUsers();
+  }
+
+  @override
+  void dispose() {
+    _codeController.dispose();
+    _pinController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchUsers() async {
+    try {
+      final remoteApi = ref.read(remoteApiProvider);
+      final res = await remoteApi.get('/auth/users');
+      if (res['success'] == true && res['users'] != null) {
+        final rawUsers = res['users'] as List<dynamic>;
+        setState(() {
+          _users = rawUsers.map((u) => Map<String, dynamic>.from(u is Map ? u : {})).toList();
+          if (_users.isNotEmpty) {
+            _selectedEmpCode = _users.first['employeeCode']?.toString();
+            _codeController.text = _users.first['employeeCode']?.toString() ?? '';
+            _pinController.text = _users.first['pin']?.toString() ?? '';
+          }
+        });
+      }
+    } catch (_) {}
+  }
 
   void _onLogin() async {
-    String empCode = _codeController.text.trim();
-    String pinCode = _pinController.text.trim();
+    final empCode = _codeController.text.trim();
+    final pinCode = _pinController.text.trim();
 
-    if (_selectedRole == 'picker') {
-      empCode = 'EMP005';
-      pinCode = '4444';
+    if (empCode.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter or scan Employee Code'), backgroundColor: AppColors.warn),
+      );
+      return;
     }
 
     final success = await ref.read(authProvider.notifier).login(
@@ -69,6 +96,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
@@ -86,11 +114,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   color: Theme.of(context).cardColor,
                   borderRadius: BorderRadius.circular(AppTokens.rLg),
                   border: Border.all(color: Theme.of(context).dividerColor),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: Color(0x33000000),
+                      color: isDark ? const Color(0x33000000) : const Color(0x1A000000),
                       blurRadius: 24,
-                      offset: Offset(0, 8),
+                      offset: const Offset(0, 8),
                     ),
                   ],
                 ),
@@ -123,9 +151,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     TextField(
                       controller: _codeController,
                       style: TextStyle(color: context.textPrimary),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'EMPLOYEE CODE / BADGE BARCODE',
-                        prefixIcon: Icon(Icons.badge_outlined, color: AppColors.textMuted),
+                        labelStyle: TextStyle(color: context.textMuted),
+                        prefixIcon: Icon(Icons.badge_outlined, color: context.textMuted),
+                        filled: true,
+                        fillColor: context.bgSurfaceElevated,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -133,9 +165,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       controller: _pinController,
                       obscureText: true,
                       style: TextStyle(color: context.textPrimary),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'SECURITY PIN (OPTIONAL FOR OPERATORS)',
-                        prefixIcon: Icon(Icons.lock_outline, color: AppColors.textMuted),
+                        labelStyle: TextStyle(color: context.textMuted),
+                        prefixIcon: Icon(Icons.lock_outline, color: context.textMuted),
+                        filled: true,
+                        fillColor: context.bgSurfaceElevated,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       ),
                     ),
                     const SizedBox(height: 20),
@@ -152,10 +188,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
-                      children: _roles.map((r) {
-                        final isSelected = _selectedRole == r['code'];
+                      children: _users.map((u) {
+                        final empCode = u['employeeCode'] ?? '';
+                        final isSelected = _selectedEmpCode == empCode;
                         return ChoiceChip(
-                          label: Text(r['label']!),
+                          label: Text('${u['name'] ?? empCode} ($empCode)'),
                           selected: isSelected,
                           selectedColor: AppColors.ribbonPink,
                           backgroundColor: context.bgSurfaceElevated,
@@ -167,23 +204,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                           onSelected: (val) {
                             if (val) {
                               setState(() {
-                                _selectedRole = r['code']!;
-                                if (r['code'] == 'superAdmin') {
-                                  _codeController.text = 'EMP001';
-                                  _pinController.text = '1234';
-                                } else if (r['code'] == 'packOperator') {
-                                  _codeController.text = 'EMP002';
-                                  _pinController.text = '1111';
-                                } else if (r['code'] == 'warehouseManager') {
-                                  _codeController.text = 'EMP003';
-                                  _pinController.text = '2222';
-                                } else if (r['code'] == 'picker') {
-                                  _codeController.text = 'EMP005';
-                                  _pinController.text = '4444';
-                                } else if (r['code'] == 'security') {
-                                  _codeController.text = 'EMP004';
-                                  _pinController.text = '3333';
-                                }
+                                _selectedEmpCode = empCode;
+                                _codeController.text = empCode;
+                                _pinController.text = u['pin'] ?? '';
                               });
                             }
                           },
@@ -213,7 +236,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           if (!isDesktop) {
             return Scaffold(
-              backgroundColor: AppColors.bg,
+              backgroundColor: Theme.of(context).scaffoldBackgroundColor,
               body: Center(
                 child: SingleChildScrollView(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
@@ -231,17 +254,17 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(56),
                   decoration: BoxDecoration(
-                    color: AppColors.bg,
-                    border: Border(right: BorderSide(color: AppColors.line)),
+                    color: isDark ? AppColors.bg : Theme.of(context).scaffoldBackgroundColor,
+                    border: Border(right: BorderSide(color: Theme.of(context).dividerColor)),
                   ),
                   child: Stack(
                     children: [
-                      // Huge Rotated Faint S Watermark (Opacity .16)
+                      // Huge Rotated Faint S Watermark
                       Positioned(
                         right: -100,
                         bottom: -100,
                         child: Opacity(
-                          opacity: 0.16,
+                          opacity: isDark ? 0.16 : 0.06,
                           child: Image.asset(
                             'assets/logo.png',
                             width: 520,
@@ -306,11 +329,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   ),
                 ),
               ),
-              // Right Form Panel (.95fr - --bg2)
+              // Right Form Panel
               Expanded(
                 flex: 95,
                 child: Container(
-                  color: AppColors.bg2,
+                  color: isDark ? AppColors.bg2 : Theme.of(context).cardColor,
                   child: formPanel,
                 ),
               ),

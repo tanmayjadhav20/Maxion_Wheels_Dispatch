@@ -25,8 +25,9 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     Decoration decoration;
-    Color textColor = Colors.white;
+    Color textColor = isDark ? AppColors.txt : const Color(0xFF0F172A);
 
     switch (variant) {
       case AppButtonVariant.gradient:
@@ -35,29 +36,34 @@ class AppButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(AppTokens.rSm),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x66E0218A),
-              blurRadius: 14,
+              color: Color(0x55E0218A),
+              blurRadius: 12,
               offset: Offset(0, 4),
             ),
           ],
         );
+        textColor = Colors.white;
         break;
+
       case AppButtonVariant.ghost:
       case AppButtonVariant.secondary:
         decoration = BoxDecoration(
-          color: AppColors.bgSurfaceElevated,
+          color: isDark ? AppColors.surface2 : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(AppTokens.rSm),
-          border: Border.all(color: AppColors.line),
+          border: Border.all(color: isDark ? AppColors.line : const Color(0xFFCBD5E1)),
         );
-        textColor = AppColors.textPrimary;
+        textColor = isDark ? AppColors.txt : const Color(0xFF0F172A);
         break;
+
       case AppButtonVariant.danger:
         decoration = BoxDecoration(
-          color: AppColors.dangerTint,
+          color: isDark ? AppColors.dangerTint : const Color(0xFFFEE2E2),
           borderRadius: BorderRadius.circular(AppTokens.rSm),
-          border: Border.all(color: AppColors.danger.withValues(alpha: 0.4)),
+          border: Border.all(
+            color: isDark ? AppColors.danger.withValues(alpha: 0.4) : const Color(0xFFFCA5A5),
+          ),
         );
-        textColor = AppColors.danger;
+        textColor = isDark ? AppColors.danger : const Color(0xFFDC2626);
         break;
     }
 
@@ -69,22 +75,29 @@ class AppButton extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (loading) ...[
-          const SizedBox(
+          SizedBox(
             width: 16,
             height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+            child: CircularProgressIndicator(
+              strokeWidth: 2,
+              color: variant == AppButtonVariant.gradient ? Colors.white : textColor,
+            ),
           ),
           const SizedBox(width: 8),
         ] else if (icon != null) ...[
           Icon(icon, size: 18, color: textColor),
           const SizedBox(width: 8),
         ],
-        Text(
-          text,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
+        Flexible(
+          child: Text(
+            text,
+            overflow: TextOverflow.ellipsis,
+            maxLines: 1,
+            style: TextStyle(
+              color: textColor,
+              fontSize: 13.5,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ),
       ],

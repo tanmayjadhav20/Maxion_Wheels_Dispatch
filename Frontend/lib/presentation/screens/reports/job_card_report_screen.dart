@@ -8,6 +8,7 @@ import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/pills.dart';
 import '../../widgets/print_preview_dialog.dart';
+import '../../widgets/responsive_tab_bar.dart';
 import '../../widgets/section_title.dart';
 
 class JobCardReportScreen extends ConsumerStatefulWidget {
@@ -123,7 +124,7 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -181,11 +182,8 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
           ),
           const SizedBox(height: 20),
 
-          TabBar(
+          ResponsiveTabBar(
             controller: _tabController,
-            indicatorColor: AppColors.ribbonPink,
-            labelColor: AppColors.ribbonPink,
-            unselectedLabelColor: context.textMuted,
             tabs: [
               Tab(icon: const Icon(Icons.assignment_outlined), text: 'JOB CARDS REGISTER (${jobCards.length})'),
               Tab(icon: const Icon(Icons.pending_actions_outlined), text: 'PENDING BOOKING REPORT (${pendingPallets.length})'),

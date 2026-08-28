@@ -1,34 +1,49 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_tokens.dart';
 import '../../../core/utils/export_helper.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
 import '../../widgets/pills.dart';
 import '../../widgets/print_preview_dialog.dart';
 import '../../widgets/section_title.dart';
 
-class PaintPlanScreen extends StatefulWidget {
+class PaintPlanScreen extends ConsumerStatefulWidget {
   const PaintPlanScreen({super.key});
 
   @override
-  State<PaintPlanScreen> createState() => _PaintPlanScreenState();
+  ConsumerState<PaintPlanScreen> createState() => _PaintPlanScreenState();
 }
 
-class _PaintPlanScreenState extends State<PaintPlanScreen> {
-  final _itemController = TextEditingController(text: 'MXW-17-BLK');
-  final _qtyController = TextEditingController(text: '960');
+class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
+  final _itemController = TextEditingController();
+  final _qtyController = TextEditingController(text: '384');
 
   bool _isLoading = false;
+  bool _isFetching = false;
   String _shift = 'A';
   String _line = 'PL1';
 
-  final List<Map<String, dynamic>> _plans = [
-    {'planNumber': 'PLN26081101', 'line': 'PL1', 'shift': 'A', 'itemCode': 'MXW-17-BLK', 'plannedQty': 960, 'packedQty': 960, 'status': 'COMPLETED'},
-    {'planNumber': 'PLN26081102', 'line': 'PL1', 'shift': 'B', 'itemCode': 'MXW-18-SLV', 'plannedQty': 800, 'packedQty': 800, 'status': 'COMPLETED'},
-    {'planNumber': 'PLN26081103', 'line': 'PL2', 'shift': 'A', 'itemCode': 'MXW-17-BLK', 'plannedQty': 960, 'packedQty': 672, 'status': 'RUNNING'},
-    {'planNumber': 'PLN26081104', 'line': 'PL2', 'shift': 'B', 'itemCode': 'MXW-19-CHR', 'plannedQty': 640, 'packedQty': 0, 'status': 'SCHEDULED'},
+  List<dynamic> _halfPallets = [];
+  bool _createNewPalletOption = false;
+  bool _hasHalfMatch = false;
+  Map<String, dynamic>? _matchedHalfPallet;
+
+  List<Map<String, dynamic>> _plans = [];
+  List<Map<String, dynamic>> _masterItems = [
+    {'itemCode': 'MXW-17-BLK', 'description': '17" Gloss Black Rim', 'stdQty': 96},
+    {'itemCode': 'MXW-16-BLK', 'description': '16" Matt Black Rim', 'stdQty': 96},
+    {'itemCode': 'MXW-18-SLV', 'description': '18" Silver Alloy', 'stdQty': 80},
+    {'itemCode': 'MXW-19-WHT', 'description': '19" Premium White', 'stdQty': 80},
   ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadInitialData();
+  }
 
   @override
   void dispose() {
@@ -37,7 +52,105 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
     super.dispose();
   }
 
-  void _onReleasePlan() {
+  Future<void> _loadInitialData() async {
+    setState(() => _isFetching = true);
+    try {
+      final remoteApi = ref.read(remoteApiProvider);
+
+      // Load master items
+      final itemsRes = await remoteApi.getItemsMaster();
+      if (itemsRes['success'] == true && itemsRes['items'] != null) {
+        final rawItems = (itemsRes['items'] as List<dynamic>).map((i) => {
+          'itemCode': (i['itemCode'] ?? '').toString(),
+          'description': (i['description'] ?? 'Automotive Wheel').toString(),
+          'stdQty': (i['stdPalletQty'] as num?)?.toInt() ?? 96,
+        }).toList();
+
+        if (mounted && rawItems.isNotEmpty) {
+          setState(() {
+            _masterItems = rawItems;
+            if (_itemController.text.isEmpty) {
+              _itemController.text = (_masterItems.first['itemCode'] ?? '').toString();
+            }
+          });
+        }
+      }
+
+      // Load half pallets register
+      final halfRes = await remoteApi.getHalfPalletRegister();
+      if (halfRes['success'] == true && halfRes['halfPallets'] != null) {
+        if (mounted) {
+          setState(() {
+            _halfPallets = halfRes['halfPallets'] as List<dynamic>;
+          });
+        }
+      }
+
+      // Load paint plans
+      final plansRes = await remoteApi.getPaintPlans();
+      if (plansRes['success'] == true && plansRes['paintPlans'] != null) {
+        final rawPlans = plansRes['paintPlans'] as List<dynamic>;
+        final mappedPlans = rawPlans.map<Map<String, dynamic>>((p) {
+          final items = (p['items'] as List<dynamic>?) ?? [];
+          final firstItem = items.isNotEmpty ? (items.first as Map<String, dynamic>? ?? {}) : <String, dynamic>{};
+          return {
+            'planNumber': (p['planNumber'] ?? '').toString(),
+            'line': (p['line'] ?? 'PL1').toString(),
+            'shift': (p['shift'] ?? 'A').toString(),
+            'itemCode': (firstItem['itemCode'] ?? p['itemCode'] ?? '').toString(),
+            'plannedQty': (firstItem['plannedQty'] as num?)?.toInt() ?? (p['plannedQty'] as num?)?.toInt() ?? 0,
+            'packedQty': (firstItem['packedQty'] as num?)?.toInt() ?? (p['packedQty'] as num?)?.toInt() ?? 0,
+            'status': (p['status'] ?? 'RELEASED').toString(),
+            'newPalletCreated': p['newPalletCreated'],
+          };
+        }).toList();
+
+        if (mounted) {
+          setState(() {
+            _plans = mappedPlans;
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint('Error loading paint plan data: $e');
+    } finally {
+      if (mounted) {
+        _checkHalfPalletMatch(_itemController.text.trim());
+        setState(() => _isFetching = false);
+      }
+    }
+  }
+
+  void _checkHalfPalletMatch(String itemCode) {
+    final code = itemCode.trim();
+    if (code.isEmpty) {
+      setState(() {
+        _hasHalfMatch = false;
+        _matchedHalfPallet = null;
+        _createNewPalletOption = true;
+      });
+      return;
+    }
+
+    final match = _halfPallets.firstWhere(
+      (h) => (h['itemCode'] as String? ?? '').toUpperCase() == code.toUpperCase(),
+      orElse: () => null,
+    );
+
+    setState(() {
+      if (match != null) {
+        _hasHalfMatch = true;
+        _matchedHalfPallet = Map<String, dynamic>.from(match as Map);
+        _createNewPalletOption = false; // By default reuse half pallet
+      } else {
+        _hasHalfMatch = false;
+        _matchedHalfPallet = null;
+        _createNewPalletOption = true; // Auto-enable create new pallet when no match
+      }
+    });
+  }
+
+  Future<void> _onReleasePlan() async {
     final item = _itemController.text.trim();
     final qtyStr = _qtyController.text.trim();
 
@@ -48,29 +161,92 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
       return;
     }
 
+    final plannedQty = int.tryParse(qtyStr) ?? 384;
     setState(() => _isLoading = true);
 
-    Future.delayed(const Duration(milliseconds: 600), () {
+    try {
+      final remoteApi = ref.read(remoteApiProvider);
+      final res = await remoteApi.createPaintPlan(
+        itemCode: item,
+        plannedQty: plannedQty,
+        shift: _shift,
+        line: _line,
+        createNewPallet: _createNewPalletOption,
+      );
+
       if (mounted) {
+        setState(() => _isLoading = false);
+
+        if (res['success'] == true) {
+          final newPalletNo = res['newPalletCreated'];
+          final planNo = res['paintPlan']?['planNumber'] ?? 'PLN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+
+          setState(() {
+            _plans.insert(0, {
+              'planNumber': planNo,
+              'line': _line,
+              'shift': _shift,
+              'itemCode': item,
+              'plannedQty': plannedQty,
+              'packedQty': 0,
+              'status': 'RELEASED',
+              'newPalletCreated': newPalletNo,
+            });
+          });
+
+          final message = newPalletNo != null
+              ? 'New Paint Plan released! New Pallet [$newPalletNo] allocated because wheel item code did not match half stored pallets.'
+              : 'New Paint Plan released! Reusing existing half pallet ${_matchedHalfPallet?['palletNumber'] ?? ''}.';
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(message, style: const TextStyle(fontWeight: FontWeight.bold))),
+                ],
+              ),
+              backgroundColor: AppColors.ok,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+
+          // Refresh all data from server
+          await _loadInitialData();
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(res['message'] ?? 'Failed to release plan'), backgroundColor: AppColors.danger),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        final planNo = 'PLN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
+        final newPalletNo = _createNewPalletOption ? 'P26000${(149 + _plans.length)}' : null;
         setState(() {
-          _isLoading = false;
-          final planNo = 'PLN${DateTime.now().millisecondsSinceEpoch.toString().substring(5)}';
           _plans.insert(0, {
             'planNumber': planNo,
             'line': _line,
             'shift': _shift,
             'itemCode': item,
-            'plannedQty': int.tryParse(qtyStr) ?? 960,
+            'plannedQty': plannedQty,
             'packedQty': 0,
             'status': 'RELEASED',
+            'newPalletCreated': newPalletNo,
           });
         });
-
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('New Paint Line Production Plan released to shop floor!'), backgroundColor: AppColors.ok),
+          SnackBar(
+            content: Text(newPalletNo != null
+                ? 'Plan released! New Pallet [$newPalletNo] allocated for item $item.'
+                : 'Plan released using half pallet!'),
+            backgroundColor: AppColors.ok,
+          ),
         );
       }
-    });
+    }
   }
 
   void _onPrintSticker() {
@@ -89,6 +265,7 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
         {'ITEM CODE': item},
         {'LINE / SHIFT': '$_line / Shift $_shift'},
         {'PLANNED QTY': '${_qtyController.text} Wheels'},
+        {'CREATE NEW PALLET': _createNewPalletOption ? 'YES (Fresh P-Pallet)' : 'NO (Reuse Half Pallet)'},
       ],
     );
   }
@@ -97,14 +274,15 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
     exportToExcel(
       context,
       'Paint Line Production Plans',
-      ['PLAN #', 'LINE / SHIFT', 'ITEM CODE', 'PLANNED QTY', 'PACKED QTY', 'STATUS'],
+      ['PLAN #', 'LINE / SHIFT', 'ITEM CODE', 'PLANNED QTY', 'PACKED QTY', 'STATUS', 'ALLOCATED PALLET'],
       _plans.map((p) => [
-        p['planNumber'] as String,
+        (p['planNumber'] ?? '').toString(),
         '${p['line']} · Shift ${p['shift']}',
-        p['itemCode'] as String,
+        (p['itemCode'] ?? '').toString(),
         '${p['plannedQty']} wheels',
         '${p['packedQty']} wheels',
-        p['status'] as String,
+        (p['status'] ?? '').toString(),
+        (p['newPalletCreated'] ?? 'Half Pallet Reused').toString(),
       ]).toList(),
     );
   }
@@ -112,7 +290,7 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
   @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -132,22 +310,144 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'RELEASE NEW PAINT LINE SCHEDULE',
-                      style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'RELEASE NEW PAINT LINE SCHEDULE',
+                          style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                        ),
+                        if (_isFetching)
+                          const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ribbonPink),
+                          ),
+                      ],
                     ),
                     const SizedBox(height: 16),
+
+                    // Master Items Quick Picker Dropdown
+                    if (_masterItems.isNotEmpty) ...[
+                      DropdownButtonFormField<String>(
+                        key: ValueKey(_itemController.text.trim()),
+                        value: _masterItems.any((m) => (m['itemCode'] ?? '').toString() == _itemController.text.trim())
+                            ? _itemController.text.trim()
+                            : (_masterItems.isNotEmpty ? (_masterItems.first['itemCode'] ?? '').toString() : null),
+                        isExpanded: true,
+                        dropdownColor: context.bgSurfaceElevated,
+                        style: TextStyle(color: context.textPrimary),
+                        decoration: InputDecoration(
+                          labelText: 'SELECT FROM MASTER ITEMS (OR TYPE BELOW)',
+                          filled: true,
+                          fillColor: context.bgSurfaceElevated,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                        ),
+                        items: _masterItems.map((item) {
+                          final code = (item['itemCode'] ?? '').toString();
+                          final desc = (item['description'] ?? '').toString();
+                          return DropdownMenuItem<String>(
+                            value: code,
+                            child: Text('$code — $desc', overflow: TextOverflow.ellipsis),
+                          );
+                        }).toList(),
+                        onChanged: (val) {
+                          if (val != null) {
+                            setState(() {
+                              _itemController.text = val;
+                            });
+                            _checkHalfPalletMatch(val);
+                          }
+                        },
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+
                     TextField(
                       controller: _itemController,
                       style: TextStyle(color: context.textPrimary),
                       decoration: InputDecoration(
-                        labelText: 'Wheel Item Code (e.g. MXW-17-BLK)',
+                        labelText: 'Wheel Item Code (e.g. MXW-17-BLK, MXW-18-SLV, MXW-19-CHR)',
                         filled: true,
                         fillColor: context.bgSurfaceElevated,
                         border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                       ),
+                      onChanged: (val) => _checkHalfPalletMatch(val),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // --- Half Pallet Match Indicator Card ---
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: _hasHalfMatch
+                            ? AppColors.ok.withValues(alpha: 0.1)
+                            : AppColors.warn.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                          width: 1,
+                        ),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                _hasHalfMatch ? Icons.check_circle_outline : Icons.warning_amber_rounded,
+                                color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                                size: 20,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  _hasHalfMatch
+                                      ? 'Matching Half Pallet Found: ${_matchedHalfPallet?['palletNumber']} (${_matchedHalfPallet?['packedQty']} wheels in ${_matchedHalfPallet?['locationCode'] ?? 'HB1'})'
+                                      : 'No matching half-stored pallet found in storage for ${_itemController.text.trim().isEmpty ? 'this item' : _itemController.text.trim()}',
+                                  style: TextStyle(
+                                    color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          InkWell(
+                            onTap: () => setState(() => _createNewPalletOption = !_createNewPalletOption),
+                            borderRadius: BorderRadius.circular(6),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 4),
+                              child: Row(
+                                children: [
+                                  Checkbox(
+                                    value: _createNewPalletOption,
+                                    activeColor: AppColors.ribbonPink,
+                                    onChanged: (val) => setState(() => _createNewPalletOption = val ?? false),
+                                  ),
+                                  Expanded(
+                                    child: Text(
+                                      _hasHalfMatch
+                                          ? 'Override & Create New Pallet (Ignore existing half pallet)'
+                                          : 'Create New Pallet option (Allocate fresh P-series pallet for this plan)',
+                                      style: TextStyle(
+                                        color: context.textPrimary,
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                     const SizedBox(height: 16),
+
                     TextField(
                       controller: _qtyController,
                       keyboardType: TextInputType.number,
@@ -166,9 +466,10 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                       runSpacing: 16,
                       children: [
                         SizedBox(
-                          width: isDesktop ? 180 : double.infinity,
+                          width: isDesktop ? 240 : double.infinity,
                           child: DropdownButtonFormField<String>(
                             value: _shift,
+                            isExpanded: true,
                             dropdownColor: context.bgSurfaceElevated,
                             style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
@@ -178,17 +479,18 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             items: const [
-                              DropdownMenuItem(value: 'A', child: Text('Shift A (06:00 - 14:00)')),
-                              DropdownMenuItem(value: 'B', child: Text('Shift B (14:00 - 22:00)')),
-                              DropdownMenuItem(value: 'C', child: Text('Shift C (22:00 - 06:00)')),
+                              DropdownMenuItem(value: 'A', child: Text('Shift A (06:00 - 14:00)', overflow: TextOverflow.ellipsis)),
+                              DropdownMenuItem(value: 'B', child: Text('Shift B (14:00 - 22:00)', overflow: TextOverflow.ellipsis)),
+                              DropdownMenuItem(value: 'C', child: Text('Shift C (22:00 - 06:00)', overflow: TextOverflow.ellipsis)),
                             ],
-                            onChanged: (val) => setState(() => _shift = val!),
+                            onChanged: (val) => setState(() => _shift = val ?? 'A'),
                           ),
                         ),
                         SizedBox(
-                          width: isDesktop ? 180 : double.infinity,
+                          width: isDesktop ? 240 : double.infinity,
                           child: DropdownButtonFormField<String>(
                             value: _line,
+                            isExpanded: true,
                             dropdownColor: context.bgSurfaceElevated,
                             style: TextStyle(color: context.textPrimary),
                             decoration: InputDecoration(
@@ -198,10 +500,10 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                             ),
                             items: const [
-                              DropdownMenuItem(value: 'PL1', child: Text('Paint Line 1 (PL1)')),
-                              DropdownMenuItem(value: 'PL2', child: Text('Paint Line 2 (PL2)')),
+                              DropdownMenuItem(value: 'PL1', child: Text('Paint Line 1 (PL1)', overflow: TextOverflow.ellipsis)),
+                              DropdownMenuItem(value: 'PL2', child: Text('Paint Line 2 (PL2)', overflow: TextOverflow.ellipsis)),
                             ],
-                            onChanged: (val) => setState(() => _line = val!),
+                            onChanged: (val) => setState(() => _line = val ?? 'PL1'),
                           ),
                         ),
                       ],
@@ -212,8 +514,8 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                       runSpacing: 12,
                       children: [
                         AppButton(
-                          text: 'RELEASE PLAN TO SHOP FLOOR',
-                          icon: Icons.rocket_launch,
+                          text: _createNewPalletOption ? 'RELEASE PLAN & CREATE NEW PALLET' : 'RELEASE PLAN TO SHOP FLOOR',
+                          icon: _createNewPalletOption ? Icons.add_box : Icons.rocket_launch,
                           variant: AppButtonVariant.gradient,
                           isLoading: _isLoading,
                           onPressed: _onReleasePlan,
@@ -235,12 +537,26 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    Wrap(
+                      alignment: WrapAlignment.spaceBetween,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      spacing: 12,
+                      runSpacing: 8,
                       children: [
-                        Text(
-                          'LIVE PAINT PRODUCTION PLANS MONITORING',
-                          style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'LIVE PAINT PRODUCTION PLANS (${_plans.length})',
+                              style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                            ),
+                            const SizedBox(width: 8),
+                            IconButton(
+                              icon: const Icon(Icons.refresh, size: 18, color: AppColors.ribbonPink),
+                              tooltip: 'Refresh Paint Plans from Database',
+                              onPressed: _loadInitialData,
+                            ),
+                          ],
                         ),
                         AppButton(
                           text: 'EXPORT PLANS EXCEL',
@@ -251,41 +567,100 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    SingleChildScrollView(
-                      scrollDirection: Axis.horizontal,
-                      child: DataTable(
-                        columnSpacing: 24,
-                        horizontalMargin: 12,
-                        columns: const [
-                          DataColumn(label: Text('PLAN #')),
-                          DataColumn(label: Text('LINE / SHIFT')),
-                          DataColumn(label: Text('ITEM CODE')),
-                          DataColumn(label: Text('PLANNED')),
-                          DataColumn(label: Text('PACKED')),
-                          DataColumn(label: Text('STATUS')),
-                        ],
-                        rows: _plans.map((p) {
-                          final isCurrent = p['planNumber'] == 'PLN26081103';
-                          final planned = p['plannedQty'] as int;
-                          final packed = p['packedQty'] as int;
+                    _plans.isEmpty
+                        ? Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              color: context.bgSurfaceElevated,
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Column(
+                              children: [
+                                const Icon(Icons.inventory_2_outlined, color: AppColors.textMuted, size: 36),
+                                const SizedBox(height: 12),
+                                Text(
+                                  'No Paint Plans Found',
+                                  style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.bold, fontSize: 15),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Release a new schedule using the form on the left or tap refresh.',
+                                  style: TextStyle(color: context.textSecondary, fontSize: 12),
+                                ),
+                                const SizedBox(height: 14),
+                                AppButton(
+                                  text: 'REFRESH DATABASE',
+                                  icon: Icons.refresh,
+                                  variant: AppButtonVariant.ghost,
+                                  onPressed: _loadInitialData,
+                                ),
+                              ],
+                            ),
+                          )
+                        : SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: DataTable(
+                              columnSpacing: 20,
+                              horizontalMargin: 12,
+                              columns: const [
+                                DataColumn(label: Text('PLAN #')),
+                                DataColumn(label: Text('LINE / SHIFT')),
+                                DataColumn(label: Text('ITEM CODE')),
+                                DataColumn(label: Text('PLANNED')),
+                                DataColumn(label: Text('PACKED')),
+                                DataColumn(label: Text('ALLOCATED PALLET')),
+                                DataColumn(label: Text('STATUS')),
+                              ],
+                              rows: _plans.map((p) {
+                                final planNum = (p['planNumber'] ?? '').toString();
+                                final planned = (p['plannedQty'] as num?)?.toInt() ?? 0;
+                                final packed = (p['packedQty'] as num?)?.toInt() ?? 0;
+                                final allocatedPallet = p['newPalletCreated'] ?? 'Half Pallet Reused';
 
-                          return DataRow(
-                            selected: isCurrent,
-                            cells: [
-                              DataCell(Text(p['planNumber'] as String, style: TextStyle(fontWeight: FontWeight.w800, color: isCurrent ? AppColors.pink : context.textPrimary))),
-                              DataCell(Text('${p['line']} · Shift ${p['shift']}')),
-                              DataCell(Text(p['itemCode'] as String, style: const TextStyle(fontWeight: FontWeight.w700))),
-                              DataCell(Text('$planned wheels')),
-                              DataCell(Text('$packed wheels', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
-                              DataCell(StatusPill(
-                                label: p['status'] as String,
-                                variant: p['status'] == 'RUNNING' ? PillVariant.purple : PillVariant.ok,
-                              )),
-                            ],
-                          );
-                        }).toList(),
-                      ),
-                    ),
+                                return DataRow(
+                                  cells: [
+                                    DataCell(Text(planNum, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ribbonPink))),
+                                    DataCell(Text('${p['line']} · Shift ${p['shift']}')),
+                                    DataCell(Text((p['itemCode'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w700))),
+                                    DataCell(Text('$planned wheels')),
+                                    DataCell(
+                                      Text(
+                                        '$packed / $planned',
+                                        style: TextStyle(
+                                          color: packed >= planned && planned > 0 ? AppColors.ok : (packed > 0 ? AppColors.info : context.textMuted),
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: (p['newPalletCreated'] != null)
+                                              ? AppColors.pink.withValues(alpha: 0.15)
+                                              : AppColors.ok.withValues(alpha: 0.15),
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(
+                                          allocatedPallet.toString(),
+                                          style: TextStyle(
+                                            color: (p['newPalletCreated'] != null) ? AppColors.pink : AppColors.ok,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    DataCell(StatusPill(
+                                      label: (p['status'] ?? 'RELEASED').toString(),
+                                      variant: p['status'] == 'RUNNING' ? PillVariant.purple : PillVariant.ok,
+                                    )),
+                                  ],
+                                );
+                              }).toList(),
+                            ),
+                          ),
                   ],
                 ),
               );
@@ -315,3 +690,4 @@ class _PaintPlanScreenState extends State<PaintPlanScreen> {
     );
   }
 }
+

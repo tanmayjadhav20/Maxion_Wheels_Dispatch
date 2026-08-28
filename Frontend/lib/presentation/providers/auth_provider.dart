@@ -84,7 +84,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         badgeBarcode: 'BADGE003',
         name: 'Suresh (Warehouse Manager)',
         role: UserRole.warehouseManager,
-        permissions: ['PUTAWAY_EXECUTE', 'PICKING_EXECUTE', 'QUALITY_HOLD_MANAGE', 'REPORTS_VIEW', 'TRACEABILITY_VIEW'],
+        permissions: [
+          'INDENT_CREATE', 'PUTAWAY_EXECUTE', 'LOADING_EXECUTE', 'GATEPASS_MANAGE',
+          'RETURNABLES_MANAGE', 'QUALITY_HOLD_MANAGE', 'REPORTS_VIEW', 'TRACEABILITY_VIEW'
+        ],
       );
     } else if (code == 'EMP004' || badge == 'BADGE004') {
       return UserModel(
@@ -93,7 +96,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         badgeBarcode: 'BADGE004',
         name: 'Vikram (Security Guard)',
         role: UserRole.security,
-        permissions: ['GATE_OUT_VERIFY', 'RETURNABLES_MANAGE'],
+        permissions: [
+          'GATE_OUT_VERIFY', 'GATEPASS_MANAGE', 'LOADING_EXECUTE', 'RETURNABLES_MANAGE',
+          'TRACEABILITY_VIEW'
+        ],
       );
     } else {
       return UserModel(

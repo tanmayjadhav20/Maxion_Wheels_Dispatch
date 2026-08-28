@@ -13,10 +13,14 @@ class VistarLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final targetCacheHeight = (size * 2).clamp(48, 256).toInt();
+
     if (showWordmark) {
       return Image.asset(
         'assets/logo_name.png',
         height: size * 1.35,
+        cacheHeight: targetCacheHeight,
+        filterQuality: FilterQuality.medium,
         fit: BoxFit.contain,
         alignment: Alignment.centerLeft,
         errorBuilder: (context, error, stackTrace) {
@@ -26,6 +30,7 @@ class VistarLogo extends StatelessWidget {
               Image.asset(
                 'assets/logo.png',
                 height: size,
+                cacheHeight: targetCacheHeight,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return Container(
@@ -75,6 +80,8 @@ class VistarLogo extends StatelessWidget {
     return Image.asset(
       'assets/logo.png',
       height: size,
+      cacheHeight: targetCacheHeight,
+      filterQuality: FilterQuality.medium,
       fit: BoxFit.contain,
       alignment: Alignment.centerLeft,
       errorBuilder: (context, error, stackTrace) {

@@ -1,7 +1,17 @@
+import 'package:flutter/foundation.dart';
+
 class ApiEndpoints {
   ApiEndpoints._();
 
-  static const String baseUrl = 'http://localhost:5000/api';
+  static String get baseUrl {
+    if (kIsWeb) {
+      return 'http://localhost:5000/api';
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      return 'http://10.0.2.2:5000/api';
+    } else {
+      return 'http://localhost:5000/api';
+    }
+  }
 
   static const String login = '/auth/login';
   static const String currentUser = '/auth/me';
@@ -41,7 +51,9 @@ class ApiEndpoints {
   static const String qualityHold = '/traceability/quality-hold';
 
   // QA Inspection & Wheel Replacement
+  static const String qaOpenInspection = '/qa/open-inspection';
   static const String qaInspectPallet = '/qa/inspect-pallet';
+  static const String qaCloseInspection = '/qa/close-inspection';
   static const String qaInspectionHistory = '/qa/inspection-history';
 
   // OEM / SPD Conversion

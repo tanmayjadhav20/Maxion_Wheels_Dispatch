@@ -17,7 +17,7 @@ class SyncMonitorScreen extends ConsumerWidget {
     final syncState = ref.watch(syncProvider);
 
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -32,10 +32,11 @@ class SyncMonitorScreen extends ConsumerWidget {
           // Control & Simulation Card
           AppCard(
             showGlow: true,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Column(
+            child: LayoutBuilder(
+              builder: (context, cardConstraints) {
+                final isNarrow = cardConstraints.maxWidth < 700;
+
+                final infoCol = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
@@ -45,38 +46,64 @@ class SyncMonitorScreen extends ConsumerWidget {
                     const SizedBox(height: 4),
                     Text(
                       syncState.isOnline ? 'Online (Connected to Plant Server)' : 'Offline (Local SQLite Cache Active)',
-                      style: TextStyle(color: context.textPrimary, fontSize: 20, fontWeight: FontWeight.w800),
+                      style: TextStyle(color: context.textPrimary, fontSize: 18, fontWeight: FontWeight.w800),
                     ),
                   ],
-                ),
-                Row(
+                );
+
+                final btn1 = AppButton(
+                  text: syncState.isOnline ? 'SIMULATE NETWORK DROP (OFFLINE)' : 'SIMULATE RESTORE',
+                  icon: syncState.isOnline ? Icons.wifi_off : Icons.wifi,
+                  variant: syncState.isOnline ? AppButtonVariant.danger : AppButtonVariant.gradient,
+                  onPressed: () {
+                    ref.read(syncProvider.notifier).toggleOnlineStatus(!syncState.isOnline);
+                  },
+                );
+
+                final btn2 = AppButton(
+                  text: 'FORCE SYNC NOW',
+                  icon: Icons.sync,
+                  variant: AppButtonVariant.ghost,
+                  onPressed: () {
+                    ref.read(syncProvider.notifier).triggerSync();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        backgroundColor: AppColors.ok,
+                        content: Text('Two-way sync completed successfully!'),
+                      ),
+                    );
+                  },
+                );
+
+                if (isNarrow) {
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      infoCol,
+                      const SizedBox(height: 16),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [btn1, btn2],
+                      ),
+                    ],
+                  );
+                }
+
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    AppButton(
-                      text: syncState.isOnline ? 'SIMULATE NETWORK DROP (OFFLINE)' : 'SIMULATE NETWORK RESTORE',
-                      icon: syncState.isOnline ? Icons.wifi_off : Icons.wifi,
-                      variant: syncState.isOnline ? AppButtonVariant.danger : AppButtonVariant.gradient,
-                      onPressed: () {
-                        ref.read(syncProvider.notifier).toggleOnlineStatus(!syncState.isOnline);
-                      },
-                    ),
-                    const SizedBox(width: 12),
-                    AppButton(
-                      text: 'FORCE SYNC NOW',
-                      icon: Icons.sync,
-                      variant: AppButtonVariant.ghost,
-                      onPressed: () {
-                        ref.read(syncProvider.notifier).triggerSync();
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            backgroundColor: AppColors.ok,
-                            content: Text('Two-way sync completed successfully!'),
-                          ),
-                        );
-                      },
+                    infoCol,
+                    Row(
+                      children: [
+                        btn1,
+                        const SizedBox(width: 12),
+                        btn2,
+                      ],
                     ),
                   ],
-                ),
-              ],
+                );
+              },
             ),
           ),
 
@@ -87,8 +114,11 @@ class SyncMonitorScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                Wrap(
+                  alignment: WrapAlignment.spaceBetween,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 12,
+                  runSpacing: 8,
                   children: [
                     Text(
                       'HANDHELD GUN DEVICES ON SHOP FLOOR',

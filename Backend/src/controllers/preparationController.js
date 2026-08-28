@@ -13,7 +13,7 @@ function getPreparationChecklist(req, res) {
 
   for (const planItem of latestPlan.items) {
     const itemMaster = store.items.find(m => m.itemCode === planItem.itemCode);
-    const stdQty = itemMaster ? itemMaster.stdPalletQty : 96;
+    const stdQty = itemMaster ? itemMaster.stdPalletQty : 4;
 
     // Find reusable half pallets in storage
     const storedHalfPallets = store.pallets.filter(p =>

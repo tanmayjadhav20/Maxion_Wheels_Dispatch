@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_tokens.dart';
+import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/export_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
@@ -41,13 +42,13 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
   }
 
   void _onExportDashboardExcel() {
-    final achievementPct = stats['achievementPct'] ?? '84.2';
-    final packedTotal = stats['packedTotal'] ?? 320;
-    final plannedTotal = stats['plannedTotal'] ?? 384;
-    final fullCount = stats['fullCount'] ?? 5;
-    final halfCount = stats['halfCount'] ?? 2;
-    final openHalfCount = stats['openHalfCount'] ?? 3;
-    final gatedOutShipments = stats['gatedOutShipments'] ?? 4;
+    final achievementPct = stats['achievementPct'] ?? '0.0';
+    final packedTotal = stats['packedTotal'] ?? 0;
+    final plannedTotal = stats['plannedTotal'] ?? 0;
+    final fullCount = stats['fullCount'] ?? 0;
+    final halfCount = stats['halfCount'] ?? 0;
+    final openHalfCount = stats['openHalfCount'] ?? 0;
+    final gatedOutShipments = stats['gatedOutShipments'] ?? 0;
 
     exportToExcel(
       context,
@@ -56,7 +57,7 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
       [
         ['Plan Achievement', '$achievementPct%', '$packedTotal / $plannedTotal Wheels Packed'],
         ['Pallets Closed Today', '$fullCount Full / $halfCount Half', 'Full: $fullCount | Half: $halfCount'],
-        ['Open Half Pallets', '$openHalfCount Pallets', 'Oldest: ${stats['oldestHalfNumber'] ?? "H26000037"} (${stats['oldestHalfAge'] ?? "1 day"})'],
+        ['Open Half Pallets', '$openHalfCount Pallets', 'Oldest: ${stats['oldestHalfNumber'] ?? "None"} (${stats['oldestHalfAge'] ?? "N/A"})'],
         ['Shipments Gated Out', '$gatedOutShipments Vehicles', '$gatedOutShipments Gate Passes Processed'],
       ],
     );
@@ -79,10 +80,10 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
           style: TextStyle(color: ctx.textSecondary),
         ),
         actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.ribbonPink),
+          AppButton(
+            text: 'OK — RETURN TO DASHBOARD',
+            variant: AppButtonVariant.gradient,
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK — RETURN TO DASHBOARD'),
           ),
         ],
       ),
@@ -91,87 +92,33 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
 
   @override
   Widget build(BuildContext context) {
-    final achievementPct = stats['achievementPct'] ?? '84.2';
-    final packedTotal = stats['packedTotal'] ?? 320;
-    final plannedTotal = stats['plannedTotal'] ?? 384;
-    final fullCount = stats['fullCount'] ?? 5;
-    final halfCount = stats['halfCount'] ?? 2;
-    final mergedCount = stats['mergedCount'] ?? 1;
-    final openHalfCount = stats['openHalfCount'] ?? 3;
-    final oldestHalfNumber = stats['oldestHalfNumber'] ?? 'H26000037';
-    final oldestHalfAge = stats['oldestHalfAge'] ?? '1 day';
-    final gatedOutShipments = stats['gatedOutShipments'] ?? 4;
+    final achievementPct = stats['achievementPct'] ?? '0.0';
+    final packedTotal = stats['packedTotal'] ?? 0;
+    final plannedTotal = stats['plannedTotal'] ?? 0;
+    final fullCount = stats['fullCount'] ?? 0;
+    final halfCount = stats['halfCount'] ?? 0;
+    final mergedCount = stats['mergedCount'] ?? 0;
+    final openHalfCount = stats['openHalfCount'] ?? 0;
+    final oldestHalfNumber = stats['oldestHalfNumber'] ?? 'None';
+    final oldestHalfAge = stats['oldestHalfAge'] ?? 'N/A';
+    final gatedOutShipments = stats['gatedOutShipments'] ?? 0;
 
     final activePlan = stats['activePlan'];
-    final planItems = (activePlan?['items'] as List<dynamic>?) ?? [
-      {'itemCode': 'MXW-17-BLK', 'description': '17 Inch Steel Wheel - Gloss Black', 'plannedQty': 384, 'packedQty': 240, 'status': 'RUNNING'},
-      {'itemCode': 'MXW-18-SLV', 'description': '18 Inch Alloy Wheel - Liquid Silver', 'plannedQty': 240, 'packedQty': 80, 'status': 'PENDING'}
-    ];
+    final planItems = (activePlan?['items'] as List<dynamic>?) ?? [];
 
     return SingleChildScrollView(
-      padding: AppTokens.pScreen,
+      padding: AppTokens.screenPadding(context),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          LayoutBuilder(
-            builder: (context, constraints) {
-              final isDesktopHeader = constraints.maxWidth > 700;
-
-              if (isDesktopHeader) {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text(
-                            'DISPATCH OPERATIONS DASHBOARD',
-                            style: TextStyle(
-                              color: AppColors.ribbonPink,
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 2.0,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Maxion Wheels Dispatch Control Center',
-                            style: TextStyle(
-                              color: context.textPrimary,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        AppButton(
-                          text: 'LIVE TV BOARD',
-                          icon: Icons.tv,
-                          variant: AppButtonVariant.ghost,
-                          onPressed: _onToggleTvBoard,
-                        ),
-                        const SizedBox(width: 12),
-                        AppButton(
-                          text: 'EXCEL REPORT',
-                          icon: Icons.download_outlined,
-                          variant: AppButtonVariant.gradient,
-                          onPressed: _onExportDashboardExcel,
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              }
-
-              return Column(
+          Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            spacing: 16,
+            runSpacing: 12,
+            children: [
+              Column(
+                mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
@@ -188,32 +135,32 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                     'Maxion Wheels Dispatch Control Center',
                     style: TextStyle(
                       color: context.textPrimary,
-                      fontSize: 20,
+                      fontSize: 24,
                       fontWeight: FontWeight.w800,
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      AppButton(
-                        text: 'LIVE TV BOARD',
-                        icon: Icons.tv,
-                        variant: AppButtonVariant.ghost,
-                        onPressed: _onToggleTvBoard,
-                      ),
-                      AppButton(
-                        text: 'EXCEL REPORT',
-                        icon: Icons.download_outlined,
-                        variant: AppButtonVariant.gradient,
-                        onPressed: _onExportDashboardExcel,
-                      ),
-                    ],
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              );
-            },
+              ),
+              Wrap(
+                spacing: 12,
+                runSpacing: 8,
+                children: [
+                  AppButton(
+                    text: 'LIVE TV BOARD',
+                    icon: Icons.tv,
+                    variant: AppButtonVariant.ghost,
+                    onPressed: _onToggleTvBoard,
+                  ),
+                  AppButton(
+                    text: 'EXCEL REPORT',
+                    icon: Icons.download_outlined,
+                    variant: AppButtonVariant.gradient,
+                    onPressed: _onExportDashboardExcel,
+                  ),
+                ],
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           // Key KPI Cards Grid
@@ -248,33 +195,40 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
               children: [
                 SectionTitle(title: 'Active Shift Summary (${activePlan?['planNumber'] ?? "PLN26081103"} - Shift ${activePlan?['shift'] ?? "A"})'),
                 const SizedBox(height: 16),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: DataTable(
-                    columnSpacing: 28,
-                    horizontalMargin: 12,
-                    columns: const [
-                      DataColumn(label: Text('ITEM CODE')),
-                      DataColumn(label: Text('PLANNED')),
-                      DataColumn(label: Text('PACKED')),
-                      DataColumn(label: Text('VARIANCE')),
-                      DataColumn(label: Text('STATUS')),
-                    ],
-                    rows: planItems.map((item) {
-                      final planned = item['plannedQty'] ?? 384;
-                      final packed = item['packedQty'] ?? 240;
-                      final varQty = packed - planned;
-                      final isDone = packed >= planned;
+                LayoutBuilder(
+                  builder: (context, tableConstraints) {
+                    return SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: ConstrainedBox(
+                        constraints: BoxConstraints(minWidth: tableConstraints.maxWidth),
+                        child: DataTable(
+                          columnSpacing: 18,
+                          horizontalMargin: 8,
+                          columns: const [
+                            DataColumn(label: Text('ITEM CODE')),
+                            DataColumn(label: Text('PLANNED')),
+                            DataColumn(label: Text('PACKED')),
+                            DataColumn(label: Text('VARIANCE')),
+                            DataColumn(label: Text('STATUS')),
+                          ],
+                          rows: planItems.map((item) {
+                            final planned = item['plannedQty'] ?? 384;
+                            final packed = item['packedQty'] ?? 240;
+                            final varQty = packed - planned;
+                            final isDone = packed >= planned;
 
-                      return DataRow(cells: [
-                        DataCell(Text(item['itemCode'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
-                        DataCell(Text('$planned')),
-                        DataCell(Text('$packed', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
-                        DataCell(Text('$varQty wheels', style: TextStyle(color: varQty < 0 ? AppColors.warn : AppColors.ok))),
-                        DataCell(StatusPill(label: isDone ? 'COMPLETED' : 'RUNNING', variant: isDone ? PillVariant.ok : PillVariant.purple)),
-                      ]);
-                    }).toList(),
-                  ),
+                            return DataRow(cells: [
+                              DataCell(Text(item['itemCode'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
+                              DataCell(Text('$planned')),
+                              DataCell(Text('$packed', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
+                              DataCell(Text('$varQty wheels', style: TextStyle(color: varQty < 0 ? AppColors.warn : AppColors.ok))),
+                              DataCell(StatusPill(label: isDone ? 'COMPLETED' : 'RUNNING', variant: isDone ? PillVariant.ok : PillVariant.purple)),
+                            ]);
+                          }).toList(),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -302,26 +256,32 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
               ),
               const SizedBox(width: 6),
               Container(
-                width: 32,
-                height: 32,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
+                  color: color.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(11),
                 ),
-                child: Icon(icon, color: color, size: 18),
+                child: Icon(icon, color: color, size: 19),
               ),
             ],
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
             child: Text(
               val,
-              style: TextStyle(color: context.textPrimary, fontSize: 20, fontWeight: FontWeight.w900),
+              style: TextStyle(
+                fontFamily: AppTheme.fontDisplay,
+                color: context.textPrimary,
+                fontSize: 28,
+                fontWeight: FontWeight.w800,
+                letterSpacing: -0.4,
+              ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             sub,
             maxLines: 1,

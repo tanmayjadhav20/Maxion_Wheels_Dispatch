@@ -7,22 +7,80 @@ function getPaintPlans(req, res) {
 }
 
 function createOrUpdatePaintPlan(req, res) {
-  const { date, shift, line, items } = req.body;
+  const { date, shift, line, items, createNewPallet = false } = req.body;
   const store = getStore();
 
   const planNumber = formatNumber('PLN');
+  let newPalletCreated = null;
+  const itemMatchStatuses = [];
 
   const processedItems = items.map(i => {
-    const master = store.items.find(m => m.itemCode === i.itemCode);
-    const stdQty = master ? master.stdPalletQty : 96;
+    let master = store.items.find(m => m.itemCode === i.itemCode);
+    if (!master) {
+      master = {
+        itemCode: i.itemCode,
+        description: i.description || `Automotive Wheel ${i.itemCode}`,
+        stdPalletQty: 4,
+        wheelsPerLayer: 1,
+        layersPerPallet: 4,
+        palletType: 'STEEL-FRAME-A',
+        separatorType: 'CORRUGATED-17',
+        separatorQtyPerPallet: 3,
+        unitWeightKg: 10.0,
+        defaultCustomer: 'Tata Motors Pune',
+        allowMerge: true
+      };
+      if (!store.items) store.items = [];
+      store.items.push(master);
+    }
+    const stdQty = master.stdPalletQty || 4;
     const fullPalletsExpected = Math.floor(i.plannedQty / stdQty);
     const looseWheelsExpected = i.plannedQty % stdQty;
+
+    // Check if matching half stored pallet exists in inventory
+    const matchingHalfPallet = (store.pallets || []).find(p =>
+      p.itemCode === i.itemCode && (p.status === 'STORED_HALF' || p.typeSeries === 'H')
+    );
+
+    const hasHalfMatch = !!matchingHalfPallet;
+
+    // If createNewPallet is requested OR if no matching half stored pallet exists
+    let allocatedPallet = null;
+    if (createNewPallet || !hasHalfMatch) {
+      const palletNo = formatNumber('P');
+      newPalletCreated = palletNo;
+      allocatedPallet = {
+        palletNumber: palletNo,
+        typeSeries: 'P',
+        itemCode: i.itemCode,
+        packedQty: 0,
+        stdQty: stdQty,
+        status: 'OPEN',
+        locationCode: 'WH1-STG-01',
+        isHold: false,
+        holdReason: null,
+        createdAt: new Date().toISOString(),
+        createdBy: req.user ? req.user.name : 'Dispatch Planner',
+        wheels: []
+      };
+      if (!store.pallets) store.pallets = [];
+      store.pallets.unshift(allocatedPallet);
+    }
+
+    itemMatchStatuses.push({
+      itemCode: i.itemCode,
+      hasHalfMatch,
+      matchedHalfPalletNumber: matchingHalfPallet ? matchingHalfPallet.palletNumber : null,
+      newPalletAllocated: allocatedPallet ? allocatedPallet.palletNumber : null
+    });
+
     return {
       itemCode: i.itemCode,
       plannedQty: i.plannedQty,
       fullPalletsExpected,
       looseWheelsExpected,
-      packedQty: 0
+      packedQty: 0,
+      allocatedPalletNumber: allocatedPallet ? allocatedPallet.palletNumber : (matchingHalfPallet ? matchingHalfPallet.palletNumber : null)
     };
   });
 
@@ -35,13 +93,44 @@ function createOrUpdatePaintPlan(req, res) {
     version: 1,
     releasedBy: req.user ? req.user.name : 'Dispatch Planner',
     releasedAt: new Date().toISOString(),
-    items: processedItems
+    items: processedItems,
+    newPalletCreated,
+    itemMatchStatuses
   };
 
   store.paintPlans.unshift(newPlan);
+
+  // Automatically update store.activePallet for the Pack Point screen
+  if (processedItems.length > 0) {
+    const firstItem = processedItems[0];
+    const itemMaster = store.items.find(m => m.itemCode === firstItem.itemCode);
+    const stdQty = itemMaster ? itemMaster.stdPalletQty : 4;
+    const activePalletNo = firstItem.allocatedPalletNumber || formatNumber('P');
+
+    store.activePallet = {
+      palletNumber: activePalletNo,
+      typeSeries: activePalletNo.startsWith('H') ? 'H' : 'P',
+      itemCode: firstItem.itemCode,
+      packedQty: 0,
+      stdQty: stdQty,
+      status: 'PACKING',
+      wheels: [],
+      currentLayer: 1,
+      createdAt: new Date().toISOString()
+    };
+  }
+
   saveStore();
 
-  res.json({ success: true, message: 'Paint plan created and released to floor', paintPlan: newPlan });
+  res.json({
+    success: true,
+    message: newPalletCreated
+      ? `Paint plan created and new pallet ${newPalletCreated} allocated!`
+      : 'Paint plan created and released to floor using existing half pallet',
+    paintPlan: newPlan,
+    newPalletCreated,
+    itemMatchStatuses
+  });
 }
 
 function getPlanVsActual(req, res) {

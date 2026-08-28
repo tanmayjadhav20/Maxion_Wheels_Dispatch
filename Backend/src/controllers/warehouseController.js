@@ -29,7 +29,8 @@ function getHalfPalletRegister(req, res) {
 }
 
 function executePutaway(req, res) {
-  const { palletNumber, scannedLocationCode } = req.body;
+  const palletNumber = req.body.palletNumber;
+  const scannedLocationCode = req.body.scannedLocationCode || req.body.locationCode;
   const store = getStore();
 
   const pallet = store.pallets.find(p => p.palletNumber === palletNumber);

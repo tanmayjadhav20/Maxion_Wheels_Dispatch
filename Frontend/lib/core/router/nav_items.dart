@@ -21,27 +21,36 @@ class NavItem {
 }
 
 final List<NavItem> navItems = [
+  // Group: OPERATIONS
   NavItem(
     path: '/dashboard',
     title: 'Dashboard',
     icon: Icons.dashboard_outlined,
     group: 'OPERATIONS',
-    canAccess: (user) => user.canViewReports && user.role != UserRole.picker,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
   ),
   NavItem(
     path: '/paint-plan',
     title: 'Paint Plan (Mod 1)',
     icon: Icons.edit_calendar_outlined,
     group: 'OPERATIONS',
-    canAccess: (user) => user.canManagePaintPlan,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.dispatchPlanner,
+  ),
+  NavItem(
+    path: '/wheel-qr-print',
+    title: 'Wheel QR Print (Mod 2)',
+    icon: Icons.qr_code_2_outlined,
+    group: 'OPERATIONS',
+    badge: 'PRINT',
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.packOperator || user.role == UserRole.prepOperator,
   ),
   NavItem(
     path: '/preparation',
-    title: 'Preparation (Mod 2)',
+    title: 'Preparation & Half Pallets',
     icon: Icons.checklist_rtl_outlined,
     group: 'OPERATIONS',
     badge: 'HALF',
-    canAccess: (user) => user.canManagePreparation,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.prepOperator || user.role == UserRole.packOperator,
   ),
   NavItem(
     path: '/pack-point',
@@ -49,21 +58,21 @@ final List<NavItem> navItems = [
     icon: Icons.qr_code_scanner_outlined,
     group: 'OPERATIONS',
     badge: 'LIVE',
-    canAccess: (user) => user.canPackPallet || user.canPrintWheelQr,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.packOperator,
   ),
   NavItem(
     path: '/warehouse',
     title: 'Warehouse & Putaway (Mod 6)',
     icon: Icons.warehouse_outlined,
     group: 'OPERATIONS',
-    canAccess: (user) => user.canExecutePutaway,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager || user.role == UserRole.putawayOperator || user.role == UserRole.picker,
   ),
   NavItem(
     path: '/picking',
     title: 'Indent Entry (Manager)',
     icon: Icons.local_shipping_outlined,
     group: 'OPERATIONS',
-    canAccess: (user) => user.canCreateIndent,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
   ),
   NavItem(
     path: '/hht-picking',
@@ -71,14 +80,14 @@ final List<NavItem> navItems = [
     icon: Icons.qr_code_scanner_outlined,
     group: 'OPERATIONS',
     badge: 'HHT',
-    canAccess: (user) => user.canExecutePicking,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.picker,
   ),
   NavItem(
     path: '/dispatch',
     title: 'Gate Pass & Loading',
     icon: Icons.gavel_outlined,
     group: 'OPERATIONS',
-    canAccess: (user) => user.canExecuteLoading || user.canManageGatePass || user.canVerifyGateOut,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager || user.role == UserRole.security || user.role == UserRole.loadingSupervisor,
   ),
 
   // Group: ASSETS & QUALITY
@@ -87,7 +96,7 @@ final List<NavItem> navItems = [
     title: 'Returnables (Mod 9)',
     icon: Icons.inventory_2_outlined,
     group: 'ASSETS & QUALITY',
-    canAccess: (user) => user.canManageReturnables,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager || user.role == UserRole.security || user.role == UserRole.stores,
   ),
   NavItem(
     path: '/quality-inspection',
@@ -95,14 +104,14 @@ final List<NavItem> navItems = [
     icon: Icons.verified_outlined,
     group: 'ASSETS & QUALITY',
     badge: 'HOLD',
-    canAccess: (user) => user.canManageHold || user.role == UserRole.superAdmin || user.role == UserRole.supervisor,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.supervisor,
   ),
   NavItem(
     path: '/oem-spd-conversion',
     title: 'OEM / SPD Conversion',
     icon: Icons.sync_alt_outlined,
     group: 'ASSETS & QUALITY',
-    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager || user.role == UserRole.dispatchPlanner,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
   ),
 
   // Group: REPORTS & ADMIN
@@ -111,27 +120,27 @@ final List<NavItem> navItems = [
     title: 'Traceability (Mod 10)',
     icon: Icons.search_outlined,
     group: 'REPORTS & ADMIN',
-    canAccess: (user) => user.canViewTraceability,
+    canAccess: (user) => true,
   ),
   NavItem(
     path: '/job-card-report',
     title: 'Job Card Report',
     icon: Icons.assignment_outlined,
     group: 'REPORTS & ADMIN',
-    canAccess: (user) => user.canViewReports && user.role != UserRole.picker,
+    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
   ),
   NavItem(
     path: '/hht-management',
     title: 'HHT Guns (4 Active)',
     icon: Icons.qr_code_scanner_outlined,
     group: 'REPORTS & ADMIN',
-    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
+    canAccess: (user) => user.role == UserRole.superAdmin,
   ),
   NavItem(
     path: '/sync-monitor',
     title: 'Sync Monitor (Sec 7)',
     icon: Icons.sync_outlined,
     group: 'REPORTS & ADMIN',
-    canAccess: (user) => user.role == UserRole.superAdmin || user.role == UserRole.warehouseManager,
+    canAccess: (user) => user.role == UserRole.superAdmin,
   ),
 ];

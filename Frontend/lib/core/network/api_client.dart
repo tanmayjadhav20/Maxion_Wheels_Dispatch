@@ -4,6 +4,7 @@ import '../constants/api_endpoints.dart';
 
 class ApiClient {
   late final Dio dio;
+  String? _cachedToken;
 
   ApiClient() {
     dio = Dio(
@@ -16,13 +17,13 @@ class ApiClient {
       ),
     );
 
+    _initToken();
+
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          final prefs = await SharedPreferences.getInstance();
-          final token = prefs.getString('auth_token');
-          if (token != null && token.isNotEmpty) {
-            options.headers['Authorization'] = 'Bearer $token';
+        onRequest: (options, handler) {
+          if (_cachedToken != null && _cachedToken!.isNotEmpty) {
+            options.headers['Authorization'] = 'Bearer $_cachedToken';
           }
           return handler.next(options);
         },
@@ -31,5 +32,16 @@ class ApiClient {
         },
       ),
     );
+  }
+
+  Future<void> _initToken() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _cachedToken = prefs.getString('auth_token');
+    } catch (_) {}
+  }
+
+  void updateToken(String? token) {
+    _cachedToken = token;
   }
 }

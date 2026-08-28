@@ -5,28 +5,10 @@ function login(req, res) {
   const { badgeBarcode, employeeCode, pin } = req.body;
   const store = getStore();
 
-  let user = store.users.find(u =>
+  const user = store.users.find(u =>
     (badgeBarcode && u.badgeBarcode === badgeBarcode) ||
     (employeeCode && u.employeeCode === employeeCode)
   );
-
-  // Fallback if EMP005 is not found in memory
-  if (!user && (employeeCode === 'EMP005' || badgeBarcode === 'BADGE005')) {
-    user = {
-      id: "usr-5",
-      employeeCode: "EMP005",
-      badgeBarcode: "BADGE005",
-      name: "John (HHT Forklift Operator)",
-      role: "picker",
-      pin: "4444",
-      permissions: [
-        "PUTAWAY_EXECUTE",
-        "PICKING_EXECUTE",
-        "LOADING_EXECUTE",
-        "TRACEABILITY_VIEW"
-      ]
-    };
-  }
 
   if (!user) {
     return res.status(404).json({ success: false, message: 'User badge or employee code not found' });
@@ -64,7 +46,21 @@ function getCurrentUser(req, res) {
   });
 }
 
+function getPublicUsers(req, res) {
+  const store = getStore();
+  const users = (store.users || []).map(u => ({
+    id: u.id,
+    name: u.name,
+    employeeCode: u.employeeCode,
+    badgeBarcode: u.badgeBarcode,
+    role: u.role,
+    pin: u.pin
+  }));
+  res.json({ success: true, users });
+}
+
 module.exports = {
   login,
-  getCurrentUser
+  getCurrentUser,
+  getPublicUsers
 };

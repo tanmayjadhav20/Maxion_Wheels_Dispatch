@@ -46,47 +46,139 @@ function printWheelQr(req, res) {
   });
 }
 
+function resolvePalletCapacity(itemCode) {
+  const store = getStore();
+  if (!itemCode) return 96;
+
+  // 1. Look up in Master Items
+  if (store.items && Array.isArray(store.items)) {
+    const im = store.items.find(i => 
+      i.itemCode === itemCode || 
+      (i.itemCode && String(i.itemCode).toLowerCase() === String(itemCode).toLowerCase())
+    );
+    if (im) {
+      if (im.stdPalletQty != null) return parseInt(im.stdPalletQty) || 96;
+      if (im.standardPalletQty != null) return parseInt(im.standardPalletQty) || 96;
+      if (im.capacity != null) return parseInt(im.capacity) || 96;
+      if (im.wheelsPerLayer && im.layersPerPallet) {
+        return parseInt(im.wheelsPerLayer) * parseInt(im.layersPerPallet);
+      }
+    }
+  }
+
+  // 2. Look up in Pallet Masters
+  if (store.palletMasters && Array.isArray(store.palletMasters)) {
+    const pm = store.palletMasters.find(p => p.itemCode === itemCode || p.palletType === itemCode);
+    if (pm && pm.capacity) return parseInt(pm.capacity) || 96;
+  }
+
+  // 3. Look up in Paint Plans
+  if (store.paintPlans && store.paintPlans.length > 0) {
+    for (const plan of store.paintPlans) {
+      const planItem = (plan.items || []).find(i => i.itemCode === itemCode);
+      if (planItem && planItem.stdPalletQty) return parseInt(planItem.stdPalletQty);
+    }
+  }
+
+  return 96;
+}
+
 function getActivePallet(req, res) {
   const store = getStore();
+
+  if (store.activePallet) {
+    store.activePallet.stdQty = resolvePalletCapacity(store.activePallet.itemCode);
+    const itemMaster = store.items ? store.items.find(i => i.itemCode === store.activePallet.itemCode) : null;
+    const wheelsPerLayer = itemMaster ? (itemMaster.wheelsPerLayer || Math.ceil(store.activePallet.stdQty / 4)) : (store.activePallet.stdQty > 0 ? Math.ceil(store.activePallet.stdQty / 4) : 24);
+    store.activePallet.currentLayer = Math.max(1, Math.ceil((store.activePallet.packedQty || 0) / (wheelsPerLayer || 1)));
+  }
+
+  if (!store.activePallet || store.activePallet.status === 'CLOSED_FULL' || store.activePallet.status === 'STORED' || store.activePallet.status === 'STORED_HALF') {
+    const openPallet = (store.pallets || []).find(p => p.status === 'OPEN' || p.status === 'PACKING');
+    if (openPallet) {
+      const itemMaster = store.items.find(i => i.itemCode === openPallet.itemCode);
+      const stdQty = resolvePalletCapacity(openPallet.itemCode);
+      const wheelsPerLayer = itemMaster ? (itemMaster.wheelsPerLayer || Math.ceil(stdQty / 4)) : (stdQty > 0 ? Math.ceil(stdQty / 4) : 24);
+      store.activePallet = {
+        palletNumber: openPallet.palletNumber,
+        typeSeries: openPallet.typeSeries || 'P',
+        itemCode: openPallet.itemCode,
+        packedQty: openPallet.packedQty || 0,
+        stdQty: stdQty,
+        status: 'PACKING',
+        wheels: openPallet.wheels || [],
+        currentLayer: Math.max(1, Math.ceil((openPallet.packedQty || 0) / wheelsPerLayer)),
+        createdAt: openPallet.createdAt || new Date().toISOString()
+      };
+      saveStore();
+    } else {
+      const latestPlan = (store.paintPlans && store.paintPlans.length > 0) ? store.paintPlans[0] : null;
+      if (latestPlan && latestPlan.items && latestPlan.items.length > 0) {
+        const itemCode = latestPlan.items[0].itemCode;
+        const stdQty = resolvePalletCapacity(itemCode);
+        const palletNo = latestPlan.newPalletCreated || formatNumber('P');
+        store.activePallet = {
+          palletNumber: palletNo,
+          typeSeries: 'P',
+          itemCode,
+          packedQty: 0,
+          stdQty,
+          status: 'PACKING',
+          wheels: [],
+          currentLayer: 1,
+          createdAt: new Date().toISOString()
+        };
+        saveStore();
+      }
+    }
+  }
+
   res.json({
     success: true,
-    activePallet: currentActivePallet
+    activePallet: store.activePallet || null
   });
 }
 
 function startOrScanWheel(req, res) {
-  const { wheelQr, itemCode } = req.body;
+  const { wheelQr, itemCode, ignoreHalfPallet, palletCapacity } = req.body;
   const store = getStore();
 
-  const itemMaster = store.items.find(i => i.itemCode === itemCode);
-  const stdQty = itemMaster ? itemMaster.stdPalletQty : 96;
+  const targetItem = itemCode || (store.activePallet ? store.activePallet.itemCode : 'MXW-17-BLK');
+  const itemMaster = store.items ? store.items.find(i => i.itemCode === targetItem) : null;
+  const configuredCapacity = palletCapacity && Number(palletCapacity) > 0 ? Number(palletCapacity) : resolvePalletCapacity(targetItem);
+  const stdQty = configuredCapacity;
+  const wheelsPerLayer = itemMaster ? (itemMaster.wheelsPerLayer || Math.max(1, Math.ceil(stdQty / 4))) : Math.max(1, Math.ceil(stdQty / 4));
 
-  // Check if active pallet exists
-  if (!currentActivePallet || currentActivePallet.itemCode !== itemCode) {
-    // Check if there is an available half pallet to reuse (SSR Section 4.2 Step 1)
-    const availableHalf = store.pallets.find(p =>
-      p.itemCode === itemCode && (p.status === 'STORED_HALF' || p.typeSeries === 'H')
-    );
+  let currentActivePallet = store.activePallet;
 
-    if (availableHalf && !req.body.ignoreHalfPallet) {
-      return res.json({
-        success: true,
-        halfPalletAvailable: true,
-        halfPallet: {
-          palletNumber: availableHalf.palletNumber,
-          currentQty: availableHalf.packedQty,
-          shortfallQty: stdQty - availableHalf.packedQty,
-          locationCode: availableHalf.locationCode,
-          ageDays: Math.floor((Date.now() - new Date(availableHalf.createdAt).getTime()) / (1000 * 60 * 60 * 24)) || 1
-        },
-        message: `HALF PALLET AVAILABLE — use it first! ${availableHalf.palletNumber} with ${availableHalf.packedQty}/${stdQty} wheels at ${availableHalf.locationCode}`
-      });
+  // Check if active pallet needs to be initialized or switched to a new item/capacity
+  if (!currentActivePallet || currentActivePallet.status === 'CLOSED_FULL' || currentActivePallet.status === 'STORED' || (itemCode && currentActivePallet.itemCode !== itemCode && !wheelQr)) {
+    // Only return half pallet suggestion if no wheelQr is provided (starting a new pallet)
+    if (!wheelQr && !ignoreHalfPallet) {
+      const availableHalf = (store.pallets || []).find(p =>
+        p.itemCode === targetItem && (p.status === 'STORED_HALF' || p.typeSeries === 'H')
+      );
+
+      if (availableHalf) {
+        return res.json({
+          success: true,
+          halfPalletAvailable: true,
+          halfPallet: {
+            palletNumber: availableHalf.palletNumber,
+            currentQty: availableHalf.packedQty,
+            shortfallQty: Math.max(0, stdQty - availableHalf.packedQty),
+            locationCode: availableHalf.locationCode,
+            ageDays: Math.floor((Date.now() - new Date(availableHalf.createdAt).getTime()) / (1000 * 60 * 60 * 24)) || 1
+          },
+          message: `HALF PALLET AVAILABLE — use it first! ${availableHalf.palletNumber} with ${availableHalf.packedQty}/${stdQty} wheels at ${availableHalf.locationCode}`
+        });
+      }
     }
 
     currentActivePallet = {
       palletNumber: formatNumber('P'),
       typeSeries: 'P',
-      itemCode,
+      itemCode: targetItem,
       packedQty: 0,
       stdQty,
       status: 'PACKING',
@@ -94,6 +186,18 @@ function startOrScanWheel(req, res) {
       currentLayer: 1,
       createdAt: new Date().toISOString()
     };
+    store.activePallet = currentActivePallet;
+    saveStore();
+  } else {
+    // If active pallet already exists, update its itemCode / stdQty if explicitly changed
+    if (itemCode && currentActivePallet.itemCode !== itemCode) {
+      currentActivePallet.itemCode = itemCode;
+    }
+    if (palletCapacity && Number(palletCapacity) > 0) {
+      currentActivePallet.stdQty = Number(palletCapacity);
+      currentActivePallet.currentLayer = Math.max(1, Math.ceil(currentActivePallet.packedQty / wheelsPerLayer));
+      saveStore();
+    }
   }
 
   // Scan wheel onto active pallet
@@ -104,12 +208,13 @@ function startOrScanWheel(req, res) {
 
     currentActivePallet.wheels.push(wheelQr);
     currentActivePallet.packedQty = currentActivePallet.wheels.length;
-    currentActivePallet.currentLayer = Math.ceil(currentActivePallet.packedQty / (itemMaster ? itemMaster.wheelsPerLayer : 24));
+    currentActivePallet.currentLayer = Math.max(1, Math.ceil(currentActivePallet.packedQty / wheelsPerLayer));
 
     // Record in wheels store
+    if (!store.wheels) store.wheels = [];
     store.wheels.push({
       wheelQr,
-      itemCode,
+      itemCode: currentActivePallet.itemCode || targetItem,
       palletNumber: currentActivePallet.palletNumber,
       packedBy: req.user ? req.user.name : 'Pack Operator',
       packedAt: new Date().toISOString()
@@ -118,25 +223,28 @@ function startOrScanWheel(req, res) {
     // Update paint plan actual count
     const latestPlan = store.paintPlans ? store.paintPlans[0] : null;
     if (latestPlan) {
-      const planItem = latestPlan.items.find(i => i.itemCode === itemCode);
+      const planItem = latestPlan.items.find(i => i.itemCode === (currentActivePallet.itemCode || targetItem));
       if (planItem) {
         planItem.packedQty = (planItem.packedQty || 0) + 1;
       }
     }
 
+    store.activePallet = currentActivePallet;
     saveStore();
   }
 
   res.json({
     success: true,
-    activePallet: currentActivePallet,
-    message: wheelQr ? `Wheel scanned: ${currentActivePallet.packedQty}/${currentActivePallet.stdQty}` : 'Pallet active'
+    message: wheelQr ? `Wheel scanned: ${currentActivePallet.packedQty}/${currentActivePallet.stdQty}` : 'Active pallet retrieved',
+    activePallet: currentActivePallet
   });
 }
 
 function closePallet(req, res) {
   const { reason = 'Standard Qty Reached', forceClose = false } = req.body;
   const store = getStore();
+
+  const currentActivePallet = store.activePallet;
 
   if (!currentActivePallet) {
     return res.status(400).json({ success: false, message: 'No active pallet to close' });
@@ -182,8 +290,9 @@ function closePallet(req, res) {
     closedBy: req.user ? req.user.name : 'Pack Operator'
   };
 
+  if (!store.pallets) store.pallets = [];
   store.pallets.unshift(closedPallet);
-  currentActivePallet = null;
+  store.activePallet = null;
   saveStore();
 
   res.json({
@@ -203,21 +312,24 @@ function loadAndResumeHalfPallet(req, res) {
   }
 
   const itemMaster = store.items.find(i => i.itemCode === halfPallet.itemCode);
+  const stdQty = resolvePalletCapacity(halfPallet.itemCode);
+  const wheelsPerLayer = itemMaster ? itemMaster.wheelsPerLayer : (stdQty > 0 ? Math.ceil(stdQty / 4) : 5);
 
-  currentActivePallet = {
+  const currentActivePallet = {
     palletNumber: halfPallet.palletNumber,
     typeSeries: 'PM',
     oldHalfPalletNumber: halfPallet.palletNumber,
     itemCode: halfPallet.itemCode,
     packedQty: halfPallet.packedQty,
-    stdQty: itemMaster ? itemMaster.stdPalletQty : 96,
+    stdQty: stdQty,
     status: 'PACKING_MERGE',
     wheels: halfPallet.wheels || [],
-    currentLayer: Math.ceil(halfPallet.packedQty / (itemMaster ? itemMaster.wheelsPerLayer : 24)),
+    currentLayer: Math.max(1, Math.ceil(halfPallet.packedQty / wheelsPerLayer)),
     createdAt: halfPallet.createdAt || new Date().toISOString()
   };
 
   halfPallet.status = 'MERGING';
+  store.activePallet = currentActivePallet;
   saveStore();
 
   res.json({
@@ -227,10 +339,20 @@ function loadAndResumeHalfPallet(req, res) {
   });
 }
 
+function getHalfPallets(req, res) {
+  const store = getStore();
+  const halfPallets = (store.pallets || []).filter(p => p.status === 'STORED_HALF' || p.typeSeries === 'H');
+  res.json({
+    success: true,
+    halfPallets
+  });
+}
+
 module.exports = {
   printWheelQr,
   getActivePallet,
   startOrScanWheel,
   closePallet,
-  loadAndResumeHalfPallet
+  loadAndResumeHalfPallet,
+  getHalfPallets
 };

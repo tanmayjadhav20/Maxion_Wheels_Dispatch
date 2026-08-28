@@ -22,7 +22,7 @@ class AppCard extends StatelessWidget {
     final isDark = theme.brightness == Brightness.dark;
 
     Widget cardBody = Container(
-      padding: padding ?? AppTokens.pCard,
+      padding: padding ?? AppTokens.cardPadding(context),
       child: child,
     );
 
@@ -45,43 +45,19 @@ class AppCard extends StatelessWidget {
         boxShadow: [
           if (showGlow)
             const BoxShadow(
-              color: Color(0x66C018C0),
-              blurRadius: 36,
-              spreadRadius: -6,
-              offset: Offset(0, 14),
+              color: Color(0x33C018C0),
+              blurRadius: 16,
+              offset: Offset(0, 6),
             )
           else if (!isDark)
             const BoxShadow(
-              color: Color(0x0D000000),
-              blurRadius: 12,
-              offset: Offset(0, 4),
+              color: Color(0x0A000000),
+              blurRadius: 8,
+              offset: Offset(0, 2),
             ),
         ],
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(AppTokens.r),
-        child: Stack(
-          children: [
-            // Faint S-Mark Corner Accent (Vistar Spec)
-            if (isDark)
-              Positioned(
-                right: -24,
-                bottom: -28,
-                child: Opacity(
-                  opacity: 0.05,
-                  child: Image.asset(
-                    'assets/logo.png',
-                    width: 120,
-                    height: 120,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
-                ),
-              ),
-            cardBody,
-          ],
-        ),
-      ),
+      child: cardBody,
     );
 
     if (onTap != null) {

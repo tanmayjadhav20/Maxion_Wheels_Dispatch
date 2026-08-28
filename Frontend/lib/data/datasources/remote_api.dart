@@ -49,6 +49,27 @@ class RemoteApi {
     return response.data;
   }
 
+  Future<Map<String, dynamic>> createPaintPlan({
+    required String itemCode,
+    required int plannedQty,
+    required String shift,
+    required String line,
+    bool createNewPallet = false,
+  }) async {
+    final response = await client.dio.post(
+      ApiEndpoints.paintPlan,
+      data: {
+        'shift': shift,
+        'line': line,
+        'createNewPallet': createNewPallet,
+        'items': [
+          {'itemCode': itemCode, 'plannedQty': plannedQty}
+        ]
+      },
+    );
+    return response.data;
+  }
+
   Future<Map<String, dynamic>> getPlanVsActual() async {
     final response = await client.dio.get(ApiEndpoints.planVsActual);
     return response.data;
@@ -67,12 +88,14 @@ class RemoteApi {
     return response.data;
   }
 
-  Future<Map<String, dynamic>> scanWheel(String itemCode, String? wheelQr) async {
+  Future<Map<String, dynamic>> scanWheel(String itemCode, String? wheelQr, {int? palletCapacity, bool ignoreHalfPallet = false}) async {
     final response = await client.dio.post(
       ApiEndpoints.scanWheel,
       data: {
         'itemCode': itemCode,
         if (wheelQr != null) 'wheelQr': wheelQr,
+        if (palletCapacity != null) 'palletCapacity': palletCapacity,
+        'ignoreHalfPallet': ignoreHalfPallet,
       },
     );
     return response.data;
@@ -187,12 +210,41 @@ class RemoteApi {
     return response.data;
   }
 
-  Future<Map<String, dynamic>> receiveReturnable(String assetNumber, String condition) async {
+  Future<Map<String, dynamic>> receiveReturnable(
+    String assetNumber,
+    String condition, {
+    String? palletNumber,
+    String? itemCode,
+    String? customerName,
+  }) async {
     final response = await client.dio.post(
       ApiEndpoints.receiveAsset,
       data: {
         'assetNumber': assetNumber,
         'condition': condition,
+        if (palletNumber != null && palletNumber.isNotEmpty) 'palletNumber': palletNumber,
+        if (itemCode != null && itemCode.isNotEmpty) 'itemCode': itemCode,
+        if (customerName != null && customerName.isNotEmpty) 'customerName': customerName,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> registerReturnable({
+    required String type,
+    String? palletNumber,
+    String? itemCode,
+    String? customerName,
+    String condition = 'Good',
+  }) async {
+    final response = await client.dio.post(
+      ApiEndpoints.returnableAssets,
+      data: {
+        'type': type,
+        'condition': condition,
+        if (palletNumber != null && palletNumber.isNotEmpty) 'palletNumber': palletNumber,
+        if (itemCode != null && itemCode.isNotEmpty) 'itemCode': itemCode,
+        if (customerName != null && customerName.isNotEmpty) 'customerName': customerName,
       },
     );
     return response.data;
@@ -213,4 +265,101 @@ class RemoteApi {
     );
     return response.data;
   }
+
+  Future<Map<String, dynamic>> openPalletForInspection(String palletNumber, {String? inspectionRef, String? reason}) async {
+    final response = await client.dio.post(
+      ApiEndpoints.qaOpenInspection,
+      data: {
+        'palletNumber': palletNumber,
+        if (inspectionRef != null) 'inspectionRef': inspectionRef,
+        if (reason != null) 'reason': reason,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> inspectAndReplaceWheels(String palletNumber, List<String> removedWheelQrs, {String? reason}) async {
+    final response = await client.dio.post(
+      ApiEndpoints.qaInspectPallet,
+      data: {
+        'palletNumber': palletNumber,
+        'removedWheelQrs': removedWheelQrs,
+        if (reason != null) 'reason': reason,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> closeQaInspection(String palletNumber, {bool closeShort = false}) async {
+    final response = await client.dio.post(
+      ApiEndpoints.qaCloseInspection,
+      data: {
+        'palletNumber': palletNumber,
+        'closeShort': closeShort,
+      },
+    );
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getInspectionHistory() async {
+    final response = await client.dio.get(ApiEndpoints.qaInspectionHistory);
+    return response.data;
+  }
+
+  // --- Dynamic Master Data Methods ---
+  Future<Map<String, dynamic>> getItemsMaster() async {
+    final response = await client.dio.get('/masters/items');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getCustomersMaster() async {
+    final response = await client.dio.get('/masters/customers');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getLocationsMaster() async {
+    final response = await client.dio.get('/masters/locations');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getTransportersMaster() async {
+    final response = await client.dio.get('/masters/transporters');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getPalletTypesMaster() async {
+    final response = await client.dio.get('/masters/pallet-types');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> getUsersMaster() async {
+    final response = await client.dio.get('/masters/users');
+    return response.data;
+  }
+
+  // --- SAP Invoice Integration Methods ---
+  Future<Map<String, dynamic>> getSapInvoices() async {
+    final response = await client.dio.get('/dispatch/sap-invoices');
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> dumpSapInvoice(Map<String, dynamic> invoiceData) async {
+    final response = await client.dio.post('/dispatch/sap-invoices/dump', data: invoiceData);
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> bulkDumpSapInvoices(List<Map<String, dynamic>> invoices) async {
+    final response = await client.dio.post('/dispatch/sap-invoices/bulk-dump', data: {'invoices': invoices});
+    return response.data;
+  }
+
+  Future<Map<String, dynamic>> parseExcelDump(String fileBase64, String fileName) async {
+    final response = await client.dio.post('/dispatch/parse-excel-dump', data: {
+      'fileBase64': fileBase64,
+      'fileName': fileName,
+    });
+    return response.data;
+  }
 }
+
+

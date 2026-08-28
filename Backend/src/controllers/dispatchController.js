@@ -85,18 +85,24 @@ function createGatePass(req, res) {
     });
   });
 
+  const defaultTransporter = (store.transporters && store.transporters[0]) ? store.transporters[0] : { transporterName: 'Vistar Logistics Express', defaultVehicles: ['MH 12 QW 8890'] };
+  const resolvedTransporter = transporterName || defaultTransporter.transporterName;
+  const resolvedVehicle = vehicleNumber || (defaultTransporter.defaultVehicles ? defaultTransporter.defaultVehicles[0] : 'MH 12 QW 8890');
+  const availableReturnable = (store.returnableAssets || []).find(r => r.status === 'In Stock (Empty)');
+  const resolvedReturnables = returnableAssetsSent || (availableReturnable ? [availableReturnable.assetNumber] : []);
+
   const newGatePass = {
     gatePassNumber,
     gatePassQr,
     indentNumber,
     customerName: indent.customerName,
     shipToAddress: indent.shipToAddress,
-    vehicleNumber: vehicleNumber || 'MH 12 QW 8890',
-    transporterName: transporterName || 'Vistar Logistics Express',
-    driverName: driverName || 'Rajesh Kumar',
-    driverLicence: driverLicence || 'DL-99201928',
-    driverPhone: driverPhone || '+91 98765 43210',
-    sealNumber: sealNumber || 'SEAL-9921',
+    vehicleNumber: resolvedVehicle,
+    transporterName: resolvedTransporter,
+    driverName: driverName || 'Designated Transporter Driver',
+    driverLicence: driverLicence || 'DL-COMMERCIAL',
+    driverPhone: driverPhone || defaultTransporter.phone || '+91 98000 00000',
+    sealNumber: sealNumber || `SEAL-${Math.floor(1000 + Math.random() * 9000)}`,
     status: 'LOADING',
     pokaYokeStatus: 'PENDING_INVOICE', // PENDING_INVOICE, PASSED, FAILED_MISMATCH, OVERRIDDEN
     sapInvoiceNumber: null,
@@ -107,7 +113,7 @@ function createGatePass(req, res) {
     allPalletNumbers,
     loadedPalletNumbers: [],
     loadedSpdPackNumbers: [],
-    returnableAssetsSent: returnableAssetsSent || ['RP0001842'],
+    returnableAssetsSent: resolvedReturnables,
     pokaYokeResults: [],
     createdAt: new Date().toISOString(),
     gateOutAt: null
@@ -125,7 +131,7 @@ function createGatePass(req, res) {
 
 // Section 10: Dispatch Poka-Yoke — Upload SAP Invoice & Perform Cross-Check
 function uploadSapInvoiceAndCheck(req, res) {
-  const { gatePassNumber, invoiceNumber, invoiceDate = new Date().toISOString().split('T')[0], invoiceItems = [], customerCode = 'CUST-1001' } = req.body;
+  const { gatePassNumber, invoiceNumber, invoiceDate = new Date().toISOString().split('T')[0], invoiceItems = [], customerCode = 'CUST-1001', simulateLoad = false } = req.body;
   const store = getStore();
 
   const gp = store.gatePasses.find(g => g.gatePassNumber === gatePassNumber);
@@ -133,32 +139,90 @@ function uploadSapInvoiceAndCheck(req, res) {
     return res.status(404).json({ success: false, message: `Gate pass ${gatePassNumber} not found` });
   }
 
-  const itemsToCompare = invoiceItems.length > 0 ? invoiceItems : [
-    { itemCode: 'MXW-17-BLK', quantity: gp.totalWheels || 192, unitOfMeasure: 'EA' }
-  ];
+  // Check if invoice exists in stored SAP invoices (e.g. from uploaded Excel/Dump)
+  const storedInv = (store.sapInvoices || []).find(si => 
+    (invoiceNumber && si.invoiceNumber === invoiceNumber) || 
+    (gatePassNumber && si.gatePassNumber === gatePassNumber)
+  );
+
+  let itemsToCompare = [];
+  const validInvoiceItems = (invoiceItems || []).filter(item => item && item.itemCode && String(item.itemCode).trim().length > 0);
+
+  if (validInvoiceItems.length > 0) {
+    itemsToCompare = validInvoiceItems;
+  } else if (storedInv && storedInv.items && storedInv.items.length > 0) {
+    itemsToCompare = storedInv.items;
+  } else if (gp.loadedPalletNumbers && gp.loadedPalletNumbers.length > 0) {
+    const itemMap = {};
+    gp.loadedPalletNumbers.forEach(pNum => {
+      const pallet = store.pallets.find(p => p.palletNumber === pNum);
+      if (pallet) {
+        itemMap[pallet.itemCode] = (itemMap[pallet.itemCode] || 0) + (pallet.packedQty || 96);
+      }
+    });
+    itemsToCompare = Object.entries(itemMap).map(([code, qty]) => ({
+      itemCode: code,
+      quantity: qty,
+      unitOfMeasure: 'EA'
+    }));
+  }
+
+  if (itemsToCompare.length === 0) {
+    itemsToCompare = [
+      { itemCode: 'MXW-17-BLK', quantity: gp.totalWheels || 192, unitOfMeasure: 'EA' }
+    ];
+  }
 
   // Aggregate loaded quantity by item code
   const loadedQtyMap = {};
 
-  gp.loadedPalletNumbers.forEach(pNum => {
-    const pallet = store.pallets.find(p => p.palletNumber === pNum);
-    if (pallet) {
-      loadedQtyMap[pallet.itemCode] = (loadedQtyMap[pallet.itemCode] || 0) + (pallet.packedQty || 96);
-    }
-  });
-
-  if (gp.loadedSpdPackNumbers) {
-    gp.loadedSpdPackNumbers.forEach(spNum => {
-      const spdPack = (store.spdPacks || []).find(sp => sp.spdPackNumber === spNum);
-      if (spdPack) {
-        loadedQtyMap[spdPack.itemCode] = (loadedQtyMap[spdPack.itemCode] || 0) + 1;
+  // If simulateLoad is requested for testing, automatically create & load corresponding test pallets
+  if (simulateLoad === true && itemsToCompare.length > 0) {
+    gp.loadedPalletNumbers = [];
+    let totalSimulatedWheels = 0;
+    itemsToCompare.forEach((invItem, idx) => {
+      const palletNo = `P26-SIM-${String(idx + 1).padStart(3, '0')}`;
+      const existingPallet = store.pallets.find(p => p.palletNumber === palletNo);
+      const palletRecord = {
+        palletNumber: palletNo,
+        itemCode: invItem.itemCode,
+        packedQty: invItem.quantity,
+        stdQty: invItem.quantity,
+        status: 'LOADED',
+        location: 'TRUCK-DISP-01',
+        createdAt: new Date().toISOString()
+      };
+      if (existingPallet) {
+        Object.assign(existingPallet, palletRecord);
+      } else {
+        store.pallets.push(palletRecord);
+      }
+      gp.loadedPalletNumbers.push(palletNo);
+      totalSimulatedWheels += invItem.quantity;
+      loadedQtyMap[invItem.itemCode] = (loadedQtyMap[invItem.itemCode] || 0) + invItem.quantity;
+    });
+    gp.totalWheels = totalSimulatedWheels;
+  } else {
+    gp.loadedPalletNumbers.forEach(pNum => {
+      const pallet = store.pallets.find(p => p.palletNumber === pNum);
+      if (pallet) {
+        loadedQtyMap[pallet.itemCode] = (loadedQtyMap[pallet.itemCode] || 0) + (pallet.packedQty || 96);
       }
     });
-  }
 
-  // If no pallets loaded yet, populate default for demonstration if loading is marked complete
-  if (Object.keys(loadedQtyMap).length === 0 && gp.totalWheels > 0) {
-    loadedQtyMap['MXW-17-BLK'] = gp.totalWheels;
+    if (gp.loadedSpdPackNumbers) {
+      gp.loadedSpdPackNumbers.forEach(spNum => {
+        const spdPack = (store.spdPacks || []).find(sp => sp.spdPackNumber === spNum);
+        if (spdPack) {
+          loadedQtyMap[spdPack.itemCode] = (loadedQtyMap[spdPack.itemCode] || 0) + 1;
+        }
+      });
+    }
+
+    // If no pallets loaded yet, populate default for demonstration if loading is marked complete
+    if (Object.keys(loadedQtyMap).length === 0 && gp.totalWheels > 0 && gp.status === 'LOADED') {
+      loadedQtyMap['MXW-17-BLK'] = gp.totalWheels;
+    }
   }
 
   let allMatch = true;
@@ -179,7 +243,7 @@ function uploadSapInvoiceAndCheck(req, res) {
     });
   });
 
-  gp.sapInvoiceNumber = invoiceNumber || `INV-SAP-2026-${String(Date.now()).slice(-4)}`;
+  gp.sapInvoiceNumber = invoiceNumber || storedInv?.invoiceNumber || `INV-SAP-2026-${String(Date.now()).slice(-4)}`;
   gp.pokaYokeResults = pokaYokeResults;
 
   if (allMatch) {
@@ -301,11 +365,367 @@ function verifySecurityGateOut(req, res) {
   });
 }
 
+// --- SAP Invoice Dump & Integration Handlers ---
+function getSapInvoices(req, res) {
+  const store = getStore();
+  const invoices = (store.sapInvoices || []).slice().reverse();
+  res.json({
+    success: true,
+    invoices,
+    count: invoices.length
+  });
+}
+
+function dumpSapInvoice(req, res) {
+  const {
+    invoiceNumber,
+    invoiceDate = new Date().toISOString().split('T')[0],
+    customerCode,
+    customerName,
+    vehicleNumber,
+    transporterName,
+    gatePassNumber,
+    items = [],
+    totalAmount,
+    currency = 'INR',
+    billingPlant = 'PL2 - Maxion Pune'
+  } = req.body;
+
+  const store = getStore();
+  if (!store.sapInvoices) store.sapInvoices = [];
+
+  const finalInvNumber = invoiceNumber && invoiceNumber.trim() ? invoiceNumber.trim() : `INV-SAP-${new Date().getFullYear()}-${String(Date.now()).slice(-4)}`;
+  
+  // Calculate total wheels and amount from items if not provided
+  let calculatedWheels = 0;
+  let calculatedAmount = 0;
+  const processedItems = (items || []).map(i => {
+    const qty = Number(i.quantity || i.qty || 0);
+    const price = Number(i.unitPrice || i.price || 950);
+    calculatedWheels += qty;
+    calculatedAmount += (qty * price);
+    return {
+      itemCode: i.itemCode || 'MXW-17-BLK',
+      description: i.description || 'Steel / Alloy Wheel Assembly',
+      quantity: qty,
+      unitOfMeasure: i.unitOfMeasure || 'EA',
+      unitPrice: price,
+      hsnCode: i.hsnCode || '87087000'
+    };
+  });
+
+  if (processedItems.length === 0) {
+    processedItems.push({
+      itemCode: 'MXW-17-BLK',
+      description: '17 Inch Steel Wheel - Gloss Black',
+      quantity: 192,
+      unitOfMeasure: 'EA',
+      unitPrice: 950.0,
+      hsnCode: '87087000'
+    });
+    calculatedWheels = 192;
+    calculatedAmount = 192 * 950.0;
+  }
+
+  // Lookup customer details if not provided
+  let resolvedCustName = customerName;
+  if (!resolvedCustName && customerCode) {
+    const c = (store.customers || []).find(cust => cust.customerCode === customerCode);
+    if (c) resolvedCustName = c.customerName;
+  }
+  if (!resolvedCustName) resolvedCustName = 'Tata Motors Pune';
+
+  const newSapInvoice = {
+    invoiceNumber: finalInvNumber,
+    invoiceDate,
+    customerCode: customerCode || 'CUST-TATA-PUNE',
+    customerName: resolvedCustName,
+    vehicleNumber: vehicleNumber || 'MH 12 QW 8890',
+    transporterName: transporterName || 'Vistar Logistics Express',
+    gatePassNumber: gatePassNumber || null,
+    totalWheels: calculatedWheels,
+    totalAmount: totalAmount || calculatedAmount,
+    currency,
+    billingPlant,
+    status: 'DUMPED',
+    pokaYokeResult: 'PENDING_VERIFICATION',
+    items: processedItems,
+    dumpedAt: new Date().toISOString(),
+    dumpedBy: req.user ? req.user.name : 'SAP RFC / Web Dump Interface'
+  };
+
+  // Check if existing invoice should be updated
+  const existingIdx = store.sapInvoices.findIndex(inv => inv.invoiceNumber === finalInvNumber);
+  if (existingIdx >= 0) {
+    store.sapInvoices[existingIdx] = newSapInvoice;
+  } else {
+    store.sapInvoices.push(newSapInvoice);
+  }
+
+  // If a gate pass is linked, trigger poka-yoke check
+  let linkedGatePass = null;
+  if (gatePassNumber) {
+    const gp = store.gatePasses.find(g => g.gatePassNumber === gatePassNumber);
+    if (gp) {
+      linkedGatePass = gp;
+      const loadedQtyMap = {};
+      gp.loadedPalletNumbers.forEach(pNum => {
+        const pallet = store.pallets.find(p => p.palletNumber === pNum);
+        if (pallet) {
+          loadedQtyMap[pallet.itemCode] = (loadedQtyMap[pallet.itemCode] || 0) + (pallet.packedQty || 96);
+        }
+      });
+      if (gp.loadedSpdPackNumbers) {
+        gp.loadedSpdPackNumbers.forEach(spNum => {
+          const spdPack = (store.spdPacks || []).find(sp => sp.spdPackNumber === spNum);
+          if (spdPack) {
+            loadedQtyMap[spdPack.itemCode] = (loadedQtyMap[spdPack.itemCode] || 0) + 1;
+          }
+        });
+      }
+      if (Object.keys(loadedQtyMap).length === 0 && gp.totalWheels > 0) {
+        loadedQtyMap['MXW-17-BLK'] = gp.totalWheels;
+      }
+
+      let allMatch = true;
+      const pokaYokeResults = [];
+      processedItems.forEach(invItem => {
+        const loadedQty = loadedQtyMap[invItem.itemCode] || 0;
+        const diff = loadedQty - invItem.quantity;
+        const isMatch = diff === 0;
+        if (!isMatch) allMatch = false;
+        pokaYokeResults.push({
+          itemCode: invItem.itemCode,
+          invoiceQty: invItem.quantity,
+          loadedQty,
+          difference: diff,
+          status: isMatch ? 'MATCH' : 'MISMATCH'
+        });
+      });
+
+      gp.sapInvoiceNumber = finalInvNumber;
+      gp.pokaYokeResults = pokaYokeResults;
+      if (allMatch) {
+        gp.pokaYokeStatus = 'PASSED';
+        gp.status = 'READY_FOR_GATE_OUT';
+        newSapInvoice.status = 'VERIFIED_MATCHED';
+        newSapInvoice.pokaYokeResult = 'PASSED';
+      } else {
+        gp.pokaYokeStatus = 'FAILED_MISMATCH';
+        gp.status = 'BLOCKED_INVOICE_MISMATCH';
+        newSapInvoice.status = 'FAILED_MISMATCH';
+        newSapInvoice.pokaYokeResult = 'FAILED_MISMATCH';
+      }
+    }
+  }
+
+  saveStore();
+
+  res.json({
+    success: true,
+    message: `SAP Invoice ${finalInvNumber} successfully dumped into database store!`,
+    invoice: newSapInvoice,
+    gatePass: linkedGatePass
+  });
+}
+
+function bulkDumpSapInvoices(req, res) {
+  const { invoices = [] } = req.body;
+  const store = getStore();
+  if (!store.sapInvoices) store.sapInvoices = [];
+
+  let count = 0;
+  invoices.forEach(inv => {
+    if (!inv.invoiceNumber) {
+      inv.invoiceNumber = `INV-SAP-${new Date().getFullYear()}-${String(Date.now() + count).slice(-4)}`;
+    }
+    inv.dumpedAt = new Date().toISOString();
+    inv.dumpedBy = req.user ? req.user.name : 'SAP Bulk Batch Job';
+    
+    const existingIdx = store.sapInvoices.findIndex(i => i.invoiceNumber === inv.invoiceNumber);
+    if (existingIdx >= 0) {
+      store.sapInvoices[existingIdx] = inv;
+    } else {
+      store.sapInvoices.push(inv);
+    }
+    count++;
+  });
+
+  saveStore();
+
+  res.json({
+    success: true,
+    message: `Successfully batch dumped ${count} SAP invoices into the system!`,
+    count,
+    invoices: store.sapInvoices
+  });
+}
+
+const XLSX = require('xlsx');
+
+function parseExcelDump(req, res) {
+  try {
+    const { fileBase64, fileName = 'dump.xlsx' } = req.body;
+    if (!fileBase64) {
+      return res.status(400).json({ success: false, message: 'No file data provided' });
+    }
+
+    const buffer = Buffer.from(fileBase64, 'base64');
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+
+    if (!workbook.SheetNames || workbook.SheetNames.length === 0) {
+      return res.status(400).json({ success: false, message: 'No sheets found in Excel workbook' });
+    }
+
+    // Pick target sheet: prefer 'Master Consolidated' or first sheet
+    const targetSheetName = workbook.SheetNames.find(n => 
+      n.toLowerCase().includes('master') || 
+      n.toLowerCase().includes('consolidated') || 
+      n.toLowerCase().includes('invoice') || 
+      n.toLowerCase().includes('declaration')
+    ) || workbook.SheetNames[0];
+
+    const worksheet = workbook.Sheets[targetSheetName];
+    const rawRows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+    let headerRowIdx = -1;
+    let sapPartCol = -1;
+    let partNoCol = -1;
+    let custCol = -1;
+    let totalCol = -1;
+    let stdPackCol = -1;
+    let priceCol = -1;
+    let dateCol = -1;
+
+    let extractedCust = null;
+    let extractedInvNo = `DECL-${new Date().getFullYear()}-${fileName.replace(/[^A-Za-z0-9]/g, '').slice(0, 8).toUpperCase()}`;
+    let extractedVehicle = 'MH 12 QW 8890';
+
+    // Locate header row in top 20 rows
+    for (let r = 0; r < Math.min(rawRows.length, 20); r++) {
+      const row = rawRows[r] || [];
+      for (let c = 0; c < row.length; c++) {
+        const val = String(row[c] || '').trim().toLowerCase();
+        if (!val) continue;
+
+        if (val.includes('sap part') || val.includes('sap part no') || val.includes('sap material')) {
+          sapPartCol = c;
+          headerRowIdx = r;
+        } else if (val.includes('part no') || val.includes('item code') || val.includes('material') || val.includes('wheel code')) {
+          partNoCol = c;
+          headerRowIdx = r;
+        }
+
+        if (val.includes('customer') || val.includes('oem') || val.includes('sold-to') || val.includes('client')) {
+          custCol = c;
+        }
+        if (val.includes('total') || val.includes('fg decl') || val.includes('qty') || val.includes('quantity')) {
+          totalCol = c;
+        }
+        if (val.includes('std pack') || val.includes('pack')) {
+          stdPackCol = c;
+        }
+        if (val.includes('price') || val.includes('rate') || val.includes('amt') || val.includes('amount')) {
+          priceCol = c;
+        }
+        if (val.includes('date')) {
+          dateCol = c;
+        }
+        if (val.includes('inv') || val.includes('doc')) {
+          if (row[c + 1]) extractedInvNo = String(row[c + 1]).trim();
+        }
+      }
+
+      if (headerRowIdx !== -1 && (sapPartCol !== -1 || partNoCol !== -1)) {
+        break;
+      }
+    }
+
+    const items = [];
+    const startRow = headerRowIdx !== -1 ? headerRowIdx + 1 : 1;
+
+    for (let r = startRow; r < rawRows.length; r++) {
+      const row = rawRows[r] || [];
+      if (!row || row.length === 0) continue;
+
+      let sapPart = (sapPartCol !== -1 && row[sapPartCol] !== undefined) ? String(row[sapPartCol]).trim() : '';
+      let partNo = (partNoCol !== -1 && row[partNoCol] !== undefined) ? String(row[partNoCol]).trim() : '';
+      let itemCode = sapPart || partNo;
+
+      let cust = (custCol !== -1 && row[custCol] !== undefined) ? String(row[custCol]).trim() : '';
+      if (cust && !extractedCust) extractedCust = cust;
+
+      let qty = (totalCol !== -1 && row[totalCol] !== undefined) ? parseInt(row[totalCol], 10) : 0;
+      if (!qty && stdPackCol !== -1 && row[stdPackCol] !== undefined) {
+        qty = parseInt(row[stdPackCol], 10) || 0;
+      }
+
+      let price = (priceCol !== -1 && row[priceCol] !== undefined) ? parseFloat(row[priceCol]) : 950.0;
+      if (!price || isNaN(price)) price = 950.0;
+
+      // Positional fallback if headers were ambiguous
+      if (!itemCode) {
+        for (let c = 0; c < row.length; c++) {
+          const s = String(row[c] || '').trim();
+          if (s.startsWith('PNAF') || s.startsWith('MXW') || (s.length >= 4 && /^[A-Z0-9_-]+$/.test(s) && isNaN(s))) {
+            itemCode = s;
+            break;
+          }
+        }
+      }
+
+      if (itemCode && itemCode !== 'Part No.' && itemCode !== 'SAP Part No.' && !itemCode.toLowerCase().includes('total')) {
+        items.push({
+          itemCode,
+          partNo: partNo || itemCode,
+          customer: cust || 'Tata Motors Pune',
+          quantity: qty > 0 ? qty : 150,
+          unitPrice: price,
+          description: cust ? `${cust} Automotive Wheel (${partNo || itemCode})` : 'Maxion Steel Wheel Assembly',
+          unitOfMeasure: 'EA',
+          hsnCode: '87087000'
+        });
+      }
+    }
+
+    if (items.length === 0) {
+      items.push({
+        itemCode: 'PNAF8700S0000',
+        customer: 'VW',
+        quantity: 150,
+        unitPrice: 950.0,
+        description: 'VW Wheel (8700)',
+        unitOfMeasure: 'EA',
+        hsnCode: '87087000'
+      });
+    }
+
+    res.json({
+      success: true,
+      message: `Parsed ${items.length} items from ${fileName} (Sheet: ${targetSheetName})`,
+      sheetName: targetSheetName,
+      totalRows: items.length,
+      invoiceNumber: extractedInvNo,
+      customerName: extractedCust || 'Tata Motors Pune',
+      vehicleNumber: extractedVehicle,
+      items
+    });
+  } catch (error) {
+    console.error('Error parsing Excel dump in backend:', error);
+    res.status(500).json({ success: false, message: `Error parsing Excel: ${error.message}` });
+  }
+}
+
 module.exports = {
   getGatePasses,
   scanLoadingPallet,
   createGatePass,
   uploadSapInvoiceAndCheck,
   overrideInvoiceMismatch,
-  verifySecurityGateOut
+  verifySecurityGateOut,
+  getSapInvoices,
+  dumpSapInvoice,
+  bulkDumpSapInvoices,
+  parseExcelDump
 };
+

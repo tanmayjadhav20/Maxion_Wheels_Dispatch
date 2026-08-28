@@ -106,53 +106,67 @@ class Sidebar extends ConsumerWidget {
                           },
                           borderRadius: BorderRadius.circular(8),
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
                               color: isActive ? navActiveBg : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
-                              border: isActive
-                                  ? const Border(
-                                      left: BorderSide(color: AppColors.pink, width: 3),
-                                    )
-                                  : null,
                             ),
-                            child: Row(
+                            child: Stack(
                               children: [
-                                Icon(
-                                  item.icon,
-                                  size: 17,
-                                  color: isActive ? AppColors.pink : textSecondary,
-                                ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Text(
-                                    item.title,
-                                    style: TextStyle(
-                                      color: isActive ? textPrimary : textSecondary,
-                                      fontSize: 12.5,
-                                      fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                if (item.badge != null) ...[
-                                  const SizedBox(width: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: AppColors.pink.withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      item.badge!,
-                                      style: const TextStyle(
-                                        color: AppColors.pink,
-                                        fontSize: 9.5,
-                                        fontWeight: FontWeight.w800,
+                                if (isActive)
+                                  Positioned(
+                                    left: 0,
+                                    top: 4,
+                                    bottom: 4,
+                                    child: Container(
+                                      width: 3.5,
+                                      decoration: BoxDecoration(
+                                        gradient: AppColors.ribbonGradient,
+                                        borderRadius: BorderRadius.circular(3),
                                       ),
                                     ),
                                   ),
-                                ],
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        item.icon,
+                                        size: 17,
+                                        color: isActive ? AppColors.pink : textSecondary,
+                                      ),
+                                      const SizedBox(width: 10),
+                                      Expanded(
+                                        child: Text(
+                                          item.title,
+                                          style: TextStyle(
+                                            color: isActive ? textPrimary : textSecondary,
+                                            fontSize: 12.5,
+                                            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      if (item.badge != null) ...[
+                                        const SizedBox(width: 6),
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.pink.withValues(alpha: 0.15),
+                                            borderRadius: BorderRadius.circular(10),
+                                          ),
+                                          child: Text(
+                                            item.badge!,
+                                            style: const TextStyle(
+                                              color: AppColors.pink,
+                                              fontSize: 9.5,
+                                              fontWeight: FontWeight.w800,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ],
+                                  ),
+                                ),
                               ],
                             ),
                           ),

@@ -17,22 +17,43 @@ const conversionController = require('../controllers/conversionController');
 const jobCardController = require('../controllers/jobCardController');
 const hhtController = require('../controllers/hhtController');
 
+const mastersController = require('../controllers/mastersController');
+
 const { authMiddleware, requirePermission } = require('../middleware/auth');
 const { PERMISSIONS } = require('../config/constants');
 const { getStore } = require('../config/db');
 
 // --- Auth Routes ---
 router.post('/auth/login', authController.login);
+router.get('/auth/users', authController.getPublicUsers);
 router.get('/auth/me', authMiddleware, authController.getCurrentUser);
 router.get('/dashboard/stats', authMiddleware, dashboardController.getDashboardStats);
 
-// --- Master Data Routes ---
-router.get('/masters/items', authMiddleware, (req, res) => {
-  res.json({ success: true, items: getStore().items });
-});
-router.get('/masters/locations', authMiddleware, (req, res) => {
-  res.json({ success: true, locations: getStore().locations });
-});
+// --- Master Data Routes (Dynamic Database-Driven CRUD) ---
+router.get('/masters/items', authMiddleware, mastersController.getItems);
+router.post('/masters/items', authMiddleware, mastersController.createItem);
+router.put('/masters/items/:itemCode', authMiddleware, mastersController.updateItem);
+router.delete('/masters/items/:itemCode', authMiddleware, mastersController.deleteItem);
+
+router.get('/masters/locations', authMiddleware, mastersController.getLocations);
+router.post('/masters/locations', authMiddleware, mastersController.createLocation);
+router.put('/masters/locations/:code', authMiddleware, mastersController.updateLocation);
+router.delete('/masters/locations/:code', authMiddleware, mastersController.deleteLocation);
+
+router.get('/masters/customers', authMiddleware, mastersController.getCustomers);
+router.post('/masters/customers', authMiddleware, mastersController.createCustomer);
+router.put('/masters/customers/:customerCode', authMiddleware, mastersController.updateCustomer);
+router.delete('/masters/customers/:customerCode', authMiddleware, mastersController.deleteCustomer);
+
+router.get('/masters/transporters', authMiddleware, mastersController.getTransporters);
+router.post('/masters/transporters', authMiddleware, mastersController.createTransporter);
+
+router.get('/masters/pallet-types', authMiddleware, mastersController.getPalletMasters);
+router.post('/masters/pallet-types', authMiddleware, mastersController.createPalletMaster);
+
+router.get('/masters/users', authMiddleware, mastersController.getUsers);
+router.post('/masters/users', authMiddleware, mastersController.createUser);
+
 
 // --- Module 1: Paint Plan ---
 router.get('/paint-plan', authMiddleware, paintPlanController.getPaintPlans);
@@ -45,6 +66,7 @@ router.get('/preparation/checklist', authMiddleware, preparationController.getPr
 // --- Modules 3, 4, 5: Pack Point & Pallet Build ---
 router.post('/pack/print-wheel-qr', authMiddleware, packPointController.printWheelQr);
 router.get('/pack/active-pallet', authMiddleware, packPointController.getActivePallet);
+router.get('/pack/half-pallets', authMiddleware, packPointController.getHalfPallets);
 router.post('/pack/scan-wheel', authMiddleware, packPointController.startOrScanWheel);
 router.post('/pack/close-pallet', authMiddleware, packPointController.closePallet);
 router.post('/pack/resume-half-pallet', authMiddleware, packPointController.loadAndResumeHalfPallet);
@@ -67,6 +89,10 @@ router.get('/dispatch/gate-passes', authMiddleware, dispatchController.getGatePa
 router.post('/dispatch/create-gate-pass', authMiddleware, dispatchController.createGatePass);
 router.post('/dispatch/scan-loading', authMiddleware, dispatchController.scanLoadingPallet);
 router.post('/dispatch/upload-invoice', authMiddleware, dispatchController.uploadSapInvoiceAndCheck);
+router.get('/dispatch/sap-invoices', authMiddleware, dispatchController.getSapInvoices);
+router.post('/dispatch/sap-invoices/dump', authMiddleware, dispatchController.dumpSapInvoice);
+router.post('/dispatch/sap-invoices/bulk-dump', authMiddleware, dispatchController.bulkDumpSapInvoices);
+router.post('/dispatch/parse-excel-dump', authMiddleware, dispatchController.parseExcelDump);
 router.post('/dispatch/override-mismatch', authMiddleware, dispatchController.overrideInvoiceMismatch);
 router.post('/dispatch/verify-gate-out', authMiddleware, dispatchController.verifySecurityGateOut);
 
@@ -89,6 +115,7 @@ router.get('/qa/inspection-history', authMiddleware, qaController.getInspectionH
 
 // --- Module 12 (Section 8): SPD Conversion (Partial Take & SP Packs) ---
 router.post('/conversion/spd-request', authMiddleware, conversionController.createSpdRequest);
+router.post('/conversion/generate-stickers', authMiddleware, conversionController.generateSpdStickers);
 router.get('/conversion/proposed-pallet', authMiddleware, conversionController.getProposedPallet);
 router.post('/conversion/pack-spd-wheel', authMiddleware, conversionController.packSpdWheel);
 router.post('/conversion/finish-spd-job', authMiddleware, conversionController.finishSpdJob);

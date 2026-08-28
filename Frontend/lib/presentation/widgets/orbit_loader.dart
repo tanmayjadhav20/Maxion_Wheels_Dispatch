@@ -85,19 +85,21 @@ class _OrbitLoaderState extends State<OrbitLoader> with TickerProviderStateMixin
                 ),
               ),
               // Breathing S Mark Center
-              Transform.scale(
-                scale: _breatheAnimation.value,
-                child: Container(
-                  decoration: const BoxDecoration(
-                    boxShadow: [
-                      BoxShadow(
-                        color: Color(0x66E0218A),
-                        blurRadius: 26,
-                        spreadRadius: 2,
-                      ),
-                    ],
+              RepaintBoundary(
+                child: Transform.scale(
+                  scale: _breatheAnimation.value,
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      boxShadow: [
+                        BoxShadow(
+                          color: Color(0x66E0218A),
+                          blurRadius: 26,
+                          spreadRadius: 2,
+                        ),
+                      ],
+                    ),
+                    child: VistarLogo(size: widget.size * 0.42, showWordmark: false),
                   ),
-                  child: VistarLogo(size: widget.size * 0.42, showWordmark: false),
                 ),
               ),
             ],

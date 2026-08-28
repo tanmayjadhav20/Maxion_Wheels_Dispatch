@@ -1,7 +1,7 @@
 const { getStore, saveStore } = require('../config/db');
 
 function traceWheelOrPallet(req, res) {
-  const { query } = req.query;
+  const { query } = req.query || {};
   const store = getStore();
 
   if (!query) {
@@ -61,6 +61,29 @@ function traceWheelOrPallet(req, res) {
         customerName: gatePass ? gatePass.customerName : 'N/A',
         wheelCount: palletWheels.length,
         wheels: palletWheels
+      }
+    });
+  }
+
+  // 3. Check returnable asset tag
+  const asset = store.returnableAssets.find(a => a.assetNumber === query || a.assetTag === query || query.includes(a.assetNumber));
+  if (asset) {
+    return res.json({
+      success: true,
+      type: 'RETURNABLE_ASSET',
+      details: {
+        assetNumber: asset.assetNumber,
+        assetTag: asset.assetTag,
+        palletNumber: asset.palletNumber || 'N/A',
+        itemCode: asset.itemCode || 'N/A',
+        type: asset.type,
+        condition: asset.condition,
+        status: asset.status,
+        customerName: asset.customerName || 'In House',
+        locationCode: asset.locationCode || 'WH1-A-01-A2',
+        issueDate: asset.issueDate || 'N/A',
+        expectedReturnDate: asset.expectedReturnDate || 'N/A',
+        ageingDays: asset.ageingDays || 0
       }
     });
   }
