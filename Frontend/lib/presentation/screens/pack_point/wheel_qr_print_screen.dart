@@ -22,17 +22,24 @@ class _WheelQrPrintScreenState extends ConsumerState<WheelQrPrintScreen> {
   final _countController = TextEditingController(text: '96');
   final _customItemController = TextEditingController();
   
-  String _selectedItemCode = 'MXW-17-BLK';
+  String _selectedItemCode = '18663';
   String _selectedShift = 'A';
   String _selectedLine = 'PL2';
   final DateTime _selectedDate = DateTime.now();
 
   List<Map<String, dynamic>> _masterItems = const [
+    {'itemCode': '18663', 'description': 'Al Wheel 8663(6JX16)_52910 BV120', 'stdQty': 96},
+    {'itemCode': '19255', 'description': 'Al Finish Wheel 9255 Piano Black New.', 'stdQty': 96},
+    {'itemCode': '8226', 'description': '8226 6JX15 ALLOY WHEEL (SKODA)', 'stdQty': 96},
+    {'itemCode': '8228AN', 'description': 'Fully Painted Wheel 8228- Grey', 'stdQty': 96},
+    {'itemCode': '8228SL', 'description': 'Al Wheel 8228-Fully Painted-Silver', 'stdQty': 96},
+    {'itemCode': '8292', 'description': '8292 7.0J X 17 FCA SATIN SILVER AL WHEEL', 'stdQty': 96},
+    {'itemCode': '8317', 'description': 'HONDA BERLINA BLACK 8317 6.0J X 16', 'stdQty': 96},
+    {'itemCode': '8346STBL', 'description': '8346_Index C_6.0J X 16 SKODA AL WHEEL BL', 'stdQty': 96},
+    {'itemCode': '9346PBBM', 'description': '9346-7Jx18J_Piano Black BM Wheel', 'stdQty': 80},
+    {'itemCode': '9348CGBM', 'description': 'FInish 9348_7.5JX18_Charcoal Grey+DC', 'stdQty': 80},
     {'itemCode': 'MXW-17-BLK', 'description': '17" Gloss Black Rim', 'stdQty': 96},
-    {'itemCode': 'MXW-16-BLK', 'description': '16" Matt Black Rim', 'stdQty': 96},
     {'itemCode': 'MXW-18-SLV', 'description': '18" Silver Alloy', 'stdQty': 80},
-    {'itemCode': 'MXW-19-WHT', 'description': '19" Premium White', 'stdQty': 80},
-    {'itemCode': 'MXW-16-MAT', 'description': '16" Matte Black Stillage', 'stdQty': 96},
   ];
   bool _isLoading = false;
 

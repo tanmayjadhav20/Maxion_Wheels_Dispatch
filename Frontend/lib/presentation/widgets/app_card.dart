@@ -39,15 +39,16 @@ class AppCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTokens.r),
         border: Border.all(
           color: showGlow
-              ? AppColors.pink.withValues(alpha: 0.6)
+              ? AppColors.pink.withValues(alpha: 0.5)
               : (isDark ? AppColors.line : const Color(0xFFCBD5E1)),
         ),
         boxShadow: [
-          if (showGlow)
+          if (showGlow && isDark)
             const BoxShadow(
-              color: Color(0x33C018C0),
-              blurRadius: 16,
-              offset: Offset(0, 6),
+              color: Color(0x55C018C0),
+              blurRadius: 22,
+              spreadRadius: -4,
+              offset: Offset(0, 8),
             )
           else if (!isDark)
             const BoxShadow(
@@ -57,7 +58,31 @@ class AppCard extends StatelessWidget {
             ),
         ],
       ),
-      child: cardBody,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppTokens.r),
+        child: Stack(
+          children: [
+            if (isDark)
+              Positioned(
+                right: -24,
+                bottom: -28,
+                child: IgnorePointer(
+                  child: Opacity(
+                    opacity: 0.045,
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 110,
+                      height: 110,
+                      fit: BoxFit.contain,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                ),
+              ),
+            cardBody,
+          ],
+        ),
+      ),
     );
 
     if (onTap != null) {

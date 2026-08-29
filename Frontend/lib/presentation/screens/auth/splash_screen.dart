@@ -62,26 +62,65 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
                 ),
               ),
               const SizedBox(height: 40),
-              // Ribbon Bar
-              Container(
-                width: 200,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.07),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      gradient: AppColors.ribbonGradient,
-                    ),
-                  ),
-                ),
-              ),
+              // Ribbon Animated Bar
+              _SplashRibbonBar(),
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _SplashRibbonBar extends StatefulWidget {
+  const _SplashRibbonBar();
+
+  @override
+  State<_SplashRibbonBar> createState() => _SplashRibbonBarState();
+}
+
+class _SplashRibbonBarState extends State<_SplashRibbonBar> with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 200,
+      height: 4,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.07),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          return FractionalTranslation(
+            translation: Offset(-1.1 + _controller.value * 4.7, 0),
+            child: Container(
+              width: 80,
+              decoration: BoxDecoration(
+                gradient: AppColors.ribbonGradient,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

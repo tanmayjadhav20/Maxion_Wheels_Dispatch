@@ -25,3 +25,5 @@ Backend/.env
 Frontend/android/local.properties
 Frontend/android/.gradle/
 Frontend/android/app/build/
+Frontend/ios/Flutter/ephemeral/
+**/ephemeral/

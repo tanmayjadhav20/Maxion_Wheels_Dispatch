@@ -48,13 +48,13 @@ class Sidebar extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Brand Row with Tiny Caption
-          Padding(
-            padding: const EdgeInsets.fromLTRB(18, 16, 18, 12),
+          const Padding(
+            padding: EdgeInsets.fromLTRB(18, 16, 18, 12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const VistarLogo(size: 44),
-                const SizedBox(height: 4),
+                VistarLogo(size: 44),
+                SizedBox(height: 4),
                 Text(
                   'DISPATCH OPERATIONS DIGITALIZATION',
                   style: TextStyle(
