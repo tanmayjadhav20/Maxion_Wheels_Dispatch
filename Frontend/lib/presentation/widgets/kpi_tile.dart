@@ -123,9 +123,13 @@ class KpiTile extends StatelessWidget {
     );
 
     if (onTap == null) return tile;
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(onTap: onTap, child: tile),
+    // InkWell keeps the tile keyboard-reachable; GestureDetector would make it
+    // mouse-only.
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTokens.r),
+      focusColor: AppColors.pink.withValues(alpha: 0.12),
+      child: tile,
     );
   }
 }

@@ -373,10 +373,12 @@ class _RoleChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.vistar;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      child: GestureDetector(
+    // InkWell so an operator can Tab between role chips and pick one with
+    // Enter — badge-scanner workflows often never touch the mouse.
+    return InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(20),
+        focusColor: AppColors.pink.withValues(alpha: 0.14),
         child: AnimatedContainer(
           duration: AppTokens.animFast,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -395,7 +397,6 @@ class _RoleChip extends StatelessWidget {
             ),
           ),
         ),
-      ),
     );
   }
 }

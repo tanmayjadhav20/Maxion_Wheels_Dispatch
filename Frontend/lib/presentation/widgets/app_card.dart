@@ -46,14 +46,16 @@ class _AppCardState extends State<AppCard> {
       child: widget.child,
     );
 
-    if (widget.cornerMark) {
+    // The corner S is a dark-mode treatment, matching what f90a2f5 shipped: on
+    // paper a 4%-opacity rainbow smudge just reads as a printing defect.
+    if (widget.cornerMark && p.isDark) {
       content = Stack(
         children: [
-          Positioned(
+          const Positioned(
             right: -26,
             bottom: -30,
             child: IgnorePointer(
-              child: VistarSMark(size: 120, opacity: p.isDark ? 0.05 : 0.04),
+              child: VistarSMark(size: 120, opacity: 0.05),
             ),
           ),
           content,
@@ -74,10 +76,12 @@ class _AppCardState extends State<AppCard> {
               : (_hovered && interactive ? p.line2 : p.line),
         ),
         boxShadow: [
-          if (lifted)
+          // The magenta bloom is a dark-mode effect; over paper it just muddies
+          // the surface, so light mode keeps the neutral shadow below.
+          if (lifted && p.isDark)
             BoxShadow(
               // --glow: 0 18px 50px -22px rgba(192,24,192,.4)
-              color: AppColors.magenta.withValues(alpha: p.isDark ? 0.4 : 0.22),
+              color: AppColors.magenta.withValues(alpha: 0.4),
               blurRadius: 28,
               spreadRadius: -8,
               offset: const Offset(0, 10),
@@ -96,11 +100,18 @@ class _AppCardState extends State<AppCard> {
 
     if (!interactive) return card;
 
-    return MouseRegion(
-      cursor: SystemMouseCursors.click,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(onTap: widget.onTap, child: card),
+    // InkWell rather than GestureDetector: it puts the card in the focus
+    // traversal chain and maps Enter/Space to onTap, which a bare
+    // GestureDetector does not. onHover drives the same hover state a
+    // MouseRegion would, so the styling is unchanged.
+    return InkWell(
+      onTap: widget.onTap,
+      onHover: (h) => setState(() => _hovered = h),
+      borderRadius: BorderRadius.circular(AppTokens.r),
+      focusColor: AppColors.pink.withValues(alpha: 0.12),
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: card,
     );
   }
 }

@@ -120,13 +120,18 @@ class _AppButtonState extends State<AppButton> {
       ],
     );
 
-    return MouseRegion(
-      cursor: enabled ? SystemMouseCursors.click : SystemMouseCursors.basic,
-      onEnter: (_) => setState(() => _hovered = true),
-      onExit: (_) => setState(() => _hovered = false),
-      child: GestureDetector(
-        onTap: enabled ? widget.onPressed : null,
-        child: AnimatedOpacity(
+    // InkWell rather than GestureDetector: it keeps the button in the focus
+    // traversal chain and maps Enter/Space to the action. A bare
+    // GestureDetector gives mouse-tap only, which strands keyboard users in
+    // the desktop dispatch office.
+    return InkWell(
+      onTap: enabled ? widget.onPressed : null,
+      onHover: (h) => setState(() => _hovered = h),
+      borderRadius: BorderRadius.circular(AppTokens.rSm),
+      focusColor: Colors.white.withValues(alpha: 0.14),
+      hoverColor: Colors.transparent,
+      highlightColor: Colors.transparent,
+      child: AnimatedOpacity(
           duration: AppTokens.animFast,
           opacity: enabled ? 1.0 : 0.5,
           child: AnimatedContainer(
@@ -140,7 +145,6 @@ class _AppButtonState extends State<AppButton> {
             child: content,
           ),
         ),
-      ),
     );
   }
 }

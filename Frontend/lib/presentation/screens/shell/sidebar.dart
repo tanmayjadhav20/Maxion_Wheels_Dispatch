@@ -186,12 +186,16 @@ class _NavRowState extends State<_NavRow> {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 3),
-      child: MouseRegion(
-        cursor: SystemMouseCursors.click,
-        onEnter: (_) => setState(() => _hovered = true),
-        onExit: (_) => setState(() => _hovered = false),
-        child: GestureDetector(
+      // InkWell rather than GestureDetector: navigation must stay reachable by
+      // Tab and activatable by Enter/Space. onHover supplies the same hover
+      // state a MouseRegion would.
+      child: InkWell(
           onTap: widget.onTap,
+          onHover: (h) => setState(() => _hovered = h),
+          borderRadius: BorderRadius.circular(8),
+          focusColor: AppColors.pink.withValues(alpha: 0.14),
+          hoverColor: Colors.transparent,
+          highlightColor: Colors.transparent,
           child: AnimatedContainer(
             duration: AppTokens.animFast,
             decoration: BoxDecoration(
@@ -266,7 +270,6 @@ class _NavRowState extends State<_NavRow> {
             ),
           ),
         ),
-      ),
     );
   }
 }
