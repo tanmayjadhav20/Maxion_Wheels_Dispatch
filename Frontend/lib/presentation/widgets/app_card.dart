@@ -14,7 +14,7 @@ class AppCard extends StatefulWidget {
     this.padding,
     this.showGlow = false,
     this.onTap,
-    this.cornerMark = false,
+    this.cornerMark = true,
   });
 
   final Widget child;

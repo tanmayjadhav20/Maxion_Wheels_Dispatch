@@ -240,7 +240,7 @@ class _ReturnableAssetRegisterScreenState extends ConsumerState<ReturnableAssetR
 
   @override
   Widget build(BuildContext context) {
-    final rawList = (_masterItems != null && _masterItems.isNotEmpty) ? _masterItems : _defaultMasterItems;
+    final rawList = _masterItems.isNotEmpty ? _masterItems : _defaultMasterItems;
     final List<Map<String, dynamic>> itemList = rawList.map((i) {
       if (i is Map) {
         return {
