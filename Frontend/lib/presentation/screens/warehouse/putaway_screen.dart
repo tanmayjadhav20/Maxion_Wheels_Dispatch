@@ -345,19 +345,19 @@ class _PutawayScreenState extends ConsumerState<PutawayScreen> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: AppColors.infoTint,
+                        color: context.infoTint,
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: AppColors.info),
+                        border: Border.all(color: context.infoInk),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('SYSTEM DIRECTED RECOMMENDATION:', style: TextStyle(color: AppColors.info, fontSize: 11, fontWeight: FontWeight.w800)),
+                          Text('SYSTEM DIRECTED RECOMMENDATION:', style: TextStyle(color: context.infoInk, fontSize: 11, fontWeight: FontWeight.w800)),
                           const SizedBox(height: 6),
                           Text('Target Zone: $_recommendedZone', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 13)),
                           Text(
                             'Suggested Bay: ${_suggestedBay.isNotEmpty ? _suggestedBay : "Select location below"}',
-                            style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w800, fontSize: 14),
+                            style: TextStyle(color: context.okInk, fontWeight: FontWeight.w800, fontSize: 14),
                           ),
                         ],
                       ),
@@ -392,7 +392,7 @@ class _PutawayScreenState extends ConsumerState<PutawayScreen> {
                             '$code — $zone ($type)${isRec ? ' ★ RECOMMENDED' : ''}',
                             style: TextStyle(
                               fontSize: 13,
-                              color: isRec ? AppColors.ok : context.textPrimary,
+                              color: isRec ? context.okInk : context.textPrimary,
                               fontWeight: isRec ? FontWeight.bold : FontWeight.normal,
                             ),
                           ),
@@ -510,7 +510,7 @@ class _PutawayScreenState extends ConsumerState<PutawayScreen> {
                                     border: Border.all(
                                       color: isRec
                                           ? AppColors.pink
-                                          : (isOcc ? AppColors.line : Theme.of(context).dividerColor),
+                                          : (isOcc ? context.borderLineStrong : context.borderLine),
                                       width: isRec ? 2 : 1,
                                     ),
                                   ),

@@ -283,10 +283,10 @@ class _WheelTraceabilityScreenState extends ConsumerState<WheelTraceabilityScree
           height: 44,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: done ? AppColors.okTint : context.bgSurfaceElevated,
-            border: Border.all(color: done ? AppColors.ok : Theme.of(context).dividerColor),
+            color: done ? context.okTint : context.bgSurfaceElevated,
+            border: Border.all(color: done ? context.okInk : Theme.of(context).dividerColor),
           ),
-          child: Icon(icon, color: done ? AppColors.ok : context.textMuted, size: 22),
+          child: Icon(icon, color: done ? context.okInk : context.textMuted, size: 22),
         ),
         const SizedBox(height: 8),
         Text(title, style: TextStyle(color: context.textPrimary, fontSize: 13, fontWeight: FontWeight.w700)),

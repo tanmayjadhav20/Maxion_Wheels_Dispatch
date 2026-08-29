@@ -1,9 +1,22 @@
 import 'package:flutter/material.dart';
 
+import '../theme/vistar_palette.dart';
+
+/// Vistar brand constants.
+///
+/// Only values that are **identical in light and dark** live here as statics:
+/// the ribbon palette, and the vivid status colours used as *fills* (snackbar
+/// grounds, dots, progress arcs) where the foreground is always white.
+///
+/// Anything that must change with the active brightness — surfaces, hairlines,
+/// the text ramp, and status colours used as *ink* — lives on [VistarPalette]
+/// and is read through the [BuildContextThemeX] getters on `context`.
 class AppColors {
   AppColors._();
 
-  // Vistar Brand Ribbon Palette (Exact Token Definitions)
+  // ---------------------------------------------------------------------------
+  // Brand ribbon — the signature accent, constant across both modes.
+  // ---------------------------------------------------------------------------
   static const Color purple = Color(0xFF7A1FB0);
   static const Color violet = Color(0xFF9B30C9);
   static const Color magenta = Color(0xFFC018C0);
@@ -15,7 +28,10 @@ class AppColors {
   static const Color yellow = Color(0xFFF0E060);
   static const Color cream = Color(0xFFFFF6CC);
 
-  // Vistar Signature Ribbon Gradient (115deg verbatim)
+  /// The 115deg Vistar ribbon, verbatim from the design tokens.
+  ///
+  /// `begin`/`end` reproduce a 115deg CSS sweep: mostly left-to-right with a
+  /// slight downward tilt.
   static const LinearGradient ribbonGradient = LinearGradient(
     colors: [
       Color(0xFF7A1FB0),
@@ -27,8 +43,9 @@ class AppColors {
       Color(0xFFF0C000),
       Color(0xFFF7EE9A),
     ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    stops: [0.0, 0.22, 0.40, 0.56, 0.70, 0.80, 0.92, 1.0],
+    begin: Alignment(-1.0, -0.42),
+    end: Alignment(1.0, 0.42),
   );
 
   static const LinearGradient ribbonSoftGradient = LinearGradient(
@@ -38,41 +55,58 @@ class AppColors {
       Color(0xE6F0480C),
       Color(0xE6F0C000),
     ],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
+    begin: Alignment(-1.0, -0.42),
+    end: Alignment(1.0, 0.42),
   );
 
-  // Near-black Premium Dark Surfaces
+  /// Vertical ribbon, for the 3px active-nav bar and section accents.
+  static const LinearGradient ribbonVertical = LinearGradient(
+    colors: [
+      Color(0xFF7A1FB0),
+      Color(0xFFE0218A),
+      Color(0xFFF0480C),
+      Color(0xFFF0C000),
+    ],
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+  );
+
+  // ---------------------------------------------------------------------------
+  // Vivid status fills. White-on-these is legible in either mode, so these stay
+  // constant. For status *ink* (text, icons, borders) use `context.okInk` etc.
+  // ---------------------------------------------------------------------------
+  static const Color ok = Color(0xFF34D399);
+  static const Color warn = Color(0xFFFBBF24);
+  static const Color bad = Color(0xFFFB6F84);
+  static const Color info = Color(0xFF5BA8FF);
+  static const Color danger = bad;
+
+  // ---------------------------------------------------------------------------
+  // Dark-scale statics.
+  //
+  // These remain for the handful of surfaces that are dark in *both* themes —
+  // camera scanner viewfinders, print previews, splash. Do not reach for them
+  // for ordinary chrome; use `context.*` so light mode stays correct.
+  // ---------------------------------------------------------------------------
   static const Color bg = Color(0xFF070611);
   static const Color bg2 = Color(0xFF0B0A18);
   static const Color surface = Color(0xFF110F1E);
   static const Color surface2 = Color(0xFF16142A);
   static const Color surface3 = Color(0xFF1D1A33);
-
-  // Hairline Lines & Borders
-  static const Color line = Color(0x14FFFFFF); // rgba(255,255,255,.08)
-  static const Color line2 = Color(0x21FFFFFF); // rgba(255,255,255,.13)
-  static const Color lineHighlight = Color(0x33E0218A);
-
-  // Typography Scale
+  static const Color line = Color(0x14FFFFFF);
+  static const Color line2 = Color(0x21FFFFFF);
   static const Color txt = Color(0xFFF2EEFB);
   static const Color txt2 = Color(0xFFB9B2D6);
   static const Color txt3 = Color(0xFF7E769B);
 
-  // Status Indicators
-  static const Color ok = Color(0xFF34D399);
-  static const Color warn = Color(0xFFFBBF24);
-  static const Color bad = Color(0xFFFB6F84);
-  static const Color info = Color(0xFF5BA8FF);
-
-  // Translucent Status Tints
   static const Color okTint = Color(0x2434D399);
   static const Color warnTint = Color(0x24FBBF24);
   static const Color dangerTint = Color(0x24FB6F84);
   static const Color infoTint = Color(0x245BA8FF);
   static const Color purpleTint = Color(0x2E9B30C9);
+  static const Color lineHighlight = Color(0x33E0218A);
 
-  // Backward Compatibility Tokens
+  // Legacy aliases kept so existing call sites keep compiling.
   static const Color bgDark = bg;
   static const Color bgSurface = surface;
   static const Color bgSurfaceElevated = surface2;
@@ -84,14 +118,49 @@ class AppColors {
   static const Color textPrimary = txt;
   static const Color textSecondary = txt2;
   static const Color textMuted = txt3;
-  static const Color danger = bad;
 }
 
+/// Theme-aware token access.
+///
+/// Every getter resolves against the [VistarPalette] on the active theme, so
+/// the same widget code renders correctly in light and dark.
 extension BuildContextThemeX on BuildContext {
+  VistarPalette get vistar => VistarPalette.of(this);
+
   bool get isDark => Theme.of(this).brightness == Brightness.dark;
-  Color get textPrimary => isDark ? AppColors.txt : const Color(0xFF0F172A);
-  Color get textSecondary => isDark ? AppColors.txt2 : const Color(0xFF475569);
-  Color get textMuted => isDark ? AppColors.txt3 : const Color(0xFF64748B);
-  Color get bgSurfaceElevated => isDark ? AppColors.surface2 : const Color(0xFFF8FAFC);
-  Color get borderLine => isDark ? AppColors.line : const Color(0xFFCBD5E1);
+
+  // Grounds
+  Color get bgCanvas => vistar.bg;
+  Color get bgPanel => vistar.bg2;
+  Color get bgSurface => vistar.surface;
+  Color get bgSurfaceElevated => vistar.surface2;
+  Color get bgSurfaceHighlight => vistar.surface3;
+
+  // Text ramp
+  Color get textPrimary => vistar.txt;
+  Color get textSecondary => vistar.txt2;
+  Color get textMuted => vistar.txt3;
+
+  // Hairlines
+  Color get borderLine => vistar.line;
+  Color get borderLineStrong => vistar.line2;
+
+  // Status ink — legible as text/icons on this brightness.
+  Color get okInk => vistar.ok;
+  Color get warnInk => vistar.warn;
+  Color get dangerInk => vistar.bad;
+  Color get infoInk => vistar.info;
+
+  // Status grounds
+  Color get okTint => vistar.okTint;
+  Color get warnTint => vistar.warnTint;
+  Color get dangerTint => vistar.badTint;
+  Color get infoTint => vistar.infoTint;
+  Color get brandTint => vistar.brandTint;
+  Color get neutralTint => vistar.neutralTint;
+
+  /// Brand pink darkened for light mode so it stays readable as text.
+  Color get brandInk => vistar.brandInk;
+
+  Color get shadowSoft => vistar.shadowColor;
 }

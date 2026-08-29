@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../core/constants/app_colors.dart';
+import 'ribbon_text.dart';
 
 class SectionTitle extends StatelessWidget {
   final String title;
@@ -13,18 +14,11 @@ class SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleColor = Theme.of(context).textTheme.bodyLarge?.color ?? AppColors.textPrimary;
+    final titleColor = context.textPrimary;
 
     return Row(
       children: [
-        Container(
-          width: 5,
-          height: 16,
-          decoration: BoxDecoration(
-            gradient: AppColors.ribbonGradient,
-            borderRadius: BorderRadius.circular(6),
-          ),
-        ),
+        const RibbonAccent(),
         const SizedBox(width: 9),
         Expanded(
           child: Text(

@@ -1,39 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../../core/constants/app_colors.dart';
+import '../../../core/constants/app_tokens.dart';
+import '../../../core/theme/vistar_backdrop.dart';
 import 'sidebar.dart';
 import 'topbar.dart';
 
+/// The app shell: 248px sidebar, 64px blurred topbar, and a scrollable canvas
+/// sitting on the Vistar ambient ground.
 class AppShell extends StatelessWidget {
-  final Widget child;
+  const AppShell({super.key, required this.child});
 
-  const AppShell({
-    super.key,
-    required this.child,
-  });
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
     final currentPath = GoRouterState.of(context).uri.toString();
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bgColor = Theme.of(context).scaffoldBackgroundColor;
+    final p = context.vistar;
 
-    Widget ambientCanvas = Container(
-      decoration: isDark
-          ? const BoxDecoration(
-              color: AppColors.bg,
-              gradient: RadialGradient(
-                center: Alignment(-0.8, -0.85),
-                radius: 1.1,
-                colors: [
-                  Color(0x2E7A1FB0), // rgba(122,31,176,.18)
-                  Colors.transparent,
-                ],
-                stops: [0.0, 0.65],
-              ),
-            )
-          : BoxDecoration(color: bgColor),
-      child: child,
+    // Each screen mounts with the design system's `fade` entry — 10px rise into
+    // place — keyed on the route so it replays on every navigation.
+    final canvas = VistarBackdrop(
+      child: AnimatedSwitcher(
+        duration: AppTokens.animNormal,
+        switchInCurve: Curves.easeOutCubic,
+        transitionBuilder: (child, animation) => FadeTransition(
+          opacity: animation,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(0, 0.022),
+              end: Offset.zero,
+            ).animate(animation),
+            child: child,
+          ),
+        ),
+        layoutBuilder: (currentChild, previousChildren) => Stack(
+          fit: StackFit.expand,
+          alignment: Alignment.topLeft,
+          children: [...previousChildren, if (currentChild != null) currentChild],
+        ),
+        child: KeyedSubtree(key: ValueKey(currentPath), child: child),
+      ),
     );
 
     return LayoutBuilder(
@@ -42,7 +50,7 @@ class AppShell extends StatelessWidget {
 
         if (isDesktop) {
           return Scaffold(
-            backgroundColor: bgColor,
+            backgroundColor: p.bg,
             body: Row(
               children: [
                 Sidebar(currentPath: currentPath),
@@ -50,9 +58,7 @@ class AppShell extends StatelessWidget {
                   child: Column(
                     children: [
                       const Topbar(),
-                      Expanded(
-                        child: ambientCanvas,
-                      ),
+                      Expanded(child: canvas),
                     ],
                   ),
                 ),
@@ -61,14 +67,16 @@ class AppShell extends StatelessWidget {
           );
         }
 
-        // Mobile Layout with Drawer
         return Scaffold(
-          backgroundColor: bgColor,
+          backgroundColor: p.bg,
           appBar: const Topbar(),
           drawer: Drawer(
+            backgroundColor: p.bg,
+            width: 264,
+            shape: const RoundedRectangleBorder(),
             child: Sidebar(currentPath: currentPath),
           ),
-          body: ambientCanvas,
+          body: canvas,
         );
       },
     );

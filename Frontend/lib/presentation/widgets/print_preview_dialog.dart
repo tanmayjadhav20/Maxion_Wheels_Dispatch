@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../core/constants/app_colors.dart';
+import '../../core/utils/label_stock.dart';
 import '../../core/utils/print_document_helper.dart';
 import '../../core/utils/print_sticker_helper.dart';
 import 'app_button.dart';
+import 'label_preview.dart';
 import 'pills.dart';
 
 enum PrintDocumentType {
@@ -76,10 +78,26 @@ class _BatchPrintPreviewDialogState extends State<BatchPrintPreviewDialog> {
     );
   }
 
+  /// Normalises the loosely-typed `stickerDetails` each screen supplies.
+  List<MapEntry<String, String>> _detailsOf(Map<String, dynamic> s) {
+    final raw = s['stickerDetails'];
+    if (raw is! List) return const [];
+    final out = <MapEntry<String, String>>[];
+    for (final d in raw) {
+      if (d is Map && d.isNotEmpty) {
+        out.add(MapEntry(
+          d.keys.first.toString().toUpperCase(),
+          d.values.first.toString(),
+        ));
+      }
+    }
+    return out;
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppColors.bgSurface,
+      backgroundColor: context.bgSurface,
       title: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -89,7 +107,7 @@ class _BatchPrintPreviewDialogState extends State<BatchPrintPreviewDialog> {
               const SizedBox(width: 10),
               Text(
                 widget.title,
-                style: const TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
+                style: TextStyle(color: context.textPrimary, fontSize: 16, fontWeight: FontWeight.w800),
               ),
             ],
           ),
@@ -108,124 +126,87 @@ class _BatchPrintPreviewDialogState extends State<BatchPrintPreviewDialog> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
               decoration: BoxDecoration(
-                color: AppColors.bgSurfaceElevated,
+                color: context.bgSurfaceElevated,
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: context.borderLine),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
                     'ITEM: ${widget.itemCode} ${widget.itemDescription != null ? "(${widget.itemDescription})" : ""}',
-                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 12, fontWeight: FontWeight.bold),
+                    style: TextStyle(color: context.textPrimary, fontSize: 12, fontWeight: FontWeight.bold),
                   ),
                   Text(
-                    'BATCH ROLL: ${widget.stickers.length} LABELS',
-                    style: const TextStyle(color: AppColors.ribbonPink, fontSize: 12, fontWeight: FontWeight.bold),
+                    LabelStock.forStickerType(widget.stickerType).specLabel,
+                    style: TextStyle(color: context.brandInk, fontSize: 11, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 14),
 
-            // Scrollable Grid of all 96 Wheel QR Stickers
+            // True-aspect proof of the actual die-cut being printed.
             Expanded(
               child: LayoutBuilder(
                 builder: (context, gridConstraints) {
-                  final isWide = gridConstraints.maxWidth > 650;
-                  final isMedium = gridConstraints.maxWidth > 420;
-                  return GridView.builder(
-                    gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: isWide ? 3 : (isMedium ? 2 : 1),
-                      childAspectRatio: 1.0,
-                      crossAxisSpacing: 10,
-                      mainAxisSpacing: 10,
-                    ),
-                    itemCount: widget.stickers.length,
-                    itemBuilder: (context, index) {
-                    final s = widget.stickers[index];
-                    final qrData = s['uniqueQrData'] ?? s['wheelQr'] ?? '';
-                    final serialNo = s['serialNumber'] ?? '00000000';
-                    
-                    String shiftVal = 'A';
-                    String lineVal = 'PL2';
-                    final parts = qrData.split('|');
-                    if (parts.length >= 7) {
-                      shiftVal = parts[5];
-                      lineVal = parts[6];
-                    }
+                  final stock = LabelStock.forStickerType(widget.stickerType);
+                  // Keep a readable on-screen size for each stock rather than
+                  // a fixed column count: the 50x25 strip needs far less room
+                  // than the 100x75 pallet label.
+                  final target = stock == LabelStock.pallet ? 300.0 : 260.0;
+                  final columns = (gridConstraints.maxWidth / target)
+                      .floor()
+                      .clamp(1, 4);
+                  const gap = 12.0;
+                  final cardWidth =
+                      (gridConstraints.maxWidth - gap * (columns - 1)) / columns;
 
-                    return Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.black, width: 2),
-                      ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              const Text(
-                                'MAXION WHEELS',
-                                style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 10.5, letterSpacing: 0.5),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(3)),
-                                child: Text('SHIFT $shiftVal', style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
-                              ),
-                            ],
+                  return SingleChildScrollView(
+                    child: Wrap(
+                      spacing: gap,
+                      runSpacing: gap,
+                      children: [
+                        for (var i = 0; i < widget.stickers.length; i++)
+                          SizedBox(
+                            width: cardWidth,
+                            child: LabelPreview(
+                              stock: stock,
+                              qrData: (widget.stickers[i]['uniqueQrData'] ??
+                                      widget.stickers[i]['spdPackQr'] ??
+                                      widget.stickers[i]['wheelQr'] ??
+                                      '')
+                                  .toString(),
+                              itemCode: widget.itemCode,
+                              codeText: (widget.stickers[i]['codeText'] ??
+                                      widget.stickers[i]['spdPackNumber'] ??
+                                      widget.stickers[i]['serialNumber'] ??
+                                      '')
+                                  .toString(),
+                              itemDescription: widget.itemDescription,
+                              details: _detailsOf(widget.stickers[i]),
+                              index: i + 1,
+                              total: widget.stickers.length,
+                            ),
                           ),
-                          const Divider(color: Colors.black, thickness: 1.2, height: 6),
-                          QrImageView(
-                            data: qrData,
-                            version: QrVersions.auto,
-                            size: 68.0,
-                            eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                            dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                widget.itemCode,
-                                style: const TextStyle(color: Colors.black, fontSize: 11, fontWeight: FontWeight.w900, letterSpacing: 0.3),
-                              ),
-                              Text(
-                                'SN: $serialNo | LINE $lineVal',
-                                style: const TextStyle(color: Colors.black87, fontSize: 8.5, fontWeight: FontWeight.w700),
-                              ),
-                              Text(
-                                qrData,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(color: Colors.black54, fontSize: 6.5, fontFamily: 'monospace'),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                );
-              },
+                      ],
+                    ),
+                  );
+                },
+              ),
             ),
-          ),
         const SizedBox(height: 14),
 
         DropdownButtonFormField<String>(
           initialValue: _selectedPrinter,
           isExpanded: true,
-          dropdownColor: AppColors.bgSurfaceElevated,
-              style: const TextStyle(color: AppColors.textPrimary),
+          dropdownColor: context.bgSurfaceElevated,
+              style: TextStyle(color: context.textPrimary),
               decoration: InputDecoration(
                 labelText: 'Target Industrial Barcode Printer',
-                labelStyle: const TextStyle(color: AppColors.textMuted),
+                labelStyle: TextStyle(color: context.textMuted),
                 filled: true,
-                fillColor: AppColors.bgSurfaceElevated,
+                fillColor: context.bgSurfaceElevated,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
               ),
               items: const [
@@ -391,7 +372,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
     final isA4 = widget.documentType == PrintDocumentType.gatePassA4 || widget.documentType == PrintDocumentType.jobCardSummary;
 
     return AlertDialog(
-      backgroundColor: AppColors.bgSurface,
+      backgroundColor: context.bgSurface,
       title: Wrap(
         alignment: WrapAlignment.spaceBetween,
         crossAxisAlignment: WrapCrossAlignment.center,
@@ -406,7 +387,7 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               Flexible(
                 child: Text(
                   widget.title,
-                  style: const TextStyle(color: AppColors.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
+                  style: TextStyle(color: context.textPrimary, fontSize: 15, fontWeight: FontWeight.w800),
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -526,13 +507,13 @@ class _PrintPreviewDialogState extends State<PrintPreviewDialog> {
               DropdownButtonFormField<String>(
                 initialValue: _selectedPrinter,
                 isExpanded: true,
-                dropdownColor: AppColors.bgSurfaceElevated,
-                style: const TextStyle(color: AppColors.textPrimary),
+                dropdownColor: context.bgSurfaceElevated,
+                style: TextStyle(color: context.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'Target Industrial Barcode Printer',
-                  labelStyle: const TextStyle(color: AppColors.textMuted),
+                  labelStyle: TextStyle(color: context.textMuted),
                   filled: true,
-                  fillColor: AppColors.bgSurfaceElevated,
+                  fillColor: context.bgSurfaceElevated,
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 items: const [

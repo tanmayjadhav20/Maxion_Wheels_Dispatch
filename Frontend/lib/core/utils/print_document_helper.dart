@@ -1,6 +1,8 @@
 import 'dart:html' as html;
 import 'package:flutter/material.dart';
 import '../constants/app_colors.dart';
+import 'label_stock.dart';
+import 'qr_svg.dart';
 
 void openPrintableDocument({
   required BuildContext context,
@@ -26,7 +28,9 @@ void openPrintableDocument({
       return '<tr>$cells</tr>';
     }).join('\n');
 
-    final qrUrl = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${Uri.encodeComponent(qrData)}';
+    // Encoded locally: an A4 gate pass must still print when the plant network
+    // is down, and pallet/vehicle numbers should not leave the site.
+    final qrMarkup = QrSvg.build(qrData, ecc: QrEcc.quartile);
 
     final htmlContent = '''
 <!DOCTYPE html>
@@ -41,7 +45,7 @@ void openPrintableDocument({
     .logo-title h1 { margin: 0; font-size: 22px; color: #111; text-transform: uppercase; letter-spacing: 1px; }
     .logo-title h3 { margin: 4px 0 0 0; font-size: 14px; color: #E0218A; }
     .qr-box { text-align: center; }
-    .qr-box img { width: 100px; height: 100px; }
+    .qr-box svg { width: 100px; height: 100px; display: block; }
     .qr-box p { margin: 4px 0 0 0; font-family: monospace; font-size: 11px; font-weight: bold; }
     .meta-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; background: #f8f9fa; padding: 14px; border: 1px solid #ddd; border-radius: 6px; margin-bottom: 20px; }
     .meta-label { font-size: 11px; font-weight: bold; color: #555; text-transform: uppercase; }
@@ -63,7 +67,7 @@ void openPrintableDocument({
       <p style="margin:4px 0 0 0; font-size:12px; color:#666;">Item Code: <strong>$itemCode</strong> ${itemDescription != null ? "($itemDescription)" : ""}</p>
     </div>
     <div class="qr-box">
-      <img src="$qrUrl" alt="QR Code" />
+      $qrMarkup
       <p>$codeText</p>
     </div>
   </div>

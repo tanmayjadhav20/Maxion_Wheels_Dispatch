@@ -229,7 +229,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                           const SizedBox(height: 4),
                           Text(
                             'Operator: ${user?.name ?? "Prakash (Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
-                            style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
+                            style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700, fontSize: 13),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ],
@@ -255,7 +255,7 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
                   const SizedBox(height: 4),
                   Text(
                     'Operator: ${user?.name ?? "Prakash (Forklift Operator)"} (${user?.employeeCode ?? "EMP005"})',
-                    style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 13),
+                    style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700, fontSize: 13),
                   ),
                   const SizedBox(height: 12),
                   Row(
@@ -430,19 +430,19 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: (_isSuccessMessage ? AppColors.ok : AppColors.danger).withValues(alpha: 0.15),
+                color: (_isSuccessMessage ? context.okInk : context.dangerInk).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: _isSuccessMessage ? AppColors.ok : AppColors.danger),
+                border: Border.all(color: _isSuccessMessage ? context.okInk : context.dangerInk),
               ),
               child: Row(
                 children: [
-                  Icon(_isSuccessMessage ? Icons.check_circle : Icons.error, color: _isSuccessMessage ? AppColors.ok : AppColors.danger),
+                  Icon(_isSuccessMessage ? Icons.check_circle : Icons.error, color: _isSuccessMessage ? context.okInk : context.dangerInk),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
                       _statusMessage!,
                       style: TextStyle(
-                        color: _isSuccessMessage ? AppColors.ok : AppColors.danger,
+                        color: _isSuccessMessage ? context.okInk : context.dangerInk,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -462,13 +462,13 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Row(
+                Row(
                   children: [
-                    Icon(Icons.qr_code_scanner, color: AppColors.ribbonPink),
-                    SizedBox(width: 8),
+                    const Icon(Icons.qr_code_scanner, color: AppColors.ribbonPink),
+                    const SizedBox(width: 8),
                     Text(
                       'PHYSICAL / CAMERA BARCODE SCANNER',
-                      style: TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w800, fontSize: 13),
+                      style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w800, fontSize: 13),
                     ),
                   ],
                 ),
@@ -606,13 +606,13 @@ class _HhtPickingExecutionScreenState extends ConsumerState<HhtPickingExecutionS
 
                 return DataRow(cells: [
                   DataCell(Text(loc, style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
-                  DataCell(Text(pal, style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700))),
+                  DataCell(Text(pal, style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700))),
                   DataCell(Text('${i['itemCode'] ?? "MXW-17-BLK"}')),
                   DataCell(Text('${i['qty'] ?? 96}')),
                   DataCell(StatusPill(label: isPicked ? 'PICKED' : 'PENDING', variant: isPicked ? PillVariant.ok : PillVariant.warn)),
                   DataCell(
                     isPicked
-                        ? const Icon(Icons.check_circle, color: AppColors.ok, size: 20)
+                        ? Icon(Icons.check_circle, color: context.okInk, size: 20)
                         : AppButton(
                             text: 'PICK',
                             icon: Icons.check,

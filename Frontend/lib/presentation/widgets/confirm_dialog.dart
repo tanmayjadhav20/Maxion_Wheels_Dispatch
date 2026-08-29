@@ -22,10 +22,10 @@ class ConfirmDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppColors.bgSurface,
+      backgroundColor: context.bgSurface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTokens.r),
-        side: const BorderSide(color: AppColors.line),
+        side: BorderSide(color: context.borderLine),
       ),
       child: Container(
         padding: AppTokens.pCard,
@@ -36,8 +36,8 @@ class ConfirmDialog extends StatelessWidget {
           children: [
             Text(
               title,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: context.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w800,
               ),
@@ -45,9 +45,10 @@ class ConfirmDialog extends StatelessWidget {
             const SizedBox(height: 12),
             Text(
               message,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.textSecondary,
                 fontSize: 14,
+                height: 1.5,
               ),
             ),
             const SizedBox(height: 24),

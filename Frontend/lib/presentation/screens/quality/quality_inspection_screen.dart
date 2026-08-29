@@ -493,7 +493,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(color: AppColors.warn.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                              child: const Icon(Icons.remove_circle_outline, color: AppColors.warn, size: 20),
+                              child: Icon(Icons.remove_circle_outline, color: context.warnInk, size: 20),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -504,7 +504,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                         ),
                         Text(
                           '${safeRemovedWheels.length} Wheels Removed',
-                          style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700),
+                          style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -547,7 +547,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                             onSubmitted: _addRemovedWheel,
                             decoration: InputDecoration(
                               hintText: 'Scan wheel QR (MW|P1|...) or Serial...',
-                              prefixIcon: const Icon(Icons.barcode_reader, color: AppColors.warn),
+                              prefixIcon: Icon(Icons.barcode_reader, color: context.warnInk),
                               filled: true,
                               fillColor: context.bgSurfaceElevated,
                               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
@@ -602,7 +602,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                                 decoration: BoxDecoration(
                                   color: isRemoved ? AppColors.danger.withValues(alpha: 0.15) : context.bgSurfaceElevated,
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: isRemoved ? AppColors.danger : Theme.of(context).dividerColor),
+                                  border: Border.all(color: isRemoved ? context.dangerInk : Theme.of(context).dividerColor),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -610,7 +610,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                                   children: [
                                     Text('SN: $serial', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 12)),
                                     const SizedBox(height: 2),
-                                    Text(isRemoved ? 'REMOVED' : 'TAP TO REMOVE', style: TextStyle(color: isRemoved ? AppColors.danger : AppColors.ok, fontSize: 10, fontWeight: FontWeight.w800)),
+                                    Text(isRemoved ? 'REMOVED' : 'TAP TO REMOVE', style: TextStyle(color: isRemoved ? context.dangerInk : context.okInk, fontSize: 10, fontWeight: FontWeight.w800)),
                                   ],
                                 ),
                               ),
@@ -631,9 +631,9 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                         children: safeRemovedWheels.map((rw) {
                           return Chip(
                             backgroundColor: AppColors.danger.withValues(alpha: 0.15),
-                            side: const BorderSide(color: AppColors.danger),
-                            label: Text('${rw['qr']} [${rw['reason']}]', style: const TextStyle(color: AppColors.danger, fontSize: 11, fontWeight: FontWeight.w700)),
-                            deleteIcon: const Icon(Icons.close, size: 16, color: AppColors.danger),
+                            side: BorderSide(color: context.dangerInk),
+                            label: Text('${rw['qr']} [${rw['reason']}]', style: TextStyle(color: context.dangerInk, fontSize: 11, fontWeight: FontWeight.w700)),
+                            deleteIcon: Icon(Icons.close, size: 16, color: context.dangerInk),
                             onDeleted: () {
                               final updated = List<Map<String, String>>.from(_removedWheels);
                               updated.removeWhere((w) => w['qr'] == rw['qr']);
@@ -664,7 +664,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                             Container(
                               padding: const EdgeInsets.all(6),
                               decoration: BoxDecoration(color: AppColors.ok.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                              child: const Icon(Icons.add_circle_outline, color: AppColors.ok, size: 20),
+                              child: Icon(Icons.add_circle_outline, color: context.okInk, size: 20),
                             ),
                             const SizedBox(width: 8),
                             Text(
@@ -781,7 +781,7 @@ class _QualityInspectionScreenState extends ConsumerState<QualityInspectionScree
                               border: Border.all(color: Theme.of(context).dividerColor),
                             ),
                             child: ListTile(
-                              leading: const Icon(Icons.verified, color: AppColors.ok),
+                              leading: Icon(Icons.verified, color: context.okInk),
                               title: Text('Pallet ${h['palletNumber'] ?? ""}', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
                               subtitle: Text('${h['reason']} • ${h['inspectorName']}', style: TextStyle(color: context.textSecondary, fontSize: 12)),
                               trailing: const StatusPill(label: 'COMPLETED', variant: PillVariant.ok),

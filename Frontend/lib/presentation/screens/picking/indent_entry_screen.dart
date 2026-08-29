@@ -393,14 +393,14 @@ class _IndentEntryScreenState extends ConsumerState<IndentEntryScreen> {
                           runSpacing: 4,
                           children: [
                             Text('Indent: ', style: TextStyle(color: context.textMuted, fontSize: 12)),
-                            Text(activePickList?['indentNumber'] ?? 'IND26000391', style: const TextStyle(color: AppColors.info, fontWeight: FontWeight.w700, fontSize: 12)),
+                            Text(activePickList?['indentNumber'] ?? 'IND26000391', style: TextStyle(color: context.infoInk, fontWeight: FontWeight.w700, fontSize: 12)),
                             const SizedBox(width: 12),
                             Text('Assigned Operator: ', style: TextStyle(color: context.textMuted, fontSize: 12)),
-                            Text(assignedOperator, style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700, fontSize: 12)),
+                            Text(assignedOperator, style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700, fontSize: 12)),
                             const SizedBox(width: 8),
                             InkWell(
                               onTap: () => _onReassignOperator(pickListNumber),
-                              child: const Text('(Reassign)', style: TextStyle(color: AppColors.info, fontSize: 12, decoration: TextDecoration.underline)),
+                              child: Text('(Reassign)', style: TextStyle(color: context.infoInk, fontSize: 12, decoration: TextDecoration.underline)),
                             ),
                           ],
                         ),
@@ -416,7 +416,7 @@ class _IndentEntryScreenState extends ConsumerState<IndentEntryScreen> {
                             decoration: BoxDecoration(
                               color: context.bgSurfaceElevated,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white12),
+                              border: Border.all(color: context.borderLine),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -518,11 +518,11 @@ class _IndentEntryScreenState extends ConsumerState<IndentEntryScreen> {
                             decoration: BoxDecoration(
                               color: context.bgSurfaceElevated,
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: Colors.white12),
+                              border: Border.all(color: context.borderLine),
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.inbox_outlined, color: AppColors.textMuted, size: 36),
+                                Icon(Icons.inbox_outlined, color: context.textMuted, size: 36),
                                 const SizedBox(height: 8),
                                 Text(
                                   'No pallets currently allocated for $pickListNumber',
@@ -554,13 +554,13 @@ class _IndentEntryScreenState extends ConsumerState<IndentEntryScreen> {
 
                                 return DataRow(cells: [
                                   DataCell(Text(loc, style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
-                                  DataCell(Text(pal, style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w700))),
+                                  DataCell(Text(pal, style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w700))),
                                   DataCell(Text('${i['itemCode'] ?? "MXW-17-BLK"}')),
                                   DataCell(Text('${i['qty'] ?? 4}')),
                                   DataCell(StatusPill(label: isPicked ? 'PICKED' : 'PENDING PICK', variant: isPicked ? PillVariant.ok : PillVariant.warn)),
                                   DataCell(
                                     isPicked
-                                        ? const Icon(Icons.check_circle, color: AppColors.ok, size: 20)
+                                        ? Icon(Icons.check_circle, color: context.okInk, size: 20)
                                         : AppButton(
                                             text: 'SCAN PICK',
                                             icon: Icons.qr_code_scanner,

@@ -39,9 +39,9 @@ class SyncMonitorScreen extends ConsumerWidget {
                 final infoCol = Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'DEVICE LOCAL SYNC STATUS',
-                      style: TextStyle(color: AppColors.ribbonPink, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.5),
+                      style: TextStyle(color: context.brandInk, fontSize: 12, fontWeight: FontWeight.w700, letterSpacing: 1.5),
                     ),
                     const SizedBox(height: 4),
                     Text(

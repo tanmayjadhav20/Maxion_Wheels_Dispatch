@@ -304,7 +304,7 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
                                                if (isSubmitted)
                                                  Text(
                                                    'MAXION REF: ${jc['maxionBookingRef'] ?? ''}',
-                                                   style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700, fontSize: 12),
+                                                   style: TextStyle(color: context.okInk, fontWeight: FontWeight.w700, fontSize: 12),
                                                  ),
                                              ],
                                            ),
@@ -320,7 +320,7 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
                                          children: [
                                            Text('Date: ${jc['date']} (Shift ${jc['shift']})', style: TextStyle(color: context.textSecondary, fontSize: 13)),
                                            Text('Full Pallets: ${jc['fullPalletsCount']}', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700)),
-                                           Text('Total Wheels: ${jc['totalWheels']}', style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w800)),
+                                           Text('Total Wheels: ${jc['totalWheels']}', style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w800)),
                                            Text('Prepared By: ${jc['submittedBy'] ?? "Supervisor"}', style: TextStyle(color: context.textMuted, fontSize: 12)),
                                          ],
                                        ),
@@ -336,7 +336,7 @@ class _JobCardReportScreenState extends ConsumerState<JobCardReportScreen> with 
                                         ),
                                         child: Row(
                                           children: [
-                                            const Icon(Icons.info_outline, color: AppColors.info, size: 18),
+                                            Icon(Icons.info_outline, color: context.infoInk, size: 18),
                                             const SizedBox(width: 10),
                                             Expanded(
                                               child: Text(

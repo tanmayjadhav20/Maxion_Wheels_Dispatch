@@ -9,7 +9,9 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#070611">
+  <meta name="theme-color" content="#F6F4FB" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#070611" media="(prefers-color-scheme: dark)">
+  <meta name="color-scheme" content="dark light">
   <meta name="description" content="Maxion Wheels Dispatch Operations Digitalization Flutter App by Vistar Logitek">
 
   <title>Maxion Wheels Dispatch Operations Digitalization · Vistar Logitek</title>
@@ -18,38 +20,48 @@
   <!-- Vistar Google Fonts (Non-Blocking Asynchronous Load) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap">
-  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
-  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600..800&family=Plus+Jakarta+Sans:wght@400..700&family=Inter:wght@400..700&family=JetBrains+Mono:wght@400..600&display=swap"></noscript>
+  <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap">
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=Manrope:wght@400;500;600;700;800&display=swap"></noscript>
 
   <style>
     :root {
+      /* Vistar brand ribbon — constant in both schemes */
       --purple: #7A1FB0; --violet: #9B30C9; --magenta: #C018C0; --pink: #E0218A;
       --red: #C8102E; --orange-red: #F0480C; --orange: #F06000; --amber: #F0C000;
       --yellow: #F0E060; --cream: #FFF6CC;
       --ribbon: linear-gradient(115deg, #7A1FB0 0%, #B81FB8 22%, #E0218A 40%, #D11630 56%, #F0480C 70%, #F06000 80%, #F0C000 92%, #F7EE9A 100%);
-      --bg: #070611; --bg2: #0B0A18;
-      --surface: #110F1E; --surface2: #16142A; --surface3: #1D1A33;
-      --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.13);
-      --txt: #F2EEFB; --txt2: #B9B2D6; --txt3: #7E769B;
+
+      /* Light scale — violet-tinted paper */
+      --bg: #F6F4FB; --bg2: #FFFFFF;
+      --surface: #FFFFFF; --surface2: #F2EFFA; --surface3: #E7E2F4;
+      --line: rgba(23,18,58,.10); --line2: rgba(23,18,58,.20);
+      --txt: #171233; --txt2: #4A4270; --txt3: #6E6690;
+      --thumb: rgba(155,48,201,.40);
+    }
+
+    /* Dark scale — the near-black premium surfaces */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #070611; --bg2: #0B0A18;
+        --surface: #110F1E; --surface2: #16142A; --surface3: #1D1A33;
+        --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.13);
+        --txt: #F2EEFB; --txt2: #B9B2D6; --txt3: #7E769B;
+        --thumb: rgba(155,48,201,.40);
+      }
     }
 
     html, body, canvas, flt-glass-pane, flt-scene-host, flt-scene {
       -webkit-font-smoothing: antialiased !important;
       -moz-osx-font-smoothing: grayscale !important;
       text-rendering: optimizeLegibility !important;
-      image-rendering: -webkit-optimize-contrast !important;
-      font-smooth: always !important;
-      transform: translateZ(0);
-      will-change: transform;
-      backface-visibility: hidden;
     }
 
     body {
       background-color: var(--bg);
       margin: 0;
       padding: 0;
-      font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
+      font-family: 'Manrope', 'Inter', system-ui, sans-serif;
       color: var(--txt);
       overflow-x: hidden;
     }
@@ -59,24 +71,39 @@
       color: #ffffff;
     }
 
-    /* Custom Vistar Scrollbar */
-    ::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
+    /* Vistar scrollbar: translucent violet thumb brightening to pink on hover */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--thumb); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--pink); }
+
+    /* Pre-Flutter boot splash: the orbit S, so the first paint is already Vistar */
+    #boot {
+      position: fixed; inset: 0; display: grid; place-items: center;
+      background: var(--bg); z-index: 9999; transition: opacity .4s ease;
     }
-    ::-webkit-scrollbar-track {
-      background: var(--bg);
+    #boot.done { opacity: 0; pointer-events: none; }
+    #boot .ring {
+      width: 132px; height: 132px; border-radius: 50%;
+      border: 1.5px solid transparent;
+      border-top-color: rgba(224,33,138,.65);
+      border-right-color: rgba(240,96,0,.40);
+      animation: vspin 1.6s linear infinite;
     }
-    ::-webkit-scrollbar-thumb {
-      background: rgba(155,48,201,.4);
-      border-radius: 4px;
+    #boot .bar {
+      position: absolute; bottom: 32%; width: 200px; height: 4px;
+      border-radius: 10px; background: var(--surface3); overflow: hidden;
     }
-    ::-webkit-scrollbar-thumb:hover {
-      background: var(--pink);
+    #boot .bar i {
+      display: block; height: 100%; width: 40%; border-radius: 10px;
+      background: var(--ribbon); animation: vload 1.4s ease-in-out infinite;
     }
+    @keyframes vspin { to { transform: rotate(360deg); } }
+    @keyframes vload { 0% { transform: translateX(-110%); } 100% { transform: translateX(360%); } }
   </style>
 </head>
 <body>
+  <div id="boot"><div class="ring"></div><div class="bar"><i></i></div></div>
   <!-- jsQR & Multi-Format Barcode Decoder Library -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
   <script>
@@ -200,6 +227,15 @@
         return false;
       }
     };
+  </script>
+  <script>
+    // Remove the boot splash as soon as Flutter has drawn its first frame.
+    window.addEventListener('flutter-first-frame', function () {
+      var b = document.getElementById('boot');
+      if (!b) return;
+      b.classList.add('done');
+      setTimeout(function () { if (b.parentNode) b.parentNode.removeChild(b); }, 450);
+    });
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>

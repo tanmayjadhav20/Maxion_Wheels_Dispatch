@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_tokens.dart';
-import '../../../core/theme/app_theme.dart';
 import '../../../core/utils/export_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/kpi_tile.dart';
+import '../../widgets/page_header.dart';
 import '../../widgets/pills.dart';
 import '../../widgets/section_title.dart';
 
@@ -111,85 +112,68 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Wrap(
-            alignment: WrapAlignment.spaceBetween,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            spacing: 16,
-            runSpacing: 12,
-            children: [
-              Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'DISPATCH OPERATIONS DASHBOARD',
-                    style: TextStyle(
-                      color: AppColors.ribbonPink,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 2.0,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Maxion Wheels Dispatch Control Center',
-                    style: TextStyle(
-                      color: context.textPrimary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w800,
-                    ),
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+          PageHeader(
+            eyebrow: 'Dispatch Operations',
+            title: 'Dispatch Control Center',
+            actions: [
+              AppButton(
+                text: 'LIVE TV BOARD',
+                icon: Icons.tv,
+                variant: AppButtonVariant.ghost,
+                isCompact: true,
+                onPressed: _onToggleTvBoard,
               ),
-              Wrap(
-                spacing: 12,
-                runSpacing: 8,
-                children: [
-                  AppButton(
-                    text: 'LIVE TV BOARD',
-                    icon: Icons.tv,
-                    variant: AppButtonVariant.ghost,
-                    onPressed: _onToggleTvBoard,
-                  ),
-                  AppButton(
-                    text: 'EXCEL REPORT',
-                    icon: Icons.download_outlined,
-                    variant: AppButtonVariant.gradient,
-                    onPressed: _onExportDashboardExcel,
-                  ),
-                ],
+              AppButton(
+                text: 'EXCEL REPORT',
+                icon: Icons.download_outlined,
+                variant: AppButtonVariant.gradient,
+                isCompact: true,
+                onPressed: _onExportDashboardExcel,
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          // Key KPI Cards Grid
-          _isLoading
-              ? const Center(child: CircularProgressIndicator(color: AppColors.ribbonPink))
-              : LayoutBuilder(
-                  builder: (context, constraints) {
-                    final width = constraints.maxWidth;
-                    final crossCount = width > 1100 ? 4 : (width > 600 ? 2 : 1);
-                    return GridView.count(
-                      crossAxisCount: crossCount,
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      mainAxisSpacing: 16,
-                      crossAxisSpacing: 16,
-                      childAspectRatio: width < 400 ? 1.3 : 1.6,
-                      children: [
-                        _buildKpiCard(context, 'Plan Achievement', '$achievementPct%', '$packedTotal / $plannedTotal Wheels Packed', Icons.pie_chart_outline, AppColors.ok),
-                        _buildKpiCard(context, 'Pallets Closed Today', '$fullCount Full / $halfCount Half', 'P: $fullCount | H: $halfCount | M: $mergedCount', Icons.inventory_2_outlined, AppColors.ribbonPink),
-                        _buildKpiCard(context, 'Open Half Pallets', '$openHalfCount Pallets', 'Oldest: $oldestHalfNumber ($oldestHalfAge)', Icons.timelapse_outlined, AppColors.warn),
-                        _buildKpiCard(context, 'Shipments Gated Out', '$gatedOutShipments Vehicles', '$gatedOutShipments Gate Passes Generated', Icons.local_shipping_outlined, AppColors.info),
-                      ],
-                    );
-                  },
+          // Key KPI tiles
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(child: CircularProgressIndicator(color: AppColors.ribbonPink)),
+            )
+          else
+            KpiTileGrid(
+              tiles: [
+                KpiTile(
+                  label: 'Plan Achievement',
+                  value: '$achievementPct%',
+                  detail: '$packedTotal / $plannedTotal wheels packed',
+                  icon: Icons.pie_chart_outline,
+                  accent: context.okInk,
                 ),
-          const SizedBox(height: 32),
+                KpiTile(
+                  label: 'Pallets Closed Today',
+                  value: '$fullCount Full / $halfCount Half',
+                  detail: 'Merged: $mergedCount',
+                  icon: Icons.inventory_2_outlined,
+                  accent: context.brandInk,
+                ),
+                KpiTile(
+                  label: 'Open Half Pallets',
+                  value: '$openHalfCount',
+                  detail: 'Oldest: $oldestHalfNumber ($oldestHalfAge)',
+                  icon: Icons.timelapse_outlined,
+                  accent: context.warnInk,
+                ),
+                KpiTile(
+                  label: 'Shipments Gated Out',
+                  value: '$gatedOutShipments',
+                  detail: '$gatedOutShipments gate passes generated',
+                  icon: Icons.local_shipping_outlined,
+                  accent: context.infoInk,
+                ),
+              ],
+            ),
+          const SizedBox(height: 20),
           // Live Activity Table Card
           AppCard(
-            showGlow: true,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -220,8 +204,8 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
                             return DataRow(cells: [
                               DataCell(Text(item['itemCode'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
                               DataCell(Text('$planned')),
-                              DataCell(Text('$packed', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
-                              DataCell(Text('$varQty wheels', style: TextStyle(color: varQty < 0 ? AppColors.warn : AppColors.ok))),
+                              DataCell(Text('$packed', style: TextStyle(color: context.okInk, fontWeight: FontWeight.w700))),
+                              DataCell(Text('$varQty wheels', style: TextStyle(color: varQty < 0 ? context.warnInk : context.okInk))),
                               DataCell(StatusPill(label: isDone ? 'COMPLETED' : 'RUNNING', variant: isDone ? PillVariant.ok : PillVariant.purple)),
                             ]);
                           }).toList(),
@@ -238,58 +222,4 @@ class _ManagementDashboardScreenState extends ConsumerState<ManagementDashboardS
     );
   }
 
-  Widget _buildKpiCard(BuildContext context, String title, String val, String sub, IconData icon, Color color) {
-    return AppCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(
-                  title.toUpperCase(),
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.6),
-                ),
-              ),
-              const SizedBox(width: 6),
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(11),
-                ),
-                child: Icon(icon, color: color, size: 19),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: Alignment.centerLeft,
-            child: Text(
-              val,
-              style: TextStyle(
-                fontFamily: AppTheme.fontDisplay,
-                color: context.textPrimary,
-                fontSize: 28,
-                fontWeight: FontWeight.w800,
-                letterSpacing: -0.4,
-              ),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            sub,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
 }

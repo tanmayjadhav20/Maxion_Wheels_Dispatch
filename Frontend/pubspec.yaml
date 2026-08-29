@@ -15,6 +15,9 @@ dependencies:
   google_fonts: ^6.2.1
   intl: ^0.19.0
   qr_flutter: ^4.1.0
+  # Pure-Dart QR encoding, so print templates generate symbols offline
+  # instead of fetching them from a public web API.
+  qr: ^3.0.2
   shared_preferences: ^2.2.3
   uuid: ^4.4.0
   excel: ^4.0.6
@@ -28,5 +31,8 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/logo.png
-    - assets/logo_name.png
+    # Only the autocropped derivatives ship. assets/logo.png and
+    # assets/logo_name.png stay in the repo as the source art the derivatives
+    # are generated from - bundling them too would add 4.2 MB the app never
+    # loads. Regenerate with tool/build_brand_assets.js after changing either.
+    - assets/brand/

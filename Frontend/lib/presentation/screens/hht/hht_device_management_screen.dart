@@ -126,13 +126,13 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
   Color _getRoleColor(String role) {
     switch (role) {
       case 'UNLOADING':
-        return AppColors.ok;
+        return context.okInk;
       case 'LOADING':
         return AppColors.ribbonPink;
       case 'MERGING_BINNING':
-        return AppColors.warn;
+        return context.warnInk;
       default:
-        return AppColors.textMuted;
+        return context.textMuted;
     }
   }
 
@@ -209,7 +209,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                   children: [
                     Text('UNLOADING GUNS', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
-                    const Text('2 / 2 ACTIVE', style: TextStyle(color: AppColors.ok, fontSize: 18, fontWeight: FontWeight.w800)),
+                    Text('2 / 2 ACTIVE', style: TextStyle(color: context.okInk, fontSize: 18, fontWeight: FontWeight.w800)),
                   ],
                 ),
               );
@@ -219,7 +219,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                   children: [
                     Text('LOADING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
-                    const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.ribbonPink, fontSize: 18, fontWeight: FontWeight.w800)),
+                    Text('1 / 1 ACTIVE', style: TextStyle(color: context.brandInk, fontSize: 18, fontWeight: FontWeight.w800)),
                   ],
                 ),
               );
@@ -229,7 +229,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                   children: [
                     Text('MERGING / BINNING GUN', style: TextStyle(color: context.textMuted, fontSize: 11, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
-                    const Text('1 / 1 ACTIVE', style: TextStyle(color: AppColors.warn, fontSize: 18, fontWeight: FontWeight.w800)),
+                    Text('1 / 1 ACTIVE', style: TextStyle(color: context.warnInk, fontSize: 18, fontWeight: FontWeight.w800)),
                   ],
                 ),
               );
@@ -301,7 +301,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                                     children: [
                                       Icon(
                                         battery > 50 ? Icons.battery_full : Icons.battery_alert,
-                                        color: battery > 20 ? AppColors.ok : AppColors.danger,
+                                        color: battery > 20 ? context.okInk : context.dangerInk,
                                         size: 16,
                                       ),
                                       const SizedBox(width: 4),
@@ -391,7 +391,7 @@ class _HhtDeviceManagementScreenState extends ConsumerState<HhtDeviceManagementS
                                   children: [
                                     Icon(
                                       battery > 50 ? Icons.battery_full : Icons.battery_alert,
-                                      color: battery > 20 ? AppColors.ok : AppColors.danger,
+                                      color: battery > 20 ? context.okInk : context.dangerInk,
                                       size: 18,
                                     ),
                                     const SizedBox(width: 4),

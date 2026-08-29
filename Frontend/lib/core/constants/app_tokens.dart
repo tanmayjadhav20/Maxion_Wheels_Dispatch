@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 class AppTokens {
   AppTokens._();
 
-  static const double rSm = 10.0;
+  // Radius scale, verbatim from the Vistar design tokens
+  // (--r-sm:11px, --r:16px, --r-lg:22px).
+  static const double rSm = 11.0;
   static const double r = 16.0;
-  static const double rLg = 24.0;
+  static const double rLg = 22.0;
 
   static const EdgeInsets pScreen = EdgeInsets.all(24.0);
   static const EdgeInsets pCard = EdgeInsets.all(18.0);

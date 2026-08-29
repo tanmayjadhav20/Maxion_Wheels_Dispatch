@@ -197,13 +197,13 @@ class _HalfPalletRegisterScreenState extends ConsumerState<HalfPalletRegisterScr
                             final short = stdQty - packedQty;
 
                             return DataRow(cells: [
-                              DataCell(Text(h['palletNumber'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: isAgeing ? AppColors.danger : AppColors.warn))),
+                              DataCell(Text(h['palletNumber'] ?? '', style: TextStyle(fontWeight: FontWeight.w700, color: isAgeing ? context.dangerInk : context.warnInk))),
                               DataCell(Text(h['itemCode'] ?? '')),
                               DataCell(Text('$packedQty / $stdQty')),
                               DataCell(Text('$short wheels short')),
                               DataCell(Text(h['locationCode'] ?? 'WH1-H-01-HB')),
                               DataCell(Text(h['closeReason'] ?? 'Sudden Item Changeover')),
-                              DataCell(Text('$age day${age > 1 ? "s" : ""}', style: TextStyle(color: isAgeing ? AppColors.danger : AppColors.ok, fontWeight: FontWeight.w700))),
+                              DataCell(Text('$age day${age > 1 ? "s" : ""}', style: TextStyle(color: isAgeing ? context.dangerInk : context.okInk, fontWeight: FontWeight.w700))),
                               DataCell(StatusPill(label: isAgeing ? 'AGEING ALERT' : 'STORED HALF', variant: isAgeing ? PillVariant.danger : PillVariant.warn)),
                             ]);
                           }).toList(),

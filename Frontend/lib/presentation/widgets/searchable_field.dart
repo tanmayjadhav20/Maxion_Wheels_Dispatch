@@ -18,10 +18,10 @@ class SearchableField extends StatelessWidget {
     return TextField(
       controller: controller,
       onChanged: onChanged,
-      style: const TextStyle(color: AppColors.textPrimary, fontSize: 14),
+      style: TextStyle(color: context.textPrimary, fontSize: 14),
       decoration: InputDecoration(
         hintText: hintText,
-        prefixIcon: const Icon(Icons.search, color: AppColors.textMuted, size: 18),
+        prefixIcon: Icon(Icons.search, color: context.textMuted, size: 18),
       ),
     );
   }

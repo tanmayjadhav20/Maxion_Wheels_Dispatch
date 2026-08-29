@@ -784,12 +784,12 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> with SingleTick
                             ),
                             Text(
                               'GATE PASS NO: ${_activeGatePass?['gatePassNumber'] ?? "GP26000208"}',
-                              style: const TextStyle(color: AppColors.ribbonPink, fontSize: 14, fontWeight: FontWeight.w800),
+                              style: TextStyle(color: context.brandInk, fontSize: 14, fontWeight: FontWeight.w800),
                             ),
                             if (_activeGatePass?['sapInvoiceNumber'] != null)
                               Text(
                                 'SAP INVOICE NO: ${_activeGatePass!['sapInvoiceNumber']}',
-                                style: const TextStyle(color: AppColors.ok, fontSize: 12, fontWeight: FontWeight.w700),
+                                style: TextStyle(color: context.okInk, fontSize: 12, fontWeight: FontWeight.w700),
                               ),
                           ],
                         ),
@@ -1104,8 +1104,8 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> with SingleTick
                 children: [
                   Text('SAP INVOICE LINE ITEMS:', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w800, fontSize: 14)),
                   TextButton.icon(
-                    icon: const Icon(Icons.add, color: AppColors.ok),
-                    label: const Text('Add Item Row', style: TextStyle(color: AppColors.ok)),
+                    icon: Icon(Icons.add, color: context.okInk),
+                    label: Text('Add Item Row', style: TextStyle(color: context.okInk)),
                     onPressed: () {
                       setState(() {
                         _dumpLineItems.add({
@@ -1164,7 +1164,7 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> with SingleTick
                                 ),
                                 child: Text(
                                   item['itemCode']?.toString() ?? '',
-                                  style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.ribbonPink, fontSize: 13),
+                                  style: TextStyle(fontWeight: FontWeight.bold, color: context.brandInk, fontSize: 13),
                                 ),
                               ),
                             ),
@@ -1200,7 +1200,7 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> with SingleTick
                             DataCell(Text('₹$total', style: const TextStyle(fontWeight: FontWeight.bold))),
                             DataCell(
                               IconButton(
-                                icon: const Icon(Icons.delete_outline, color: AppColors.danger),
+                                icon: Icon(Icons.delete_outline, color: context.dangerInk),
                                 onPressed: () {
                                   if (_dumpLineItems.length > 1) {
                                     setState(() => _dumpLineItems.removeAt(actualIdx));
@@ -1472,7 +1472,7 @@ class _GatePassScreenState extends ConsumerState<GatePassScreen> with SingleTick
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: Theme.of(ctx).cardColor,
-        title: const Text('DISPATCH HEAD OVERRIDE', style: TextStyle(color: AppColors.danger, fontWeight: FontWeight.w800)),
+        title: Text('DISPATCH HEAD OVERRIDE', style: TextStyle(color: context.dangerInk, fontWeight: FontWeight.w800)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [

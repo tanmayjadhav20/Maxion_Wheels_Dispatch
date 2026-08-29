@@ -159,8 +159,6 @@ class _CameraQrScannerDialogState extends State<CameraQrScannerDialog> with Sing
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     Widget cameraContentWidget;
     if (_isCameraPermissionGranted && _viewId.isNotEmpty) {
@@ -172,7 +170,7 @@ class _CameraQrScannerDialogState extends State<CameraQrScannerDialog> with Sing
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.videocam_off_outlined, color: AppColors.warn, size: 44),
+              Icon(Icons.videocam_off_outlined, color: AppColors.warn, size: 44),
               const SizedBox(height: 10),
               Text(
                 'System Camera Access Error',
@@ -205,7 +203,7 @@ class _CameraQrScannerDialogState extends State<CameraQrScannerDialog> with Sing
     }
 
     return Dialog(
-      backgroundColor: isDark ? AppColors.bgSurfaceElevated : theme.cardColor,
+      backgroundColor: context.bgSurfaceElevated,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
       child: Container(
@@ -313,7 +311,7 @@ class _CameraQrScannerDialogState extends State<CameraQrScannerDialog> with Sing
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: _isCameraPermissionGranted ? AppColors.ribbonPink : AppColors.line,
+                  color: _isCameraPermissionGranted ? AppColors.ribbonPink : context.borderLine,
                   width: 2,
                 ),
               ),

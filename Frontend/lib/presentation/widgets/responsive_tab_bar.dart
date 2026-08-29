@@ -53,7 +53,7 @@ class _ResponsiveTabBarState extends State<ResponsiveTabBar> {
     final currentIndex = widget.controller.index;
     final totalTabs = widget.tabs.length;
     final indColor = widget.indicatorColor ?? AppColors.ribbonPink;
-    final lblColor = widget.labelColor ?? AppColors.ribbonPink;
+    final lblColor = widget.labelColor ?? context.brandInk;
 
     return Container(
       decoration: BoxDecoration(

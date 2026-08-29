@@ -533,7 +533,7 @@ class _ReturnableAssetRegisterScreenState extends ConsumerState<ReturnableAssetR
 
                                         return DataRow(
                                           cells: [
-                                            DataCell(Text(assetNo, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ribbonPink))),
+                                            DataCell(Text(assetNo, style: TextStyle(fontWeight: FontWeight.w800, color: context.brandInk))),
                                             DataCell(Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                               decoration: BoxDecoration(
@@ -545,12 +545,12 @@ class _ReturnableAssetRegisterScreenState extends ConsumerState<ReturnableAssetR
                                             DataCell(Text(itemCode, style: const TextStyle(fontWeight: FontWeight.w700))),
                                             DataCell(Text((a['type'] ?? '').toString(), style: TextStyle(fontSize: 11, color: context.textMuted))),
                                             DataCell(Text(cust.isEmpty ? 'In House' : cust, style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w600))),
-                                            DataCell(Text(cond, style: TextStyle(color: cond == 'Good' ? AppColors.ok : AppColors.warn, fontWeight: FontWeight.w700))),
+                                            DataCell(Text(cond, style: TextStyle(color: cond == 'Good' ? context.okInk : context.warnInk, fontWeight: FontWeight.w700))),
                                             DataCell(StatusPill(
                                               label: status,
                                               variant: status == 'With Customer' ? PillVariant.warn : (status == 'In Repair' ? PillVariant.danger : PillVariant.ok),
                                             )),
-                                            DataCell(Text(age > 0 ? age.toString() + ' d' : '—', style: TextStyle(color: age > 15 ? AppColors.danger : context.textSecondary))),
+                                            DataCell(Text(age > 0 ? age.toString() + ' d' : '—', style: TextStyle(color: age > 15 ? context.dangerInk : context.textSecondary))),
                                           ],
                                         );
                                       }).toList(),
@@ -585,8 +585,8 @@ class _ReturnableAssetRegisterScreenState extends ConsumerState<ReturnableAssetR
                                         return DataRow(cells: [
                                           DataCell(Text(r['customer'] as String, style: TextStyle(fontWeight: FontWeight.w700, color: context.textPrimary))),
                                           DataCell(Text(out.toString() + ' units')),
-                                          DataCell(Text(ret.toString() + ' units', style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w700))),
-                                          DataCell(Text(bal.toString() + ' units', style: TextStyle(color: isOverdue ? AppColors.danger : AppColors.warn, fontWeight: FontWeight.w800))),
+                                          DataCell(Text(ret.toString() + ' units', style: TextStyle(color: context.okInk, fontWeight: FontWeight.w700))),
+                                          DataCell(Text(bal.toString() + ' units', style: TextStyle(color: isOverdue ? context.dangerInk : context.warnInk, fontWeight: FontWeight.w800))),
                                           DataCell(StatusPill(
                                             label: isOverdue ? 'OVERDUE ALERT' : 'BALANCED',
                                             variant: isOverdue ? PillVariant.danger : PillVariant.ok,

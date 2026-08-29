@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/constants/app_colors.dart';
 import '../../../core/constants/app_tokens.dart';
 import '../../../core/utils/export_helper.dart';
 import '../../../core/utils/print_sticker_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/app_button.dart';
+import '../../../core/utils/label_stock.dart';
 import '../../widgets/app_card.dart';
+import '../../widgets/label_preview.dart';
 import '../../widgets/pills.dart';
 import '../../widgets/section_title.dart';
 
@@ -329,7 +330,6 @@ class _WheelQrPrintScreenState extends ConsumerState<WheelQrPrintScreen> {
               );
 
               final previewCard = AppCard(
-                showGlow: true,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -344,71 +344,21 @@ class _WheelQrPrintScreenState extends ConsumerState<WheelQrPrintScreen> {
                       ],
                     ),
                     const SizedBox(height: 16),
-                    Center(
-                      child: Container(
-                        width: 200,
-                        height: 200,
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: Colors.black, width: 2),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.2),
-                              blurRadius: 8,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                const Text(
-                                  'MAXION WHEELS',
-                                  style: TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 10, letterSpacing: 0.5),
-                                ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
-                                  decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(3)),
-                                  child: Text('SHIFT $_selectedShift', style: const TextStyle(color: Colors.white, fontSize: 8, fontWeight: FontWeight.w900)),
-                                ),
-                              ],
-                            ),
-                            const Divider(color: Colors.black, thickness: 1.2, height: 4),
-                            QrImageView(
-                              data: previewQr,
-                              version: QrVersions.auto,
-                              size: 82,
-                              eyeStyle: const QrEyeStyle(eyeShape: QrEyeShape.square, color: Colors.black),
-                              dataModuleStyle: const QrDataModuleStyle(dataModuleShape: QrDataModuleShape.square, color: Colors.black),
-                            ),
-                            Column(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  _selectedItemCode,
-                                  style: const TextStyle(color: Colors.black, fontWeight: FontWeight.w900, fontSize: 11, letterSpacing: 0.3),
-                                ),
-                                Text(
-                                  'SN: 00000001 | LINE $_selectedLine',
-                                  style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w700, fontSize: 8),
-                                ),
-                                Text(
-                                  previewQr,
-                                  style: const TextStyle(color: Colors.black54, fontSize: 6.5, fontFamily: 'monospace'),
-                                  textAlign: TextAlign.center,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                    // Drawn at the real 50x25 mm die-cut, so the operator sees
+                    // the label they are about to run, not an idealised square.
+                    LabelPreview(
+                      stock: LabelStock.scanning,
+                      qrData: previewQr,
+                      itemCode: _selectedItemCode,
+                      codeText: '00000001',
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      LabelStock.scanning.specLabel,
+                      style: TextStyle(
+                        color: context.textMuted,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -423,9 +373,9 @@ class _WheelQrPrintScreenState extends ConsumerState<WheelQrPrintScreen> {
                         children: [
                           Text('Standard Sticker Payload Format:', style: TextStyle(color: context.textPrimary, fontWeight: FontWeight.w700, fontSize: 11)),
                           const SizedBox(height: 4),
-                          const SelectableText(
+                          SelectableText(
                             'MW|Plant|ItemCode|Serial|YYMMDD|Shift|Line',
-                            style: TextStyle(color: AppColors.ribbonPink, fontFamily: 'monospace', fontSize: 11, fontWeight: FontWeight.bold),
+                            style: TextStyle(color: context.brandInk, fontFamily: 'monospace', fontSize: 11, fontWeight: FontWeight.bold),
                           ),
                         ],
                       ),

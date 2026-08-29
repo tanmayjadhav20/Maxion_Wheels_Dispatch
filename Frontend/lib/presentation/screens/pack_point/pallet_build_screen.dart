@@ -603,18 +603,18 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
                     final iconWidget = Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: AppColors.warnTint,
+                        color: context.warnTint,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      child: const Icon(Icons.history_outlined, color: AppColors.warn, size: 28),
+                      child: Icon(Icons.history_outlined, color: context.warnInk, size: 28),
                     );
 
                     final textWidget = Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'MATCHING HALF PALLET AVAILABLE — USE IT FIRST!',
-                          style: TextStyle(color: AppColors.warn, fontSize: 14, fontWeight: FontWeight.w800),
+                          style: TextStyle(color: context.warnInk, fontSize: 14, fontWeight: FontWeight.w800),
                         ),
                         const SizedBox(height: 2),
                         Text(
@@ -690,7 +690,7 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
                             ),
                             child: Text(
                               'ITEM: ' + _activeItem,
-                              style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.bold, fontSize: 11),
+                              style: TextStyle(color: context.brandInk, fontWeight: FontWeight.bold, fontSize: 11),
                             ),
                           ),
                         ],
@@ -711,7 +711,7 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
                             Text(
                               _packedCount.toString(),
                               style: TextStyle(
-                                color: isPalletFull ? AppColors.ok : AppColors.ribbonPink,
+                                color: isPalletFull ? context.okInk : AppColors.ribbonPink,
                                 fontSize: 88,
                                 fontWeight: FontWeight.w900,
                               ),
@@ -737,7 +737,7 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
                           minHeight: 8,
                           backgroundColor: context.bgSurfaceElevated,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            isPalletFull ? AppColors.ok : AppColors.ribbonPink,
+                            isPalletFull ? context.okInk : AppColors.ribbonPink,
                           ),
                         ),
                       ),
@@ -746,7 +746,7 @@ class _PalletBuildScreenState extends ConsumerState<PalletBuildScreen> {
                       Text(
                         'LAYER ' + _currentLayer.toString() + ' OF 4 (' + _wheelsPerLayer.toString() + ' WHEELS / LAYER) • ' + (fillPercentage * 100).toInt().toString() + '% FILLED',
                         style: TextStyle(
-                          color: isPalletFull ? AppColors.ok : AppColors.info,
+                          color: isPalletFull ? context.okInk : context.infoInk,
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
                         ),

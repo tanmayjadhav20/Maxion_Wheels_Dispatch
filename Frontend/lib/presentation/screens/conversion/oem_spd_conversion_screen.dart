@@ -686,7 +686,7 @@ class _OemSpdConversionScreenState extends ConsumerState<OemSpdConversionScreen>
                              if (_proposedPallet != null) ...[
                               Divider(color: Theme.of(context).dividerColor),
                               const SizedBox(height: 12),
-                              const Text('SYSTEM PROPOSED SOURCE PALLET (Order of Preference):', style: TextStyle(color: AppColors.ok, fontWeight: FontWeight.w800, fontSize: 12)),
+                              Text('SYSTEM PROPOSED SOURCE PALLET (Order of Preference):', style: TextStyle(color: context.okInk, fontWeight: FontWeight.w800, fontSize: 12)),
                               const SizedBox(height: 8),
                               Text(
                                 'Pallet ${_proposedPallet!['palletNumber']} (${_proposedPallet!['typeSeries']}) • Qty: ${_proposedPallet!['packedQty']} • Location: ${_proposedPallet!['locationCode']}',
@@ -773,7 +773,7 @@ class _OemSpdConversionScreenState extends ConsumerState<OemSpdConversionScreen>
                                     ),
                                     child: Text(
                                       '${activeReq['status']}',
-                                      style: const TextStyle(color: AppColors.ok, fontWeight: FontWeight.w800, fontSize: 11),
+                                      style: TextStyle(color: context.okInk, fontWeight: FontWeight.w800, fontSize: 11),
                                     ),
                                   ),
                               ],
@@ -955,7 +955,7 @@ class _OemSpdConversionScreenState extends ConsumerState<OemSpdConversionScreen>
                                   ),
                                   child: Text(
                                     '${inStockPacks.length} IN-STOCK SPD PACKS',
-                                    style: const TextStyle(color: AppColors.ribbonPink, fontWeight: FontWeight.w800, fontSize: 11),
+                                    style: TextStyle(color: context.brandInk, fontWeight: FontWeight.w800, fontSize: 11),
                                   ),
                                 ),
                               ],
@@ -1131,7 +1131,7 @@ class _OemSpdConversionScreenState extends ConsumerState<OemSpdConversionScreen>
                                                 color: AppColors.ok.withValues(alpha: 0.15),
                                                 borderRadius: BorderRadius.circular(4),
                                               ),
-                                              child: const Text('IN-STOCK', style: TextStyle(color: AppColors.ok, fontWeight: FontWeight.w800, fontSize: 10)),
+                                              child: Text('IN-STOCK', style: TextStyle(color: context.okInk, fontWeight: FontWeight.w800, fontSize: 10)),
                                             ),
                                           ],
                                         ),
@@ -1175,7 +1175,7 @@ class _OemSpdConversionScreenState extends ConsumerState<OemSpdConversionScreen>
                               ),
                               child: Row(
                                 children: [
-                                  const Icon(Icons.check_circle_outline, color: AppColors.ok, size: 20),
+                                  Icon(Icons.check_circle_outline, color: context.okInk, size: 20),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Text(

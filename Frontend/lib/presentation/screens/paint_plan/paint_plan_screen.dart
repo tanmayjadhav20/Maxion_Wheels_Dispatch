@@ -385,7 +385,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                             : AppColors.warn.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
-                          color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                          color: _hasHalfMatch ? context.okInk : context.warnInk,
                           width: 1,
                         ),
                       ),
@@ -396,7 +396,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                             children: [
                               Icon(
                                 _hasHalfMatch ? Icons.check_circle_outline : Icons.warning_amber_rounded,
-                                color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                                color: _hasHalfMatch ? context.okInk : context.warnInk,
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -406,7 +406,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                                       ? 'Matching Half Pallet Found: ${_matchedHalfPallet?['palletNumber']} (${_matchedHalfPallet?['packedQty']} wheels in ${_matchedHalfPallet?['locationCode'] ?? 'HB1'})'
                                       : 'No matching half-stored pallet found in storage for ${_itemController.text.trim().isEmpty ? 'this item' : _itemController.text.trim()}',
                                   style: TextStyle(
-                                    color: _hasHalfMatch ? AppColors.ok : AppColors.warn,
+                                    color: _hasHalfMatch ? context.okInk : context.warnInk,
                                     fontSize: 13,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -577,7 +577,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                             ),
                             child: Column(
                               children: [
-                                const Icon(Icons.inventory_2_outlined, color: AppColors.textMuted, size: 36),
+                                Icon(Icons.inventory_2_outlined, color: context.textMuted, size: 36),
                                 const SizedBox(height: 12),
                                 Text(
                                   'No Paint Plans Found',
@@ -620,7 +620,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
 
                                 return DataRow(
                                   cells: [
-                                    DataCell(Text(planNum, style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.ribbonPink))),
+                                    DataCell(Text(planNum, style: TextStyle(fontWeight: FontWeight.w800, color: context.brandInk))),
                                     DataCell(Text('${p['line']} · Shift ${p['shift']}')),
                                     DataCell(Text((p['itemCode'] ?? '').toString(), style: const TextStyle(fontWeight: FontWeight.w700))),
                                     DataCell(Text('$planned wheels')),
@@ -628,7 +628,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                                       Text(
                                         '$packed / $planned',
                                         style: TextStyle(
-                                          color: packed >= planned && planned > 0 ? AppColors.ok : (packed > 0 ? AppColors.info : context.textMuted),
+                                          color: packed >= planned && planned > 0 ? context.okInk : (packed > 0 ? context.infoInk : context.textMuted),
                                           fontWeight: FontWeight.bold,
                                         ),
                                       ),
@@ -645,7 +645,7 @@ class _PaintPlanScreenState extends ConsumerState<PaintPlanScreen> {
                                         child: Text(
                                           allocatedPallet.toString(),
                                           style: TextStyle(
-                                            color: (p['newPalletCreated'] != null) ? AppColors.pink : AppColors.ok,
+                                            color: (p['newPalletCreated'] != null) ? AppColors.pink : context.okInk,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 12,
                                           ),
